@@ -9,10 +9,25 @@
         android:name="com.cupofcoffee.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_saveMeetingFragment"
+            app:destination="@id/saveMeetingFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/userFragment"
         android:name="com.cupofcoffee.UserFragment"
-        android:label="fragment_user">
+        android:label="fragment_user"></fragment>
+
+    <fragment
+        android:id="@+id/saveMeetingFragment"
+        android:name="com.cupofcoffee.SaveMeetingFragment"
+        android:label="SaveMeetingFragment">
+        <argument
+            android:name="placeName"
+            app:argType="string" />
+        <argument
+            android:name="placePosition"
+            app:argType="com.naver.maps.geometry.LatLng" />
     </fragment>
 </navigation>
