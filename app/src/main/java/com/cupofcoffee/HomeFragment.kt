@@ -14,6 +14,7 @@ import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
 
+const val INIT_ZOOM_LEVEL = 20.0
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -49,28 +50,28 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(p0: NaverMap) {
         setSymbolClick(p0)
-        setCameraZoom(p0)
+        initCameraZoom(p0)
     }
 
-    private fun setCameraZoom(naverMap: NaverMap) {
-        naverMap.moveCamera(CameraUpdate.zoomTo(20.0))
+    private fun initCameraZoom(naverMap: NaverMap) {
+        naverMap.moveCamera(CameraUpdate.zoomTo(INIT_ZOOM_LEVEL))
     }
 
     private fun setSymbolClick(naverMap: NaverMap) {
         naverMap.setOnSymbolClickListener { symbol ->
             symbol.caption
-            setDialog(symbol.caption, symbol.position)
+            showDialog(symbol.caption, symbol.position)
             true
         }
     }
 
-    private fun setDialog(placeName: String, position: LatLng) {
+    private fun showDialog(placeName: String, position: LatLng) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.save_title))
             .setMessage(placeName)
-            .setNegativeButton(getString(R.string.save_cancle)) { dialog, which -> dialog.cancel() }
-            .setPositiveButton(getString(R.string.save_create)) { dialog, which ->
-                moveToSaveMeeting(placeName,position)
+            .setNegativeButton(getString(R.string.save_cancle)) { dialog, _ -> dialog.cancel() }
+            .setPositiveButton(getString(R.string.save_create)) { _, _ ->
+                moveToSaveMeeting(placeName, position)
             }
             .show()
     }
@@ -80,6 +81,5 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             HomeFragmentDirections.actionHomeFragmentToSaveMeetingFragment(placeName, position)
         findNavController().navigate(action)
     }
-
 
 }
