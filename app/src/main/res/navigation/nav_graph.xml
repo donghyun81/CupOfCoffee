@@ -6,13 +6,13 @@
     app:startDestination="@id/homeFragment">
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.cupofcoffee.HomeFragment"
+        android:name="com.cupofcoffee.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
     </fragment>
     <fragment
         android:id="@+id/userFragment"
-        android:name="com.example.cupofcoffee.UserFragment"
+        android:name="com.cupofcoffee.UserFragment"
         android:label="fragment_user">
     </fragment>
 </navigation>
