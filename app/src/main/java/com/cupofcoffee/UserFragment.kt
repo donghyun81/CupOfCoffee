@@ -1,11 +1,11 @@
-package com.example.cupofcoffee
+package com.cupofcoffee
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.cupofcoffee.databinding.FragmentUserBinding
+import com.cupofcoffee.databinding.FragmentUserBinding
 
 class UserFragment : Fragment() {
 

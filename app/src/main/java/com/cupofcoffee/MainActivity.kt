@@ -1,10 +1,10 @@
-package com.example.cupofcoffee
+package com.cupofcoffee
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
-import com.example.cupofcoffee.databinding.ActivityMainBinding
+import com.cupofcoffee.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
