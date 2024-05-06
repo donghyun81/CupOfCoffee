@@ -14,12 +14,7 @@
             app:destination="@id/saveMeetingFragment" />
     </fragment>
 
-    <fragment
-        android:id="@+id/userFragment"
-        android:name="com.cupofcoffee.UserFragment"
-        android:label="fragment_user"></fragment>
-
-    <fragment
+    <dialog
         android:id="@+id/saveMeetingFragment"
         android:name="com.cupofcoffee.SaveMeetingFragment"
         android:label="SaveMeetingFragment">
@@ -29,5 +24,11 @@
         <argument
             android:name="placePosition"
             app:argType="com.naver.maps.geometry.LatLng" />
-    </fragment>
+    </dialog>
+
+    <fragment
+        android:id="@+id/userFragment"
+        android:name="com.cupofcoffee.UserFragment"
+        android:label="user_fragment" />
+
 </navigation>
