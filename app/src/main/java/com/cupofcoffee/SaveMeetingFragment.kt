@@ -5,14 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.timepicker.MaterialTimePicker
+import okhttp3.internal.toLongOrDefault
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 
 class SaveMeetingFragment : BottomSheetDialogFragment() {
 
@@ -20,6 +20,8 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
 
     private val args: SaveMeetingFragmentArgs by navArgs()
+
+    private val viewModel: SaveMeetingViewModel by viewModels { SaveMeetingViewModel.Factory }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,6 +36,7 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         setPlace()
         setTime()
+        setSaveButton()
     }
 
     override fun onDestroy() {
@@ -66,5 +69,24 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
             calendar.get(Calendar.MINUTE),
             true
         ).show()
+    }
+
+    private fun setSaveButton() {
+        binding.btnSave.setOnClickListener {
+            with(binding) {
+                val meeting = MeetingModel(
+                    caption = args.placeName,
+                    lat = args.placePosition.latitude,
+                    lng = args.placePosition.longitude,
+                    personnel = 3,
+                    managerId = "임시",
+                    peopleId = listOf("친구 1", "친구 2"),
+                    time = tvTime.text.toString().toLongOrDefault(0),
+                    createDate = Date().time,
+                    content = tvContent.text.toString()
+                )
+                viewModel.saveMeeting(meeting)
+            }
+        }
     }
 }
