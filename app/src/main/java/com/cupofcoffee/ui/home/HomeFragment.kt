@@ -1,4 +1,4 @@
-package com.cupofcoffee
+package com.cupofcoffee.ui.home
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.cupofcoffee.R
 import com.cupofcoffee.databinding.FragmentHomeBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.naver.maps.geometry.LatLng
@@ -78,7 +79,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun moveToSaveMeeting(placeName: String, position: LatLng) {
         val action =
-            HomeFragmentDirections.actionHomeFragmentToSaveMeetingFragment(placeName, position)
+            HomeFragmentDirections.actionHomeFragmentToSaveMeetingFragment(
+                placeName,
+                position
+            )
         findNavController().navigate(action)
     }
 

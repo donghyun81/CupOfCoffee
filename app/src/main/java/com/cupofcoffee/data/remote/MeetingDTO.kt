@@ -1,4 +1,4 @@
-package com.cupofcoffee
+package com.cupofcoffee.data.remote
 
 import kotlinx.serialization.Serializable
 

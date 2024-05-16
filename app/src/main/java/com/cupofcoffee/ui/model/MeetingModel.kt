@@ -1,4 +1,6 @@
-package com.cupofcoffee
+package com.cupofcoffee.ui.model
+
+import com.cupofcoffee.data.remote.MeetingDTO
 
 data class MeetingModel(
     val caption: String,

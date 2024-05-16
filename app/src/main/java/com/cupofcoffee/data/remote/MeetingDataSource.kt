@@ -1,4 +1,4 @@
-package com.cupofcoffee
+package com.cupofcoffee.data.remote
 
 class MeetingDataSource(private val meetingService: MeetingService) {
 

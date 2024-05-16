@@ -6,7 +6,7 @@
     app:startDestination="@id/homeFragment">
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.cupofcoffee.HomeFragment"
+        android:name="com.cupofcoffee.ui.home.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
         <action
@@ -16,7 +16,7 @@
 
     <dialog
         android:id="@+id/saveMeetingFragment"
-        android:name="com.cupofcoffee.SaveMeetingFragment"
+        android:name="com.cupofcoffee.ui.savemeeting.SaveMeetingFragment"
         android:label="SaveMeetingFragment">
         <argument
             android:name="placeName"
@@ -28,7 +28,7 @@
 
     <fragment
         android:id="@+id/userFragment"
-        android:name="com.cupofcoffee.UserFragment"
+        android:name="com.cupofcoffee.ui.user.UserFragment"
         android:label="user_fragment" />
 
 </navigation>

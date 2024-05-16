@@ -1,6 +1,8 @@
 package com.cupofcoffee
 
 import android.app.Application
+import com.cupofcoffee.data.module.RepositoryModule
+import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 
 
 class CupOfCoffeeApplication : Application() {

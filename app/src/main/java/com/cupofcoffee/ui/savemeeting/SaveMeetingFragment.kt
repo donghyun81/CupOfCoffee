@@ -1,4 +1,4 @@
-package com.cupofcoffee
+package com.cupofcoffee.ui.savemeeting
 
 import android.app.TimePickerDialog
 import android.os.Bundle
@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
+import com.cupofcoffee.ui.model.MeetingModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import okhttp3.internal.toLongOrDefault
 import java.text.SimpleDateFormat
