@@ -7,7 +7,6 @@ data class MeetingDTO(
     val caption: String,
     val lat: Double,
     val lng: Double,
-    val personnel: Int,
     val managerId: String,
     val peopleId: List<String>,
     val time:Long,

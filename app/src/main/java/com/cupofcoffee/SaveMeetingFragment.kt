@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs
 import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import okhttp3.internal.toLongOrDefault
@@ -18,8 +17,6 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentSaveMeetingBinding? = null
     private val binding get() = _binding!!
-
-    private val args: SaveMeetingFragmentArgs by navArgs()
 
     private val viewModel: SaveMeetingViewModel by viewModels { SaveMeetingViewModel.Factory }
 
@@ -35,7 +32,7 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setPlace()
-        setTime()
+        setMeetingTime()
         setSaveButton()
     }
 
@@ -45,18 +42,18 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
     }
 
     private fun setPlace() {
-        binding.tvPlace.text = args.placeName
+        binding.tvPlace.text = viewModel.args.placeName
     }
 
-    private fun setTime() {
-        val cal = Calendar.getInstance()
-        binding.tvTime.text = SimpleDateFormat("HH:mm").format(cal.time)
+    private fun setMeetingTime() {
+        val calendar = Calendar.getInstance()
+        binding.tvTime.text = SimpleDateFormat("HH:mm").format(calendar.time)
         binding.tvTime.setOnClickListener {
-            showTimePicker(cal)
+            showMeetingTimePicker(calendar)
         }
     }
 
-    private fun showTimePicker(calendar: Calendar) {
+    private fun showMeetingTimePicker(calendar: Calendar) {
         val timeSetListener = TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
@@ -71,14 +68,14 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
         ).show()
     }
 
+
     private fun setSaveButton() {
         binding.btnSave.setOnClickListener {
             with(binding) {
                 val meeting = MeetingModel(
-                    caption = args.placeName,
-                    lat = args.placePosition.latitude,
-                    lng = args.placePosition.longitude,
-                    personnel = 3,
+                    caption = viewModel.args.placeName,
+                    lat = viewModel.args.placePosition.latitude,
+                    lng = viewModel.args.placePosition.longitude,
                     managerId = "임시",
                     peopleId = listOf("친구 1", "친구 2"),
                     time = tvTime.text.toString().toLongOrDefault(0),

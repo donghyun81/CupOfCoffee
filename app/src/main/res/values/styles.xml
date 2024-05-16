@@ -27,7 +27,7 @@
 
     <style name="SaveMeetingTime" parent="SaveMeetingContent"></style>
 
-    <style name="SaveMeetingMemo" parent="TextCornerRadius">
+    <style name="SaveMeetingDetail" parent="TextCornerRadius">
         <item name="android:textSize">18dp</item>
     </style>
 
