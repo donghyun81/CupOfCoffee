@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
 import com.cupofcoffee.ui.model.MeetingModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -73,7 +74,7 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
     private fun setSaveButton() {
         binding.btnSave.setOnClickListener {
             with(binding) {
-                val meeting = MeetingModel(
+                val meeting = MeetingDTO(
                     caption = viewModel.args.placeName,
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,

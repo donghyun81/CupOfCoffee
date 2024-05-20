@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
+import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.toMeetingDTO
@@ -20,9 +21,9 @@ class SaveMeetingViewModel(
 
     val args = SaveMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    fun saveMeeting(meetingModel: MeetingModel) {
+    fun saveMeeting(meetingDTO: MeetingDTO) {
         viewModelScope.launch {
-            meetingRepositoryImpl.insert(meetingModel.toMeetingDTO())
+            meetingRepositoryImpl.insert(meetingDTO)
         }
     }
 
