@@ -1,4 +1,4 @@
-package com.cupofcoffee
+package com.cupofcoffee.ui.user
 
 import android.os.Bundle
 import android.view.LayoutInflater

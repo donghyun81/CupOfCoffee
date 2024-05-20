@@ -1,11 +1,15 @@
-package com.cupofcoffee
+package com.cupofcoffee.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.cupofcoffee.R
 import com.cupofcoffee.databinding.FragmentHomeBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.naver.maps.geometry.LatLng
@@ -20,6 +24,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: HomeViewModel by viewModels { HomeViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,9 +54,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
     }
 
-    override fun onMapReady(p0: NaverMap) {
-        setSymbolClick(p0)
-        initCameraZoom(p0)
+    override fun onMapReady(naverMap: NaverMap) {
+        setSymbolClick(naverMap)
+        initCameraZoom(naverMap)
+        initMarkers(naverMap)
     }
 
     private fun initCameraZoom(naverMap: NaverMap) {
@@ -59,9 +66,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun setSymbolClick(naverMap: NaverMap) {
         naverMap.setOnSymbolClickListener { symbol ->
-            symbol.caption
-            showDialog(symbol.caption, symbol.position)
+            val placeName = symbol.caption.split("\n").last()
+            showDialog(placeName, symbol.position)
             true
+        }
+    }
+
+    private fun initMarkers(naverMap: NaverMap) {
+        viewModel.marker.observe(viewLifecycleOwner) { markers ->
+            Log.d("12345",markers.toString())
+            markers?.map { it.map = naverMap }
         }
     }
 
@@ -78,7 +92,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun moveToSaveMeeting(placeName: String, position: LatLng) {
         val action =
-            HomeFragmentDirections.actionHomeFragmentToSaveMeetingFragment(placeName, position)
+            HomeFragmentDirections.actionHomeFragmentToSaveMeetingFragment(
+                placeName,
+                position
+            )
         findNavController().navigate(action)
     }
 
