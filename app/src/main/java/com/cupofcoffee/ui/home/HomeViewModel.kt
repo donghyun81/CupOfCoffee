@@ -44,7 +44,9 @@ class HomeViewModel(private val meetingRepositoryImpl: MeetingRepositoryImpl) : 
         _makers.value = meetings.value?.map { meetingEntry -> meetingEntry.meetingModel.toMarker() }
     }
 
-    private fun MeetingModel.toMarker() = Marker().apply { position = LatLng(lat, lng) }
+    private fun MeetingModel.toMarker() = Marker().apply {
+        position = LatLng(lat, lng)
+    }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

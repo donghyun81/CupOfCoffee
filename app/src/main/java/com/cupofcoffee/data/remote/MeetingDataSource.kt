@@ -8,7 +8,7 @@ import java.lang.Exception
 
 class MeetingDataSource(private val meetingService: MeetingService) {
 
-    suspend fun insert(meetingDTO: MeetingDTO) = meetingService.insert(meetingDTO)
+    suspend fun insert(meetingDTO: MeetingDTO) = meetingService.insert(meetingDTO).name
 
     suspend fun getMeetings(): Map<String, MeetingDTO> {
         return try {

@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
 import com.cupofcoffee.ui.model.MeetingModel
+import com.cupofcoffee.ui.model.PlaceModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import okhttp3.internal.toLongOrDefault
 import java.text.SimpleDateFormat
@@ -74,7 +75,7 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
     private fun setSaveButton() {
         binding.btnSave.setOnClickListener {
             with(binding) {
-                val meeting = MeetingDTO(
+                val meeting = MeetingModel(
                     caption = viewModel.args.placeName,
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,
@@ -84,7 +85,12 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
                     createDate = Date().time,
                     content = tvContent.text.toString()
                 )
-                viewModel.saveMeeting(meeting)
+                val placeModel = PlaceModel(
+                    caption = viewModel.args.placeName,
+                    lat = viewModel.args.placePosition.latitude,
+                    lng = viewModel.args.placePosition.longitude,
+                )
+                viewModel.saveMeeting(meeting, placeModel)
             }
         }
     }
