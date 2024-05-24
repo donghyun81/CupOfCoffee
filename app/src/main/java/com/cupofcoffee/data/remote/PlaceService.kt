@@ -6,16 +6,19 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-private const val MEETING_PATH = "places"
+private const val PlACE_PATH = "places"
 
 interface PlaceService {
 
-    @PUT("$MEETING_PATH/{id}.json")
+    @PUT("$PlACE_PATH/{id}.json")
     suspend fun insert(@Path("id") caption: String, @Body place: PlaceDTO)
 
-    @GET("$MEETING_PATH/{id}.json")
+    @GET("$PlACE_PATH/{id}.json")
     suspend fun getPlaceByCaption(
         @Path("id") position: String
     ): PlaceDTO?
+
+    @GET("$PlACE_PATH.json")
+    suspend fun getPlaces(): Map<String, PlaceDTO>
 
 }

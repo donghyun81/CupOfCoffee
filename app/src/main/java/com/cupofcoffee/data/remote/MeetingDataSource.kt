@@ -10,11 +10,5 @@ class MeetingDataSource(private val meetingService: MeetingService) {
 
     suspend fun insert(meetingDTO: MeetingDTO) = meetingService.insert(meetingDTO).name
 
-    suspend fun getMeetings(): Map<String, MeetingDTO> {
-        return try {
-            meetingService.getMeetings()
-        } catch (e: Exception) {
-            emptyMap()
-        }
-    }
+    suspend fun getMeeting() = meetingService.getMeeting()
 }

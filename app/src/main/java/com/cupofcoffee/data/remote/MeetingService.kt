@@ -15,5 +15,5 @@ interface MeetingService {
     suspend fun insert(@Body meetingDTO: MeetingDTO): RemoteIdWrapper
 
     @GET("$MEETING_PATH.json")
-    suspend fun getMeetings(): Map<String, MeetingDTO>
+    suspend fun getMeeting(): MeetingDTO
 }

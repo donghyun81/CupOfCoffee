@@ -12,4 +12,11 @@ class PlaceDataSource(private val placeService: PlaceService) {
         }
     }
 
+    suspend fun getPlaces(): Map<String, PlaceDTO> {
+        return try {
+            placeService.getPlaces()
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
 }

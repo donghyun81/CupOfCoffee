@@ -74,7 +74,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun initMarkers(naverMap: NaverMap) {
         viewModel.marker.observe(viewLifecycleOwner) { markers ->
-            Log.d("12345",markers.toString())
             markers?.map { it.map = naverMap }
         }
     }
@@ -98,5 +97,4 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             )
         findNavController().navigate(action)
     }
-
 }

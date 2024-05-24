@@ -9,4 +9,6 @@ class PlaceRepositoryImpl(private val placeDataSource: PlaceDataSource) {
         placeDataSource.insert(caption, placeDTO)
 
     suspend fun getPlaceByPosition(position: String) = placeDataSource.getPlaceByPosition(position)
+
+    suspend fun getPlaces() = placeDataSource.getPlaces()
 }
