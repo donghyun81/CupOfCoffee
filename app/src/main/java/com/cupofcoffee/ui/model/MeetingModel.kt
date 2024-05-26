@@ -7,7 +7,7 @@ data class MeetingModel(
     val lat: Double,
     val lng: Double,
     val managerId: String,
-    val peopleId: List<String>,
+    val peopleId: MutableList<String>,
     val time: Long,
     val createDate: Long,
     val content: String

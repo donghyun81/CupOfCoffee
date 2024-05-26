@@ -14,8 +14,8 @@ interface PlaceService {
     suspend fun insert(@Path("id") caption: String, @Body place: PlaceDTO)
 
     @GET("$PlACE_PATH/{id}.json")
-    suspend fun getPlaceByCaption(
-        @Path("id") position: String
+    suspend fun getPlaceById(
+        @Path("id") id: String
     ): PlaceDTO?
 
     @GET("$PlACE_PATH.json")

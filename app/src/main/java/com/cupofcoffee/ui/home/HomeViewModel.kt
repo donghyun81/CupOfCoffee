@@ -10,11 +10,13 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.remote.toMeetingEntry
+import com.cupofcoffee.data.remote.toPlaceEntry
 import com.cupofcoffee.data.remote.toPlaceModel
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingModel
+import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.PlaceModel
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
@@ -23,8 +25,8 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : ViewModel() {
 
-    private val _places: MutableLiveData<List<PlaceModel>> = MutableLiveData()
-    val places: LiveData<List<PlaceModel>> = _places
+    private val _places: MutableLiveData<List<PlaceEntry>> = MutableLiveData()
+    private val places: LiveData<List<PlaceEntry>> = _places
 
     private val _makers: MutableLiveData<List<Marker>?> = MutableLiveData()
     val marker: LiveData<List<Marker>?> = _makers
@@ -36,19 +38,20 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
     private fun initMeetings() {
         viewModelScope.launch {
             _places.value = placeRepositoryImpl.getPlaces().map {
-                val (_, placeDTO) = it
-                placeDTO.toPlaceModel()
+                val (id, placeDTO) = it
+                placeDTO.toPlaceEntry(id)
             }
             initMarkers()
         }
     }
 
     private fun initMarkers() {
-        _makers.value = places.value?.map { placeModel -> placeModel.toMarker() }
+        _makers.value = places.value?.map { placeEntry -> placeEntry.toMarker() }
     }
 
-    private fun PlaceModel.toMarker() = Marker().apply {
-        position = LatLng(lat, lng)
+    private fun PlaceEntry.toMarker() = Marker().apply {
+        position = LatLng(placeModel.lat, placeModel.lng)
+        tag = id
     }
 
     companion object {

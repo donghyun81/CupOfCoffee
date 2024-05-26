@@ -80,7 +80,7 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,
                     managerId = "임시",
-                    peopleId = listOf("친구 1", "친구 2"),
+                    peopleId = mutableListOf("친구 1", "친구 2"),
                     time = tvTime.text.toString().toLongOrDefault(0),
                     createDate = Date().time,
                     content = tvContent.text.toString()

@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.remote
 
+import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.PlaceModel
 import kotlinx.serialization.Serializable
 
@@ -12,3 +13,5 @@ data class PlaceDTO(
 )
 
 fun PlaceDTO.toPlaceModel() = PlaceModel(caption, lat, lng, meetingIds)
+
+fun PlaceDTO.toPlaceEntry(id: String) = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))

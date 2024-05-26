@@ -4,9 +4,9 @@ class PlaceDataSource(private val placeService: PlaceService) {
 
     suspend fun insert(caption: String, placeDTO: PlaceDTO) = placeService.insert(caption, placeDTO)
 
-    suspend fun getPlaceByPosition(position: String): PlaceDTO? {
+    suspend fun getPlaceById(id: String): PlaceDTO? {
         return try {
-            placeService.getPlaceByCaption(position)
+            placeService.getPlaceById(id)
         } catch (e: Exception) {
             null
         }

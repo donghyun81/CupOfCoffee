@@ -17,6 +17,7 @@ import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.overlay.Overlay
 
 const val INIT_ZOOM_LEVEL = 17.0
 
@@ -74,7 +75,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun initMarkers(naverMap: NaverMap) {
         viewModel.marker.observe(viewLifecycleOwner) { markers ->
-            markers?.map { it.map = naverMap }
+            markers?.map { marker ->
+                marker.map = naverMap
+                marker.setOnClickListener {
+                    val action =
+                        HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(marker.tag.toString())
+                    findNavController().navigate(action)
+                    true
+                }
+            }
         }
     }
 
