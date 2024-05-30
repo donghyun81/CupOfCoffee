@@ -77,4 +77,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
 
     implementation("com.navercorp.nid:oauth:5.9.1")
+
+    implementation("androidx.core:core-splashscreen:1.0.0-beta02")
+
 }
