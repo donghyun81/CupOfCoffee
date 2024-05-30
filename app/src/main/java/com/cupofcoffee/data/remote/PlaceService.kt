@@ -1,10 +1,12 @@
 package com.cupofcoffee.data.remote
 
+import kotlinx.coroutines.flow.Flow
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 private const val PlACE_PATH = "places"
 
