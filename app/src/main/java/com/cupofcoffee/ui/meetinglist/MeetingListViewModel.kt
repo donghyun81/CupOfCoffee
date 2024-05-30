@@ -34,22 +34,20 @@ class MeetingListViewModel(
     val place: LiveData<PlaceEntry> = _place
 
     init {
-        initMeetings()
-        initPlace()
-    }
-
-    private fun initPlace() {
         viewModelScope.launch {
-            _place.value = placeRepositoryImpl.getPlaceById(placeId)?.toPlaceEntry(placeId)
+            initPlace()
+            initMeetings()
         }
     }
 
-    private fun initMeetings() {
-        viewModelScope.launch {
-            val meetingIds = placeRepositoryImpl.getPlaceById(placeId)?.meetingIds?.keys
-            _meetings.value = meetingIds?.map { meetingId ->
-                meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
-            }
+    private suspend fun initPlace() {
+        _place.value = placeRepositoryImpl.getPlaceById(placeId)?.toPlaceEntry(placeId)
+    }
+
+    private suspend fun initMeetings() {
+        val meetingIds = placeRepositoryImpl.getPlaceById(placeId)?.meetingIds?.keys
+        _meetings.value = meetingIds?.map { meetingId ->
+            meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
         }
     }
 
