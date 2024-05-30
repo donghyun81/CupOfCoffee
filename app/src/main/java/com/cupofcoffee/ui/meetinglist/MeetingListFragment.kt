@@ -1,25 +1,14 @@
 package com.cupofcoffee.ui.meetinglist
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Observer
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.databinding.FragmentMeetingListBinding
 import com.cupofcoffee.ui.model.MeetingEntry
-import com.cupofcoffee.ui.model.MeetingModel
-import com.cupofcoffee.ui.model.toMeetingDTO
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 class MeetingListFragment : BottomSheetDialogFragment() {
 

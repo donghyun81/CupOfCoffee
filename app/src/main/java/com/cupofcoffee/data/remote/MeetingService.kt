@@ -1,12 +1,9 @@
 package com.cupofcoffee.data.remote
 
-import retrofit2.Call
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
-import retrofit2.http.PUT
 import retrofit2.http.Path
 
 private const val MEETING_PATH = "meetings"

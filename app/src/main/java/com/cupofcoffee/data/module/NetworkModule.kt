@@ -15,6 +15,7 @@ private val json = Json {
     coerceInputValues = true
     explicitNulls = false
 }
+
 object NetworkModule {
 
     private const val BASE_URL = BuildConfig.BASE_URL

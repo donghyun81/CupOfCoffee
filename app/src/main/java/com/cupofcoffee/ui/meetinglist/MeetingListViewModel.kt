@@ -15,7 +15,6 @@ import com.cupofcoffee.data.remote.toPlaceEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
-import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.toMeetingDTO
 import kotlinx.coroutines.launch
