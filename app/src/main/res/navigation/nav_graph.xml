@@ -12,6 +12,9 @@
         <action
             android:id="@+id/action_homeFragment_to_saveMeetingFragment"
             app:destination="@id/saveMeetingFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_meetingListFragment"
+            app:destination="@id/meetingListFragment" />
     </fragment>
 
     <dialog
@@ -30,5 +33,14 @@
         android:id="@+id/userFragment"
         android:name="com.cupofcoffee.ui.user.UserFragment"
         android:label="user_fragment" />
+
+    <dialog
+        android:id="@+id/meetingListFragment"
+        android:name="com.cupofcoffee.ui.meetinglist.MeetingListFragment"
+        android:label="MeetingListFragment" >
+        <argument
+            android:name="placeId"
+            app:argType="string" />
+    </dialog>
 
 </navigation>

@@ -1,13 +1,11 @@
 package com.cupofcoffee.ui.home
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
 import com.cupofcoffee.databinding.FragmentHomeBinding
@@ -74,8 +72,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun initMarkers(naverMap: NaverMap) {
         viewModel.marker.observe(viewLifecycleOwner) { markers ->
-            Log.d("12345",markers.toString())
-            markers?.map { it.map = naverMap }
+            markers?.map { marker ->
+                marker.map = naverMap
+                marker.setOnClickListener {
+                    val action =
+                        HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(marker.tag.toString())
+                    findNavController().navigate(action)
+                    true
+                }
+            }
         }
     }
 
@@ -98,5 +103,4 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             )
         findNavController().navigate(action)
     }
-
 }
