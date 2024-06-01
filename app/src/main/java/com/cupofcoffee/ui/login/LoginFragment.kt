@@ -6,10 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.BuildConfig
 import com.cupofcoffee.databinding.FragmentLoginBinding
 import com.cupofcoffee.ui.model.NaverUser
+import com.cupofcoffee.ui.model.toUserEntry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -18,6 +21,7 @@ import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
+import kotlinx.coroutines.launch
 
 private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
 private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
@@ -27,6 +31,7 @@ class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: LoginViewModel by viewModels { LoginViewModel.Factory }
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +78,7 @@ class LoginFragment : Fragment() {
                 val naverUser = result.profile?.run {
                     NaverUser(
                         this.id!!,
-                        email!!,
+                        name ?: "익명",
                         nickname,
                         profileImage
                     )
@@ -96,6 +101,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         moveToHome()
                     } else {
+                        Log.w("12345", task.exception)
                         createAccount(naverUser)
                     }
                 }
@@ -104,10 +110,14 @@ class LoginFragment : Fragment() {
 
     private fun createAccount(naverUser: NaverUser) {
         with(naverUser) {
-            auth.createUserWithEmailAndPassword(id.toNaverEmail(), email)
+            auth.createUserWithEmailAndPassword(id.toNaverEmail(), id)
                 .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        moveToHome()
+                    require(task.isSuccessful) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            val userEntry = naverUser.toUserEntry()
+                            viewModel.insertUser(userEntry)
+                            moveToHome()
+                        }
                     }
                 }
         }
