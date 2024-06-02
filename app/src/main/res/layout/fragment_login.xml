@@ -3,14 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     android:background="@color/brown">
 
-    <com.navercorp.nid.oauth.view.NidOAuthLoginButton
+    <ImageView
+        android:id="@+id/app_logo"
+        android:src="@mipmap/cup_of_coffee"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
         android:id="@+id/btn_naverLogin"
         android:layout_width="0dp"
-        android:layout_height="160dp"
-        android:layout_margin="16dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="50dp"
+        android:backgroundTint="@color/green"
+        android:text="@string/naver_login"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/img_naver_logo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:src="@drawable/naver_logo"
+        app:layout_constraintBottom_toBottomOf="@id/btn_naverLogin"
+        app:layout_constraintStart_toStartOf="@id/btn_naverLogin"
+        app:layout_constraintTop_toTopOf="@id/btn_naverLogin" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

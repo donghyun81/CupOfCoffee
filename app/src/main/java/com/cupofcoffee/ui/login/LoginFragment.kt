@@ -17,15 +17,19 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
+import com.navercorp.nid.oauth.NidOAuthBehavior
 import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
 private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
 private const val APP_NAME = "CupOfCoffee"
+private const val EMPTY_NAME = "익명"
+private const val NAVER_ID_TO_EMAIL_COUNT = 7
 
 class LoginFragment : Fragment() {
 
@@ -59,29 +63,33 @@ class LoginFragment : Fragment() {
     }
 
     private fun setNaverLogin() {
-        binding.btnNaverLogin.setOAuthLogin(object : OAuthLoginCallback {
-            override fun onSuccess() {
-                loginNaver()
-            }
+        binding.btnNaverLogin.setOnClickListener {
+            NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
+            NaverIdLoginSDK.authenticate(requireContext(), object : OAuthLoginCallback {
+                override fun onSuccess() {
+                    loginNaver()
+                }
 
-            override fun onFailure(httpStatus: Int, message: String) {
-            }
+                override fun onFailure(httpStatus: Int, message: String) {
+                }
 
-            override fun onError(errorCode: Int, message: String) {
-            }
-        })
+                override fun onError(errorCode: Int, message: String) {
+                }
+            })
+        }
     }
 
-    fun loginNaver() {
+    private fun loginNaver() {
         NidOAuthLogin().callProfileApi(object : NidProfileCallback<NidProfileResponse> {
             override fun onSuccess(result: NidProfileResponse) {
                 val naverUser = result.profile?.run {
-                    NaverUser(
+                    val naverUser = NaverUser(
                         this.id!!,
-                        name ?: "익명",
+                        name ?: EMPTY_NAME,
                         nickname,
                         profileImage
                     )
+                    naverUser
                 } ?: return
                 loginAccount(naverUser)
             }
@@ -94,14 +102,13 @@ class LoginFragment : Fragment() {
         })
     }
 
-    fun loginAccount(naverUser: NaverUser) {
+    private fun loginAccount(naverUser: NaverUser) {
         with(naverUser) {
             auth.signInWithEmailAndPassword(id.toNaverEmail(), id)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         moveToHome()
                     } else {
-                        Log.w("12345", task.exception)
                         createAccount(naverUser)
                     }
                 }
@@ -128,5 +135,5 @@ class LoginFragment : Fragment() {
         findNavController().navigate(action)
     }
 
-    private fun String.toNaverEmail() = "${this.take(7)}@naver.com"
+    private fun String.toNaverEmail() = "${this.take(NAVER_ID_TO_EMAIL_COUNT)}@naver.com"
 }
