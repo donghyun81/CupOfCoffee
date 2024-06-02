@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.meetinglist
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -7,6 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cupofcoffee.databinding.MeetingListItemBinding
 import com.cupofcoffee.ui.model.MeetingEntry
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.app
 
 class MeetingListAdapter(
     private val meetingClickListener: MeetingClickListener
@@ -24,12 +28,18 @@ class MeetingListAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(meetingEntry: MeetingEntry, meetingClickListener: MeetingClickListener) {
+            val uid = Firebase.auth.uid
             with(binding) {
                 tvCaption.text = meetingEntry.meetingModel.caption
                 tvTime.text = meetingEntry.meetingModel.time.toString()
                 tvContent.text = meetingEntry.meetingModel.content
-                btnApply.setOnClickListener {
-                    meetingClickListener.onClick(meetingEntry)
+                val hasUserId = meetingEntry.meetingModel.peopleId.contains(uid).not()
+                btnApply.isEnabled = hasUserId
+                if (hasUserId) {
+                    btnApply.setOnClickListener {
+                        meetingClickListener.onClick(meetingEntry)
+                    }
+                    btnApply.isEnabled = false
                 }
             }
         }

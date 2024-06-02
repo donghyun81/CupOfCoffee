@@ -10,6 +10,9 @@ import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import okhttp3.internal.toLongOrDefault
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -78,9 +81,9 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
                     caption = viewModel.args.placeName,
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,
-                    managerId = "임시",
-                    peopleId = mutableListOf("친구 1", "친구 2"),
-                    time = tvTime.text.toString().toLongOrDefault(0),
+                    managerId = Firebase.auth.uid!!,
+                    peopleId = mutableListOf(),
+                    time = tvTime.text.toString().toLong(),
                     createDate = Date().time,
                     content = tvContent.text.toString()
                 )

@@ -17,6 +17,8 @@ import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.toMeetingDTO
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class MeetingListViewModel(
@@ -51,14 +53,12 @@ class MeetingListViewModel(
         }
     }
 
-    fun applyMeeting(meetingEntry: MeetingEntry) {
-        viewModelScope.launch {
-            with(meetingEntry) {
-                meetingRepositoryImpl.addPeopleId(
-                    id,
-                    meetingModel.apply { peopleId.add("참가 유저") }.toMeetingDTO()
-                )
-            }
+    suspend fun applyMeeting(meetingEntry: MeetingEntry) {
+        with(meetingEntry) {
+            meetingRepositoryImpl.addPeopleId(
+                id,
+                meetingModel.apply { peopleId.add(Firebase.auth.uid!!) }.toMeetingDTO()
+            )
         }
     }
 
