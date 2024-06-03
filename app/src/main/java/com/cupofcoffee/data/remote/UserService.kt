@@ -13,5 +13,5 @@ interface UserService {
     suspend fun insert(@Path("id") id: String, @Body userDTO: UserDTO): RemoteIdWrapper
 
     @GET("$USER_PATH/{id}.json")
-    suspend fun getUserById(id: String)
+    suspend fun getUserById(@Path("id") id: String): UserDTO
 }
