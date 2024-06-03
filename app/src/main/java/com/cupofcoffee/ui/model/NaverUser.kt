@@ -9,4 +9,4 @@ data class NaverUser(
 
 fun NaverUser.toUserModel() = UserModel(name, nickname, profileImageWebUrl)
 
-fun NaverUser.toUserEntry() = UserEntry(id, toUserModel())
+fun NaverUser.toUserEntry(id: String) = UserEntry(id, toUserModel())

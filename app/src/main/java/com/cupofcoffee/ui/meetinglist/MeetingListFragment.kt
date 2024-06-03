@@ -48,15 +48,16 @@ class MeetingListFragment : BottomSheetDialogFragment() {
     private fun initAdapter() {
         adapter = MeetingListAdapter(applyOnclick())
         binding.rvMeetings.adapter = adapter
-        viewModel.meetings.observe(viewLifecycleOwner) { meetingEntries ->
-            adapter.submitList(meetingEntries)
+        viewModel.meetings.observe(viewLifecycleOwner) { meetingListEntry ->
+            adapter.submitList(meetingListEntry)
         }
     }
 
     private fun applyOnclick() = object : MeetingClickListener {
-        override fun onClick(meetingEntry: MeetingEntry) {
+
+        override fun onClick(meetingListEntry: MeetingListEntry) {
             viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.applyMeeting(meetingEntry)
+                viewModel.applyMeeting(meetingListEntry)
             }
         }
     }

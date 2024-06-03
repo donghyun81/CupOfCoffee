@@ -122,7 +122,7 @@ class LoginFragment : Fragment() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         viewLifecycleOwner.lifecycleScope.launch {
-                            val userEntry = naverUser.toUserEntry()
+                            val userEntry = naverUser.toUserEntry(Firebase.auth.uid!!)
                             viewModel.insertUser(userEntry)
                             moveToHome()
                         }
