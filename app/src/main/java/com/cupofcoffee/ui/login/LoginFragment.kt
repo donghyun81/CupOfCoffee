@@ -30,6 +30,7 @@ private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SEC
 private const val APP_NAME = "CupOfCoffee"
 private const val EMPTY_NAME = "익명"
 private const val NAVER_ID_TO_EMAIL_COUNT = 7
+private const val CREATE_USER_ERROR_MESSAGE = "회원 가입 오류"
 
 class LoginFragment : Fragment() {
 
@@ -119,13 +120,13 @@ class LoginFragment : Fragment() {
         with(naverUser) {
             auth.createUserWithEmailAndPassword(id.toNaverEmail(), id)
                 .addOnCompleteListener { task ->
-                    require(task.isSuccessful) {
+                    if (task.isSuccessful) {
                         viewLifecycleOwner.lifecycleScope.launch {
                             val userEntry = naverUser.toUserEntry()
                             viewModel.insertUser(userEntry)
                             moveToHome()
                         }
-                    }
+                    } else require(task.isSuccessful) { CREATE_USER_ERROR_MESSAGE }
                 }
         }
     }

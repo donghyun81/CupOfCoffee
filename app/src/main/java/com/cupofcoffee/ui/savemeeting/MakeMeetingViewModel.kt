@@ -18,13 +18,13 @@ import kotlinx.coroutines.launch
 
 const val POSITION_COUNT = 10
 
-class SaveMeetingViewModel(
+class MakeMeetingViewModel(
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val placeRepositoryImpl: PlaceRepositoryImpl,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val args = SaveMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
     fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
         viewModelScope.launch {
@@ -41,7 +41,8 @@ class SaveMeetingViewModel(
     }
 
     private fun convertPlaceId(lat: Double, lng: Double) =
-        (lat.toString().take(POSITION_COUNT) + lng.toString().take(POSITION_COUNT)).filter { it != '.' }
+        (lat.toString().take(POSITION_COUNT) + lng.toString()
+            .take(POSITION_COUNT)).filter { it != '.' }
 
     private suspend fun createPlace(placeId: String, meetingId: String, placeModel: PlaceModel) {
         val placeDTO =
@@ -50,14 +51,15 @@ class SaveMeetingViewModel(
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String, prvPlaceDTO: PlaceDTO) {
-        val placeDTO = prvPlaceDTO.run { PlaceDTO(caption, lat, lng, meetingIds.plus(meetingId to true)) }
+        val placeDTO =
+            prvPlaceDTO.run { PlaceDTO(caption, lat, lng, meetingIds.plus(meetingId to true)) }
         placeRepositoryImpl.insert(placeId, placeDTO)
     }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                SaveMeetingViewModel(
+                MakeMeetingViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     placeRepositoryImpl = CupOfCoffeeApplication.placeRepository

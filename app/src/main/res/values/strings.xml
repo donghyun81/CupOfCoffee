@@ -3,8 +3,10 @@
     <string name="save_title">모임 등록</string>
     <string name="save_cancle">취소</string>
     <string name="save_create">생성</string>
+    <string name="date_label">날짜</string>
     <string name="time_label">시간</string>
     <string name="place_label">장소</string>
     <string name="content_hint">모임 상세</string>
     <string name="naver_login">네이버로 시작하기</string>
+    <string name="make_meeting">모임 만들기</string>
 </resources>

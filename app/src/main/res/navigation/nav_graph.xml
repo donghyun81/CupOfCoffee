@@ -11,16 +11,16 @@
         tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_homeFragment_to_saveMeetingFragment"
-            app:destination="@id/saveMeetingFragment" />
+            app:destination="@id/makeMeetingFragment" />
         <action
             android:id="@+id/action_homeFragment_to_meetingListFragment"
             app:destination="@id/meetingListFragment" />
     </fragment>
 
     <dialog
-        android:id="@+id/saveMeetingFragment"
-        android:name="com.cupofcoffee.ui.savemeeting.SaveMeetingFragment"
-        android:label="SaveMeetingFragment">
+        android:id="@+id/makeMeetingFragment"
+        android:name="com.cupofcoffee.ui.savemeeting.MakeMeetingFragment"
+        android:label="MakeMeetingFragment">
         <argument
             android:name="placeName"
             app:argType="string" />

@@ -23,13 +23,21 @@ class PlaceDataSource(
     fun getPlaces(): Flow<List<PlaceEntry>> {
         return flow {
             while (true) {
-                val latestNews = placeService.getPlaces().map { entry ->
-                    val (id, place) = entry
-                    place.toPlaceEntry(id)
-                }
-                emit(latestNews)
+                emit(tryGetPlaces())
                 delay(refreshIntervalMs)
             }
+        }
+    }
+
+    private suspend fun tryGetPlaces(): List<PlaceEntry> {
+        return try {
+            val latestNews = placeService.getPlaces().map { entry ->
+                val (id, place) = entry
+                place.toPlaceEntry(id)
+            }
+            latestNews
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 }
