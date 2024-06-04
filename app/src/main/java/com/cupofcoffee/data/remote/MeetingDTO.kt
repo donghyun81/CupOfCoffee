@@ -10,8 +10,9 @@ data class MeetingDTO(
     val lat: Double,
     val lng: Double,
     val managerId: String,
-    val peopleId: MutableList<String>,
-    val time: Long,
+    val peopleId: MutableList<String> = mutableListOf(),
+    val date: String,
+    val time: String,
     val createDate: Long,
     val content: String
 )
@@ -19,5 +20,5 @@ data class MeetingDTO(
 fun MeetingDTO.toMeetingEntry(id: String) =
     MeetingEntry(
         id,
-        MeetingModel(caption, lat, lng, managerId, peopleId, time, createDate, content)
+        MeetingModel(caption, lat, lng, managerId, peopleId, date, time, createDate, content)
     )

@@ -6,31 +6,36 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import com.cupofcoffee.databinding.FragmentSaveMeetingBinding
+import com.cupofcoffee.databinding.FragmentMakeMeetingBinding
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.firebase.auth.auth
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import okhttp3.internal.toLongOrDefault
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
-class SaveMeetingFragment : BottomSheetDialogFragment() {
+private const val MEETING_DATE_PICKER_TITLE = "모임 날짜 선택"
+private const val MEETING_DATE_PICKER_TAG = "meeting_date"
+private const val MEETING_DATE_FORMAT = "yyyy-MM-dd"
+private const val MEETING_TIME_FORMAT = "HH:mm"
 
-    private var _binding: FragmentSaveMeetingBinding? = null
+class MakeMeetingFragment : BottomSheetDialogFragment() {
+
+    private var _binding: FragmentMakeMeetingBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: SaveMeetingViewModel by viewModels { SaveMeetingViewModel.Factory }
+    private val viewModel: MakeMeetingViewModel by viewModels { MakeMeetingViewModel.Factory }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentSaveMeetingBinding.inflate(inflater)
+        _binding = FragmentMakeMeetingBinding.inflate(inflater)
         return binding.root
     }
 
@@ -39,6 +44,7 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
         setPlace()
         setMeetingTime()
         setSaveButton()
+        setMeetingDate()
     }
 
     override fun onDestroy() {
@@ -50,19 +56,48 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
         binding.tvPlace.text = viewModel.args.placeName
     }
 
+    private fun setMeetingDate() {
+        val calendar = Calendar.getInstance()
+        binding.tvDate.text = SimpleDateFormat("yyyy-MM-dd").format(calendar.time)
+        binding.tvDate.setOnClickListener {
+            showMeetingDatePicker()
+        }
+    }
+
+    private fun showMeetingDatePicker() {
+        val datePicker = MaterialDatePicker.Builder.datePicker().setTitleText(
+            MEETING_DATE_PICKER_TITLE
+        )
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build()
+        datePicker.show(parentFragmentManager, MEETING_DATE_PICKER_TAG)
+        datePicker.addOnPositiveButtonClickListener { selectedDateInMillis ->
+            binding.tvDate.text = selectedDateInMillis.toDateFormat()
+        }
+    }
+
+    private fun Long.toDateFormat(): String {
+        val date = Date(this)
+        val format = SimpleDateFormat(MEETING_DATE_FORMAT, Locale.getDefault())
+        return format.format(date)
+    }
+
     private fun setMeetingTime() {
         val calendar = Calendar.getInstance()
-        binding.tvTime.text = SimpleDateFormat("HH:mm").format(calendar.time)
+        binding.tvTime.text = calendar.toCurrentTime()
         binding.tvTime.setOnClickListener {
             showMeetingTimePicker(calendar)
         }
     }
 
+    private fun Calendar.toCurrentTime(): String =
+        SimpleDateFormat(MEETING_TIME_FORMAT).format(this.time)
+
+
     private fun showMeetingTimePicker(calendar: Calendar) {
         val timeSetListener = TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
-            binding.tvTime.text = SimpleDateFormat("HH:mm").format(calendar.time)
+            binding.tvTime.text = calendar.toCurrentTime()
         }
         TimePickerDialog(
             requireContext(),
@@ -83,7 +118,8 @@ class SaveMeetingFragment : BottomSheetDialogFragment() {
                     lng = viewModel.args.placePosition.longitude,
                     managerId = Firebase.auth.uid!!,
                     peopleId = mutableListOf(),
-                    time = tvTime.text.toString().toLong(),
+                    date = tvDate.text.toString(),
+                    time = tvTime.text.toString(),
                     createDate = Date().time,
                     content = tvContent.text.toString()
                 )
