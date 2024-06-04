@@ -1,8 +1,6 @@
 package com.cupofcoffee.ui.meetinglist
 
-import com.cupofcoffee.ui.model.MeetingEntry
-
 interface MeetingClickListener {
 
-    fun onClick(meetingEntry: MeetingEntry)
+    fun onClick(meetingListEntry: MeetingListEntry)
 }

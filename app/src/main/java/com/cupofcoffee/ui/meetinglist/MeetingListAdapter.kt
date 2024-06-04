@@ -6,13 +6,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cupofcoffee.databinding.MeetingListItemBinding
-import com.cupofcoffee.ui.model.MeetingEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 class MeetingListAdapter(
     private val meetingClickListener: MeetingClickListener
-) : ListAdapter<MeetingEntry, MeetingListAdapter.ViewHolder>(diffUtil) {
+) : ListAdapter<MeetingListEntry, MeetingListAdapter.ViewHolder>(diffUtil) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
@@ -24,21 +23,29 @@ class MeetingListAdapter(
 
     class ViewHolder(private val binding: MeetingListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        private val peopleRecyclerView: RecyclerView = binding.rvPeople
 
-        fun bind(meetingEntry: MeetingEntry, meetingClickListener: MeetingClickListener) {
+        fun bind(
+            meetingListEntry: MeetingListEntry,
+            meetingClickListener: MeetingClickListener
+        ) {
             val uid = Firebase.auth.uid
+            val adapter = PeopleListAdapter()
+            val meetingModel = meetingListEntry.meetingListModel
             with(binding) {
-                tvContent.text = meetingEntry.meetingModel.content
-                tvDate.text = meetingEntry.meetingModel.date
-                tvTime.text = meetingEntry.meetingModel.time
-                val hasUserId = meetingEntry.meetingModel.peopleId.contains(uid).not()
-                btnApply.isEnabled = hasUserId
-                if (hasUserId) {
+                tvContent.text = meetingModel.content
+                tvDate.text = meetingModel.date
+                tvTime.text = meetingModel.time
+                rvPeople.adapter = adapter
+                val hasUserId = meetingModel.people.filter { it.id == uid }
+                btnApply.isEnabled = hasUserId.isEmpty()
+                if (hasUserId.isEmpty()) {
                     btnApply.setOnClickListener {
-                        meetingClickListener.onClick(meetingEntry)
+                        meetingClickListener.onClick(meetingListEntry)
                     }
                     btnApply.isEnabled = false
                 }
+                adapter.submitList(meetingModel.people)
             }
         }
 
@@ -54,12 +61,18 @@ class MeetingListAdapter(
     }
 
     companion object {
-        val diffUtil = object : DiffUtil.ItemCallback<MeetingEntry>() {
-            override fun areItemsTheSame(oldItem: MeetingEntry, newItem: MeetingEntry): Boolean {
-                return oldItem.meetingModel.createDate == newItem.meetingModel.createDate
+        val diffUtil = object : DiffUtil.ItemCallback<MeetingListEntry>() {
+            override fun areItemsTheSame(
+                oldItem: MeetingListEntry,
+                newItem: MeetingListEntry
+            ): Boolean {
+                return oldItem.id == newItem.id
             }
 
-            override fun areContentsTheSame(oldItem: MeetingEntry, newItem: MeetingEntry): Boolean {
+            override fun areContentsTheSame(
+                oldItem: MeetingListEntry,
+                newItem: MeetingListEntry
+            ): Boolean {
                 return oldItem == newItem
             }
         }

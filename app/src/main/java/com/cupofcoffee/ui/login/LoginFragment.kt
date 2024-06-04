@@ -1,7 +1,6 @@
 package com.cupofcoffee.ui.login
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +22,6 @@ import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
 private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
@@ -122,7 +120,7 @@ class LoginFragment : Fragment() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         viewLifecycleOwner.lifecycleScope.launch {
-                            val userEntry = naverUser.toUserEntry()
+                            val userEntry = naverUser.toUserEntry(Firebase.auth.uid!!)
                             viewModel.insertUser(userEntry)
                             moveToHome()
                         }

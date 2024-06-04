@@ -12,6 +12,4 @@ data class PlaceDTO(
     val meetingIds: Map<String, Boolean> = emptyMap()
 )
 
-fun PlaceDTO.toPlaceModel() = PlaceModel(caption, lat, lng, meetingIds)
-
 fun PlaceDTO.toPlaceEntry(id: String) = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))

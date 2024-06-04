@@ -8,11 +8,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.databinding.FragmentMeetingListBinding
-import com.cupofcoffee.ui.model.MeetingEntry
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class MeetingListFragment : BottomSheetDialogFragment() {
@@ -48,15 +44,16 @@ class MeetingListFragment : BottomSheetDialogFragment() {
     private fun initAdapter() {
         adapter = MeetingListAdapter(applyOnclick())
         binding.rvMeetings.adapter = adapter
-        viewModel.meetings.observe(viewLifecycleOwner) { meetingEntries ->
-            adapter.submitList(meetingEntries)
+        viewModel.meetings.observe(viewLifecycleOwner) { meetingListEntry ->
+            adapter.submitList(meetingListEntry)
         }
     }
 
     private fun applyOnclick() = object : MeetingClickListener {
-        override fun onClick(meetingEntry: MeetingEntry) {
+
+        override fun onClick(meetingListEntry: MeetingListEntry) {
             viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.applyMeeting(meetingEntry)
+                viewModel.applyMeeting(meetingListEntry)
             }
         }
     }
