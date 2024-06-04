@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.meetinglist
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -10,7 +9,8 @@ import com.bumptech.glide.Glide
 import com.cupofcoffee.databinding.MeetingPeopleItemBinding
 import com.cupofcoffee.ui.model.UserEntry
 
-class PeopleListAdapter : ListAdapter<UserEntry, PeopleListAdapter.ViewHolder>(PeopleListAdapter.diffUtil) {
+class PeopleListAdapter :
+    ListAdapter<UserEntry, PeopleListAdapter.ViewHolder>(diffUtil) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
@@ -24,10 +24,10 @@ class PeopleListAdapter : ListAdapter<UserEntry, PeopleListAdapter.ViewHolder>(P
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(userEntry: UserEntry) {
-            Log.d("12345","이게 된다고?")
             val profileUrl = userEntry.userModel.profileImageWebUrl
             Glide.with(binding.root.context).load(profileUrl).centerCrop()
                 .into(binding.personProfile)
+            binding.nickname.text = userEntry.userModel.nickname
         }
 
         companion object {

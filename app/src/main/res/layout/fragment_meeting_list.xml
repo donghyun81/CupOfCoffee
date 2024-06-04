@@ -8,7 +8,7 @@
         android:id="@+id/tv_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="32dp"
+        android:textSize="24dp"
         app:layout_constraintEnd_toStartOf="@id/ib_cancel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
