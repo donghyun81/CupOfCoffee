@@ -3,6 +3,60 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_profile"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="40dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
+
+    <TextView
+        android:id="@+id/tv_nickName"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_margin="5dp"
+        app:layout_constraintStart_toEndOf="@id/iv_profile"
+        app:layout_constraintTop_toTopOf="@id/iv_profile" />
+
+    <TextView
+        android:id="@+id/tv_attended_meeting_label"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_margin="5dp"
+        android:text="@string/attended_meeting_count"
+        app:layout_constraintStart_toEndOf="@id/iv_profile"
+        app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+
+    <TextView
+        android:id="@+id/tv_attended_meeting_count"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_margin="5dp"
+        app:layout_constraintStart_toEndOf="@id/tv_attended_meeting_label"
+        app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+
+    <TextView
+        android:id="@+id/tv_made_meeting_label"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_margin="5dp"
+        android:text="@string/made_meeting_count"
+        app:layout_constraintStart_toEndOf="@id/iv_profile"
+        app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_label" />
+
+    <TextView
+        android:id="@+id/tv_made_meeting_count"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_margin="5dp"
+        app:layout_constraintStart_toEndOf="@id/tv_made_meeting_label"
+        app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_count" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
