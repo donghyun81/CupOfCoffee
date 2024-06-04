@@ -1,13 +1,11 @@
 package com.cupofcoffee.ui.meetinglist
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cupofcoffee.databinding.MeetingListItemBinding
-import com.cupofcoffee.ui.model.MeetingEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -47,7 +45,6 @@ class MeetingListAdapter(
                     }
                     btnApply.isEnabled = false
                 }
-                Log.d("12345",meetingModel.people.toString())
                 adapter.submitList(meetingModel.people)
             }
         }

@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.meetinglist
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -46,7 +45,7 @@ class MeetingListViewModel(
         }
     }
 
-    suspend fun initPlace() {
+    private suspend fun initPlace() {
         _place.value = placeRepositoryImpl.getPlaceById(placeId)?.toPlaceEntry(placeId)
     }
 
@@ -56,7 +55,6 @@ class MeetingListViewModel(
             meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
         }
         val meetingListModel = meetings?.map { meetingEntry ->
-            Log.d("123456",meetingEntry.meetingModel.peopleId.toString())
             val users =
                 meetingEntry.meetingModel.peopleId.map { id ->
                     userRepositoryImpl.getUserById(id).toUserEntry(id)

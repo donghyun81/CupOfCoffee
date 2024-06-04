@@ -1,7 +1,6 @@
 package com.cupofcoffee.ui.model
 
 import com.cupofcoffee.ui.meetinglist.MeetingListEntry
-import com.cupofcoffee.ui.meetinglist.MeetingListModel
 
 data class MeetingEntry(
     val id: String,

@@ -1,10 +1,7 @@
 package com.cupofcoffee.data.remote
 
-import com.cupofcoffee.ui.meetinglist.MeetingListModel
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingModel
-import com.cupofcoffee.ui.model.UserEntry
-import com.cupofcoffee.ui.model.UserModel
 import kotlinx.serialization.Serializable
 
 @Serializable
