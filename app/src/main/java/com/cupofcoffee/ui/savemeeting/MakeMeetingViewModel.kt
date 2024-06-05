@@ -16,7 +16,6 @@ import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
 import com.cupofcoffee.ui.model.UserEntry
-import com.cupofcoffee.ui.model.UserModel
 import com.cupofcoffee.ui.model.toMeetingDTO
 import com.cupofcoffee.ui.model.toUserDTO
 import com.google.firebase.auth.ktx.auth
@@ -44,9 +43,11 @@ class MakeMeetingViewModel(
 
     private suspend fun updateUserMeeting(meetingId: String) {
         val uid = Firebase.auth.uid ?: return
-        val user = userRepositoryImpl.getUserById(uid).toUserEntry(uid)
-        addUserMadeMeeting(user, meetingId)
-        addUserAttendedMeeting(user, meetingId)
+        userRepositoryImpl.getUserByIdInFlow(uid).collect { userDTO ->
+            val user = userDTO.toUserEntry(uid)
+            addUserMadeMeeting(user, meetingId)
+            addUserAttendedMeeting(user, meetingId)
+        }
     }
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {

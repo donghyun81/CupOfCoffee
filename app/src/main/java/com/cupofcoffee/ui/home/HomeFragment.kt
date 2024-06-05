@@ -16,7 +16,7 @@ import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
 
-const val INIT_ZOOM_LEVEL = 17.0
+private const val INIT_ZOOM_LEVEL = 17.0
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 

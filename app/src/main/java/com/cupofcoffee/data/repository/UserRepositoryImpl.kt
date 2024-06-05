@@ -8,6 +8,8 @@ class UserRepositoryImpl(private val userDataSource: UserDataSource) {
     suspend fun insert(id: String, userDTO: UserDTO) = userDataSource.insert(id, userDTO)
 
 
+    fun getUserByIdInFlow(id: String) = userDataSource.getUserByIdInFlow(id)
+
     suspend fun getUserById(id: String) = userDataSource.getUserById(id)
 
     suspend fun update(id: String, userDTO: UserDTO) =
