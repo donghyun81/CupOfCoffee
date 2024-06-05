@@ -9,4 +9,8 @@ class UserRepositoryImpl(private val userDataSource: UserDataSource) {
 
 
     suspend fun getUserById(id: String) = userDataSource.getUserById(id)
+
+    suspend fun update(id: String, userDTO: UserDTO) =
+        userDataSource.update(id, userDTO)
+
 }

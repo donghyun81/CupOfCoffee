@@ -2,6 +2,7 @@ package com.cupofcoffee.data.remote
 
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -14,4 +15,10 @@ interface UserService {
 
     @GET("$USER_PATH/{id}.json")
     suspend fun getUserById(@Path("id") id: String): UserDTO
+
+    @PATCH("$USER_PATH/{id}.json")
+    suspend fun update(
+        @Path("id") id: String,
+        @Body userDTO: UserDTO
+    )
 }

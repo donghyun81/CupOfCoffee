@@ -6,8 +6,8 @@ data class UserModel(
     val name: String? = null,
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
-    val madeMeetingIds: List<String> = emptyList(),
-    val attendedMeetingIds: List<String> = emptyList()
+    val madeMeetingIds: MutableList<String> = mutableListOf(),
+    val attendedMeetingIds: MutableList<String> = mutableListOf()
 )
 
 fun UserModel.toUserDTO() =
