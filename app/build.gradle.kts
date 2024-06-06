@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("androidx.navigation.safeargs")
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
