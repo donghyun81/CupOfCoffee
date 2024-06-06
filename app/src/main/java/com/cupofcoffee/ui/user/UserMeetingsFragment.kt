@@ -6,15 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.cupofcoffee.databinding.FragmentUserMeetingsBinding
+import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
+import kotlinx.coroutines.launch
 
 class UserMeetingsFragment : Fragment() {
 
     private var _binding: FragmentUserMeetingsBinding? = null
     private val binding get() = _binding!!
 
-    private val adapter = UserMeetingsAdapter()
+    private val adapter = UserMeetingsAdapter(userMeetingDeleteClick())
     private val viewModel: UserMeetingsViewModel by viewModels { UserMeetingsViewModel.Factory }
 
     override fun onCreateView(
@@ -37,6 +40,14 @@ class UserMeetingsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
+        override fun onClick(meetingEntry: MeetingEntry) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.deleteMeeting(meetingEntry)
+            }
+        }
     }
 
     companion object {

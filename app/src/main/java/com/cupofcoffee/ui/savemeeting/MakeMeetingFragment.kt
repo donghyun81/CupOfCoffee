@@ -119,6 +119,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
                     lng = viewModel.args.placePosition.longitude,
                     managerId = Firebase.auth.uid!!,
                     peopleId = mutableListOf(Firebase.auth.uid!!),
+                    placeId = viewModel.convertPlaceId(),
                     date = tvDate.text.toString(),
                     time = tvTime.text.toString(),
                     createDate = Date().time,

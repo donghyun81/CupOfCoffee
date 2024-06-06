@@ -10,5 +10,9 @@ class PlaceRepositoryImpl(private val placeDataSource: PlaceDataSource) {
 
     suspend fun getPlaceById(position: String) = placeDataSource.getPlaceById(position)
 
+    suspend fun update(id: String, placeDTO: PlaceDTO) = placeDataSource.update(id, placeDTO)
+
+    suspend fun delete(id: String) = placeDataSource.delete(id)
+
     fun getPlaces() = placeDataSource.getPlaces()
 }

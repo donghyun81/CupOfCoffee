@@ -11,4 +11,6 @@ class MeetingRepositoryImpl(private val meetingDataSource: MeetingDataSource) {
 
     suspend fun addPeopleId(id: String, meetingDTO: MeetingDTO) =
         meetingDataSource.addPeopleId(id, meetingDTO)
+
+    suspend fun delete(id: String) = meetingDataSource.delete(id)
 }

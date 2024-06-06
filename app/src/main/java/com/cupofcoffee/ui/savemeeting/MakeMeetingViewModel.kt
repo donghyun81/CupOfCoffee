@@ -17,6 +17,7 @@ import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.toMeetingDTO
+import com.cupofcoffee.ui.model.toPlaceDTO
 import com.cupofcoffee.ui.model.toUserDTO
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -61,26 +62,28 @@ class MakeMeetingViewModel(
     }
 
     private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
-        val placeId = placeModel.run { convertPlaceId(lat, lng) }
+        val placeId = convertPlaceId()
         val prvPlaceDTO = placeRepositoryImpl.getPlaceById(placeId)
         if (prvPlaceDTO != null) updatePlace(placeId, meetingId, prvPlaceDTO)
         else createPlace(placeId, meetingId, placeModel)
     }
 
-    private fun convertPlaceId(lat: Double, lng: Double) =
-        (lat.toString().take(POSITION_COUNT) + lng.toString()
+    fun convertPlaceId(): String {
+        val lat = args.placePosition.latitude
+        val lng = args.placePosition.longitude
+        return (lat.toString().take(POSITION_COUNT) + lng.toString()
             .take(POSITION_COUNT)).filter { it != '.' }
+    }
+
 
     private suspend fun createPlace(placeId: String, meetingId: String, placeModel: PlaceModel) {
-        val placeDTO =
-            placeModel.run { PlaceDTO(caption, lat, lng, meetingIds.plus(meetingId to true)) }
-        placeRepositoryImpl.insert(placeId, placeDTO)
+        placeModel.meetingIds[meetingId] = true
+        placeRepositoryImpl.insert(placeId, placeModel.toPlaceDTO())
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String, prvPlaceDTO: PlaceDTO) {
-        val placeDTO =
-            prvPlaceDTO.run { PlaceDTO(caption, lat, lng, meetingIds.plus(meetingId to true)) }
-        placeRepositoryImpl.insert(placeId, placeDTO)
+        prvPlaceDTO.meetingIds[meetingId] = true
+        placeRepositoryImpl.update(placeId, prvPlaceDTO)
     }
 
     companion object {

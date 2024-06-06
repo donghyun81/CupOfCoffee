@@ -11,8 +11,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.remote.toMeetingEntry
-import com.cupofcoffee.data.remote.toUserModel
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
+import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
@@ -23,7 +23,8 @@ import kotlinx.coroutines.launch
 class UserMeetingsViewModel(
     savedStateHandle: SavedStateHandle,
     private val userRepositoryImpl: UserRepositoryImpl,
-    private val meetingRepositoryImpl: MeetingRepositoryImpl
+    private val meetingRepositoryImpl: MeetingRepositoryImpl,
+    private val placeRepositoryImpl: PlaceRepositoryImpl
 ) : ViewModel() {
 
     private val category = savedStateHandle.get<MeetingsCategory>("category")!!
@@ -39,17 +40,42 @@ class UserMeetingsViewModel(
 
     private suspend fun setMeetings() {
         val uid = Firebase.auth.uid ?: return
-        val user = userRepositoryImpl.getUserById(id = uid).toUserModel()
-        _meetings.value =
-            when (category) {
-                MeetingsCategory.ATTENDED_MEETINGS -> user.attendedMeetingIds.map { id ->
-                    meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
-                }
+        val user = userRepositoryImpl.getUserByIdInFlow(id = uid)
+        user.collect { userDTO ->
+            _meetings.value =
+                when (category) {
+                    MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.map { id ->
+                        meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
+                    }
 
-                MeetingsCategory.MADE_MEETINGS -> user.madeMeetingIds.map { id ->
-                    meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
+                    MeetingsCategory.MADE_MEETINGS -> userDTO.madeMeetingIds.map { id ->
+                        meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
+                    }
                 }
-            }
+        }
+    }
+
+    suspend fun deleteMeeting(meetingEntry: MeetingEntry) {
+        val placeId = meetingEntry.meetingModel.placeId
+        updatePlace(placeId, meetingEntry.id)
+        updateUser(meetingEntry.id)
+        meetingRepositoryImpl.delete(meetingEntry.id)
+    }
+
+    private suspend fun updatePlace(placeId: String, meetingId: String) {
+        val placeDTO = placeRepositoryImpl.getPlaceById(placeId) ?: return
+        placeDTO.meetingIds.remove(meetingId)
+        if (placeDTO.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
+        else placeRepositoryImpl.update(placeId, placeDTO)
+
+    }
+
+    private suspend fun updateUser(meetingId: String) {
+        val uid = Firebase.auth.uid!!
+        val user = userRepositoryImpl.getUserById(uid)
+        user.madeMeetingIds.remove(meetingId)
+        user.attendedMeetingIds.remove(meetingId)
+        userRepositoryImpl.insert(uid, user)
     }
 
     companion object {
@@ -58,7 +84,8 @@ class UserMeetingsViewModel(
                 UserMeetingsViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository
+                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
+                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository
                 )
             }
         }

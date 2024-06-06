@@ -8,4 +8,7 @@ class MeetingDataSource(private val meetingService: MeetingService) {
 
     suspend fun addPeopleId(id: String, meetingDTO: MeetingDTO) =
         meetingService.addPeopleId(id, meetingDTO)
+
+    suspend fun delete(id: String) = meetingService.delete(id)
+
 }
