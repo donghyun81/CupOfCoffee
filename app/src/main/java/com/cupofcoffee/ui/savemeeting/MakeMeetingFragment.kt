@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.databinding.FragmentMakeMeetingBinding
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
@@ -118,6 +119,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
                     lng = viewModel.args.placePosition.longitude,
                     managerId = Firebase.auth.uid!!,
                     peopleId = mutableListOf(Firebase.auth.uid!!),
+                    placeId = viewModel.convertPlaceId(),
                     date = tvDate.text.toString(),
                     time = tvTime.text.toString(),
                     createDate = Date().time,

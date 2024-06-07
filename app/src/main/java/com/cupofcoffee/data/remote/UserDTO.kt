@@ -9,17 +9,17 @@ data class UserDTO(
     val name: String? = null,
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
-    val createdMeetingIds: List<String> = emptyList(),
-    val attendedMeetingIds: List<String> = emptyList()
+    val madeMeetingIds: MutableList<String> = mutableListOf(),
+    val attendedMeetingIds: MutableList<String> = mutableListOf()
 )
 
 fun UserDTO.toUserEntry(id: String): UserEntry {
     return UserEntry(
         id,
-        UserModel(name, nickname, profileImageWebUrl, createdMeetingIds, attendedMeetingIds)
+        UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
     )
 }
 
 fun UserDTO.toUserModel() =
-    UserModel(name, nickname, profileImageWebUrl, createdMeetingIds, attendedMeetingIds)
+    UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
 

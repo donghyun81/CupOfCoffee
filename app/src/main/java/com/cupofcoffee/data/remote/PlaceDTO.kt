@@ -9,7 +9,7 @@ data class PlaceDTO(
     val caption: String,
     val lat: Double,
     val lng: Double,
-    val meetingIds: Map<String, Boolean> = emptyMap()
+    val meetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
 fun PlaceDTO.toPlaceEntry(id: String) = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))

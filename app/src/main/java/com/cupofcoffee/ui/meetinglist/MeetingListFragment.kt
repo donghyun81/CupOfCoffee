@@ -35,6 +35,11 @@ class MeetingListFragment : BottomSheetDialogFragment() {
         setCancelButton()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
     private fun initTitle() {
         viewModel.place.observe(viewLifecycleOwner) { placeEntry ->
             binding.tvTitle.text = placeEntry.placeModel.caption
@@ -62,10 +67,5 @@ class MeetingListFragment : BottomSheetDialogFragment() {
         binding.ibCancel.setOnClickListener {
             findNavController().navigateUp()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _binding = null
     }
 }

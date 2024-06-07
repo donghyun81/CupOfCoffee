@@ -20,6 +20,10 @@ class PlaceDataSource(
         }
     }
 
+    suspend fun update(id: String, placeDTO: PlaceDTO) = placeService.update(id, placeDTO)
+
+    suspend fun delete(id: String) = placeService.delete(id)
+
     fun getPlaces(): Flow<List<PlaceEntry>> {
         return flow {
             while (true) {

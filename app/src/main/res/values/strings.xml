@@ -10,4 +10,8 @@
     <string name="naver_login">네이버로 시작하기</string>
     <string name="make_meeting">모임 만들기</string>
     <string name="apply_button">참가 신청</string>
+    <string name="attended_meeting_count">참여 모임 개수:</string>
+    <string name="made_meeting_count">만든 모임 개수:</string>
+    <string name="attended_meetings">참석한 모임</string>
+    <string name="made_meetings">만든 모임</string>
 </resources>

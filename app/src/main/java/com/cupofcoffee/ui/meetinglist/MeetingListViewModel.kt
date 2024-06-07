@@ -65,6 +65,11 @@ class MeetingListViewModel(
     }
 
     suspend fun applyMeeting(meetingListEntry: MeetingListEntry) {
+        addMeetingUserId(meetingListEntry)
+        addUserAttendedMeeting(meetingListEntry.id)
+    }
+
+    private suspend fun addMeetingUserId(meetingListEntry: MeetingListEntry) {
         with(meetingListEntry) {
             meetingRepositoryImpl.addPeopleId(
                 id,
@@ -73,6 +78,13 @@ class MeetingListViewModel(
                     .toMeetingDTO()
             )
         }
+    }
+
+    private suspend fun addUserAttendedMeeting(meetingId: String) {
+        val uid = Firebase.auth.uid!!
+        val user = userRepositoryImpl.getUserById(uid)
+        user.attendedMeetingIds.add(meetingId)
+        userRepositoryImpl.update(uid, user)
     }
 
     companion object {

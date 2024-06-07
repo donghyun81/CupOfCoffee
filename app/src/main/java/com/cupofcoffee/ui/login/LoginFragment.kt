@@ -61,6 +61,11 @@ class LoginFragment : Fragment() {
         setNaverLogin()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun setNaverLogin() {
         binding.btnNaverLogin.setOnClickListener {
             NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP

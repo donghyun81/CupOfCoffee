@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.meetinglist
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -37,13 +38,14 @@ class MeetingListAdapter(
                 tvDate.text = meetingModel.date
                 tvTime.text = meetingModel.time
                 rvPeople.adapter = adapter
-                val hasUserId = meetingModel.people.filter { it.id == uid }
-                btnApply.isEnabled = hasUserId.isEmpty()
-                if (hasUserId.isEmpty()) {
+                val hasUserId = meetingModel.people.filter { it.id == uid }.isEmpty()
+                Log.d("12345",hasUserId.toString())
+                btnApply.isEnabled = hasUserId
+                if (hasUserId) {
                     btnApply.setOnClickListener {
                         meetingClickListener.onClick(meetingListEntry)
+                        btnApply.isEnabled = false
                     }
-                    btnApply.isEnabled = false
                 }
                 adapter.submitList(meetingModel.people)
             }
