@@ -15,6 +15,10 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
 
+private const val CANCEL_MEMBERSHIP_TITLE = "회원 탈퇴"
+private const val CANCEL_MEMBERSHIP_MESSAGE = "기존에 사용한 기록이 전부 제거 됩니다. 그래도 탈퇴 하시겠습니까?"
+
+
 class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
@@ -47,8 +51,8 @@ class SettingsFragment : Fragment() {
     private fun setCancelMembership() {
         binding.cancelMembership.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("회원 탈퇴")
-                .setMessage("기존에 사용한 기록이 전부 제거 됩니다. 그래도 탈퇴 하시겠습니까?")
+                .setTitle(CANCEL_MEMBERSHIP_TITLE)
+                .setMessage(CANCEL_MEMBERSHIP_MESSAGE)
                 .setNegativeButton(getString(R.string.save_cancle)) { dialog, _ -> dialog.cancel() }
                 .setPositiveButton(getString(R.string.save_create)) { _, _ ->
                     cancelMembership()
