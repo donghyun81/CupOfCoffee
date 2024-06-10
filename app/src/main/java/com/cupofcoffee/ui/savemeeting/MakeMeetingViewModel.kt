@@ -45,19 +45,14 @@ class MakeMeetingViewModel(
     private suspend fun updateUserMeeting(meetingId: String) {
         val uid = Firebase.auth.uid ?: return
         userRepositoryImpl.getUserByIdInFlow(uid).collect { userDTO ->
+            if (userDTO == null) return@collect
             val user = userDTO.toUserEntry(uid)
             addUserMadeMeeting(user, meetingId)
-            addUserAttendedMeeting(user, meetingId)
         }
     }
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
         userEntry.userModel.madeMeetingIds.add(meetingId)
-        userRepositoryImpl.update(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
-    }
-
-    private suspend fun addUserAttendedMeeting(userEntry: UserEntry, meetingId: String) {
-        userEntry.userModel.attendedMeetingIds.add(meetingId)
         userRepositoryImpl.update(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
     }
 

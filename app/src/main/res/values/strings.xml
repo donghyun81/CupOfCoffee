@@ -14,4 +14,6 @@
     <string name="made_meeting_count">만든 모임 개수:</string>
     <string name="attended_meetings">참석한 모임</string>
     <string name="made_meetings">만든 모임</string>
+    <string name="logout">로그아웃</string>
+    <string name="cancel_membership">회원 탈퇴</string>
 </resources>

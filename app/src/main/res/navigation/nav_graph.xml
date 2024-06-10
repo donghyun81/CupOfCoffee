@@ -32,7 +32,11 @@
     <fragment
         android:id="@+id/userFragment"
         android:name="com.cupofcoffee.ui.user.UserFragment"
-        android:label="user_fragment" />
+        android:label="user_fragment" >
+        <action
+            android:id="@+id/action_userFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
 
     <dialog
         android:id="@+id/meetingListFragment"
@@ -49,6 +53,15 @@
         <action
             android:id="@+id/action_loginFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.cupofcoffee.ui.settings.SettingsFragment"
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_settingsFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
     </fragment>
 
 </navigation>

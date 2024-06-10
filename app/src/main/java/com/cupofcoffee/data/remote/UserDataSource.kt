@@ -15,12 +15,16 @@ class UserDataSource(
 
     suspend fun insert(id: String, userDTO: UserDTO) = userService.insert(id, userDTO)
 
-    fun getUserByIdInFlow(id: String): Flow<UserDTO> {
+    fun getUserByIdInFlow(id: String): Flow<UserDTO?> {
         return flow {
-            while (true) {
-                userService.getUserById(id)
-                emit(userService.getUserById(id))
-                delay(refreshIntervalMs)
+            try {
+                while (true) {
+                    userService.getUserById(id)
+                    emit(userService.getUserById(id))
+                    delay(refreshIntervalMs)
+                }
+            } catch (e: Exception) {
+                emit(null)
             }
         }
     }
@@ -30,4 +34,7 @@ class UserDataSource(
 
     suspend fun update(id: String, userDTO: UserDTO) =
         userService.update(id, userDTO)
+
+    suspend fun delete(id: String) = userService.delete(id)
+
 }

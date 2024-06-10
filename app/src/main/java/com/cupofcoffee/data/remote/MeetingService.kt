@@ -20,7 +20,7 @@ interface MeetingService {
     ): MeetingDTO
 
     @PATCH("$MEETING_PATH/{id}.json")
-    suspend fun addPeopleId(
+    suspend fun update(
         @Path("id") id: String,
         @Body meetingDTO: MeetingDTO
     )

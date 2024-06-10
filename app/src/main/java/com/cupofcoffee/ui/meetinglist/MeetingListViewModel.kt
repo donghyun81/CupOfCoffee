@@ -71,7 +71,7 @@ class MeetingListViewModel(
 
     private suspend fun addMeetingUserId(meetingListEntry: MeetingListEntry) {
         with(meetingListEntry) {
-            meetingRepositoryImpl.addPeopleId(
+            meetingRepositoryImpl.update(
                 id,
                 meetingListModel.toMeetingModel()
                     .apply { peopleId.add(Firebase.auth.uid!!) }
