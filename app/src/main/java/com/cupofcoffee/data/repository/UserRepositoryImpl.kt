@@ -15,4 +15,5 @@ class UserRepositoryImpl(private val userDataSource: UserDataSource) {
     suspend fun update(id: String, userDTO: UserDTO) =
         userDataSource.update(id, userDTO)
 
+    suspend fun delete(id: String) = userDataSource.delete(id)
 }

@@ -9,8 +9,8 @@ class MeetingRepositoryImpl(private val meetingDataSource: MeetingDataSource) {
 
     suspend fun getMeeting(id: String) = meetingDataSource.getMeeting(id)
 
-    suspend fun addPeopleId(id: String, meetingDTO: MeetingDTO) =
-        meetingDataSource.addPeopleId(id, meetingDTO)
+    suspend fun update(id: String, meetingDTO: MeetingDTO) =
+        meetingDataSource.update(id, meetingDTO)
 
     suspend fun delete(id: String) = meetingDataSource.delete(id)
 }

@@ -42,6 +42,7 @@ class UserMeetingsViewModel(
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getUserByIdInFlow(id = uid)
         user.collect { userDTO ->
+            if (userDTO == null) return@collect
             _meetings.value =
                 when (category) {
                     MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.map { id ->
