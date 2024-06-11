@@ -10,7 +10,7 @@
     </style>
 
     <style name="SaveMeetingLabel" parent="TextCornerRadius">
-        <item name="android:textSize">28dp</item>
+        <item name="android:textSize">24dp</item>
     </style>
 
     <style name="SaveMeetingContent" parent="TextCornerRadius">
@@ -20,9 +20,9 @@
     </style>
 
     <style name="SaveMeetingPlace" parent="SaveMeetingContent">
-        <item name="android:textSize">28dp</item>
+        <item name="android:textSize">24dp</item>
+        <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
-        <item name="maxLines">1</item>
     </style>
 
     <style name="SaveMeetingDate" parent="SaveMeetingContent"></style>
