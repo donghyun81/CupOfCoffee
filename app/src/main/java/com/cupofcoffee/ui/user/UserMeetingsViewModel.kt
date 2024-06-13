@@ -20,6 +20,9 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
+
+private const val CATEGORY_TAG = "category"
+
 class UserMeetingsViewModel(
     savedStateHandle: SavedStateHandle,
     private val userRepositoryImpl: UserRepositoryImpl,
@@ -27,7 +30,7 @@ class UserMeetingsViewModel(
     private val placeRepositoryImpl: PlaceRepositoryImpl
 ) : ViewModel() {
 
-    private val category = savedStateHandle.get<MeetingsCategory>("category")!!
+    private val category = savedStateHandle.get<MeetingsCategory>(CATEGORY_TAG)!!
 
     private val _meetings: MutableLiveData<List<MeetingEntry>> = MutableLiveData()
     val meetings: LiveData<List<MeetingEntry>> = _meetings
@@ -42,7 +45,6 @@ class UserMeetingsViewModel(
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getUserByIdInFlow(id = uid)
         user.collect { userDTO ->
-            if (userDTO == null) return@collect
             _meetings.value =
                 when (category) {
                     MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.keys.map { id ->

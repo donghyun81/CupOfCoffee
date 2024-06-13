@@ -54,9 +54,11 @@ class UserFragment : Fragment() {
         viewModel.user.observe(viewLifecycleOwner) { userEntry ->
             val userModel = userEntry.userModel
             setUserProfile(userModel)
-            setUserNickName(userModel)
-            setAttendedMeetingCount(userModel)
-            setMakeMeetingCount(userModel)
+            with(binding) {
+                tvNickName.text = userModel.nickname
+                tvAttendedMeetingCount.text = userModel.attendedMeetingIds.count().toString()
+                binding.tvMadeMeetingCount.text = userModel.madeMeetingIds.count().toString()
+            }
         }
     }
 
@@ -66,18 +68,6 @@ class UserFragment : Fragment() {
             .load(profileUrl)
             .centerCrop()
             .into(binding.ivProfile)
-    }
-
-    private fun setUserNickName(userModel: UserModel) {
-        binding.tvNickName.text = userModel.nickname
-    }
-
-    private fun setAttendedMeetingCount(userModel: UserModel) {
-        binding.tvAttendedMeetingCount.text = userModel.attendedMeetingIds.count().toString()
-    }
-
-    private fun setMakeMeetingCount(userModel: UserModel) {
-        binding.tvMadeMeetingCount.text = userModel.madeMeetingIds.count().toString()
     }
 
     private fun setMeetingsAdapter() {

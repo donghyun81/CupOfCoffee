@@ -31,7 +31,6 @@ class UserViewModel(
     private suspend fun initUser() {
         val uid = Firebase.auth.uid!!
         userRepositoryImpl.getUserByIdInFlow(uid).collect { userDTO ->
-            if (userDTO == null) return@collect
             _user.value = userDTO.toUserEntry(uid)
         }
     }
