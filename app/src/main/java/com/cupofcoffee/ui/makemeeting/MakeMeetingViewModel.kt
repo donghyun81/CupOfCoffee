@@ -52,7 +52,7 @@ class MakeMeetingViewModel(
     }
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
-        userEntry.userModel.madeMeetingIds.add(meetingId)
+        userEntry.userModel.madeMeetingIds[meetingId] = true
         userRepositoryImpl.update(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
     }
 

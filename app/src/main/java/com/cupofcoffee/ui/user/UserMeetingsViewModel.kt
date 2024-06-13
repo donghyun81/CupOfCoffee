@@ -45,11 +45,11 @@ class UserMeetingsViewModel(
             if (userDTO == null) return@collect
             _meetings.value =
                 when (category) {
-                    MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.map { id ->
+                    MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.keys.map { id ->
                         meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
                     }
 
-                    MeetingsCategory.MADE_MEETINGS -> userDTO.madeMeetingIds.map { id ->
+                    MeetingsCategory.MADE_MEETINGS -> userDTO.madeMeetingIds.keys.map { id ->
                         meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
                     }
                 }
@@ -64,7 +64,7 @@ class UserMeetingsViewModel(
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {
-        val placeDTO = placeRepositoryImpl.getPlaceById(placeId) ?: return
+        val placeDTO = placeRepositoryImpl.getPlaceById(placeId)!!
         placeDTO.meetingIds.remove(meetingId)
         if (placeDTO.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
         else placeRepositoryImpl.update(placeId, placeDTO)

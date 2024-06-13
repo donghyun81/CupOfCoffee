@@ -8,7 +8,7 @@ data class MeetingModel(
     val lat: Double,
     val lng: Double,
     val managerId: String,
-    val peopleId: MutableList<String>,
+    val personIds: MutableMap<String,Boolean> = mutableMapOf(),
     val placeId: String,
     val date: String,
     val time: String,
@@ -17,7 +17,7 @@ data class MeetingModel(
 )
 
 fun MeetingModel.toMeetingDTO() =
-    MeetingDTO(caption, lat, lng, managerId, peopleId, placeId, date, time, createDate, content)
+    MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 
 fun MeetingModel.toMeetingListModel(people: List<UserEntry>) =
     MeetingListModel(caption, lat, lng, managerId, people, placeId, date, time, createDate, content)

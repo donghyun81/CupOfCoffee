@@ -17,7 +17,6 @@ import com.cupofcoffee.ui.toCurrentTime
 import com.cupofcoffee.ui.toDateFormat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import java.util.Calendar
@@ -86,7 +85,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
     }
 
     private fun showMeetingTimePicker(calendar: Calendar) {
-        val timeSetListener = TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
+        val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
             binding.tvTime.text = calendar.toCurrentTime()
@@ -110,7 +109,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,
                     managerId = uid,
-                    peopleId = mutableListOf(uid),
+                    personIds = mutableMapOf(uid to true),
                     placeId = viewModel.convertPlaceId(),
                     date = tvDate.text.toString(),
                     time = tvTime.text.toString(),

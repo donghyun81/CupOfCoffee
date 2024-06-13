@@ -22,7 +22,7 @@ fun MeetingListModel.toMeetingModel() =
         lat,
         lng,
         managerId,
-        people.map { it.id }.toMutableList(),
+        people.associate { it.id to true }.toMutableMap(),
         placeId,
         date,
         time,

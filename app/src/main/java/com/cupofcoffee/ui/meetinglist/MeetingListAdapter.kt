@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.meetinglist
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -24,7 +23,6 @@ class MeetingListAdapter(
 
     class ViewHolder(private val binding: MeetingListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        private val peopleRecyclerView: RecyclerView = binding.rvPeople
 
         fun bind(
             meetingListEntry: MeetingListEntry,
@@ -38,8 +36,7 @@ class MeetingListAdapter(
                 tvDate.text = meetingModel.date
                 tvTime.text = meetingModel.time
                 rvPeople.adapter = adapter
-                val hasUserId = meetingModel.people.filter { it.id == uid }.isEmpty()
-                Log.d("12345",hasUserId.toString())
+                val hasUserId = meetingModel.people.none { it.id == uid }
                 btnApply.isEnabled = hasUserId
                 if (hasUserId) {
                     btnApply.setOnClickListener {

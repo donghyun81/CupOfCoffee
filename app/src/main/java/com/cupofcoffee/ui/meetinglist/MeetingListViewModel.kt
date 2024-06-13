@@ -46,22 +46,22 @@ class MeetingListViewModel(
     }
 
     private suspend fun initPlace() {
-        _place.value = placeRepositoryImpl.getPlaceById(placeId)?.toPlaceEntry(placeId)
+        _place.value = placeRepositoryImpl.getPlaceById(placeId)!!.toPlaceEntry(placeId)
     }
 
     private suspend fun initMeetings() {
-        val meetingIds = placeRepositoryImpl.getPlaceById(placeId)?.meetingIds?.keys
-        val meetings = meetingIds?.map { meetingId ->
+        val meetingIds = placeRepositoryImpl.getPlaceById(placeId)!!.meetingIds.keys
+        val meetings = meetingIds.map { meetingId ->
             meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
         }
-        val meetingListModel = meetings?.map { meetingEntry ->
+        val meetingListModel = meetings.map { meetingEntry ->
             val users =
-                meetingEntry.meetingModel.peopleId.map { id ->
+                meetingEntry.meetingModel.personIds.keys.map { id ->
                     userRepositoryImpl.getUserById(id).toUserEntry(id)
                 }
             meetingEntry.toMeetingListEntry(users)
         }
-        _meetings.value = meetingListModel ?: emptyList()
+        _meetings.value = meetingListModel
     }
 
     suspend fun applyMeeting(meetingListEntry: MeetingListEntry) {
@@ -74,7 +74,7 @@ class MeetingListViewModel(
             meetingRepositoryImpl.update(
                 id,
                 meetingListModel.toMeetingModel()
-                    .apply { peopleId.add(Firebase.auth.uid!!) }
+                    .apply { personIds[Firebase.auth.uid!!] = true }
                     .toMeetingDTO()
             )
         }
@@ -83,7 +83,7 @@ class MeetingListViewModel(
     private suspend fun addUserAttendedMeeting(meetingId: String) {
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getUserById(uid)
-        user.attendedMeetingIds.add(meetingId)
+        user.attendedMeetingIds[meetingId] = true
         userRepositoryImpl.update(uid, user)
     }
 
