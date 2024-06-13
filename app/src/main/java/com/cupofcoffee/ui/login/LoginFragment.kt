@@ -39,12 +39,7 @@ class LoginFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        NaverIdLoginSDK.initialize(
-            requireContext(), NAVER_LOGIN_CLIENT_ID,
-            NAVER_LOGIN_CLIENT_SECRET,
-            APP_NAME
-        )
-        auth = Firebase.auth
+        initNaverLogin()
     }
 
     override fun onCreateView(
@@ -64,6 +59,15 @@ class LoginFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun initNaverLogin() {
+        NaverIdLoginSDK.initialize(
+            requireContext(), NAVER_LOGIN_CLIENT_ID,
+            NAVER_LOGIN_CLIENT_SECRET,
+            APP_NAME
+        )
+        auth = Firebase.auth
     }
 
     private fun setNaverLogin() {
@@ -99,9 +103,11 @@ class LoginFragment : Fragment() {
             }
 
             override fun onFailure(httpStatus: Int, message: String) {
+                throwLoginError(false)
             }
 
             override fun onError(errorCode: Int, message: String) {
+                throwLoginError(false)
             }
         })
     }
@@ -124,20 +130,28 @@ class LoginFragment : Fragment() {
             auth.createUserWithEmailAndPassword(id.toNaverEmail(), id)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            val userEntry = naverUser.toUserEntry(Firebase.auth.uid!!)
-                            viewModel.insertUser(userEntry)
-                            moveToHome()
-                        }
-                    } else require(task.isSuccessful) { CREATE_USER_ERROR_MESSAGE }
+                        insertUser(naverUser)
+                    } else throwLoginError(task.isSuccessful)
                 }
         }
     }
+
+    private fun insertUser(naverUser: NaverUser) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val userEntry = naverUser.toUserEntry(Firebase.auth.uid!!)
+            viewModel.insertUser(userEntry)
+            moveToHome()
+        }
+    }
+
 
     private fun moveToHome() {
         val action = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
         findNavController().navigate(action)
     }
+
+    private fun throwLoginError(isLoginError: Boolean) =
+        require(isLoginError) { CREATE_USER_ERROR_MESSAGE }
 
     private fun String.toNaverEmail() = "${this.take(NAVER_ID_TO_EMAIL_COUNT)}@naver.com"
 }
