@@ -84,7 +84,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.save_title))
             .setMessage(placeName)
-            .setNegativeButton(getString(R.string.save_cancle)) { dialog, _ -> dialog.cancel() }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ -> dialog.cancel() }
             .setPositiveButton(getString(R.string.save_create)) { _, _ ->
                 moveToSaveMeeting(placeName, position)
             }

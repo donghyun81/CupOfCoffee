@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">CupOfCoffee</string>
     <string name="save_title">모임 등록</string>
-    <string name="save_cancle">취소</string>
+    <string name="cancel">취소</string>
     <string name="save_create">생성</string>
     <string name="date_label">날짜</string>
     <string name="time_label">시간</string>
@@ -19,4 +19,5 @@
     <string name="select_previous_date">최근 날짜 이후로 모임을 생성할 수 있습니다.</string>
     <string name="date_picker_title">모임 날짜 선택</string>
     <string name="meeting_date_picker_tag">meeting_date</string>
+    <string name="cancel_membership_message">기존에 사용한 기록이 전부 제거 됩니다. 그래도 탈퇴 하시겠습니까?</string>
 </resources>

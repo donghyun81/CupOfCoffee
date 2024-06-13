@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
@@ -25,10 +24,8 @@ class SettingsViewModel(
                 cancelMeeting(uid, meetingId)
             }
             user.madeMeetingIds.keys.map { meetingId ->
-                val meeting = meetingRepositoryImpl.getMeeting(meetingId)
                 deleteMeeting(meetingId)
-                val placeId = meeting.placeId
-                deleteMadeMeetingsInPlace(placeId, meetingId)
+                deleteMadeMeetingsInPlace(meetingId)
             }
             deleteUser(uid)
         }
@@ -44,7 +41,9 @@ class SettingsViewModel(
         meetingRepositoryImpl.delete(meetingId)
     }
 
-    private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
+    private suspend fun deleteMadeMeetingsInPlace(meetingId: String) {
+        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
+        val placeId = meeting.placeId
         val place = placeRepositoryImpl.getPlaceById(placeId)!!
         place.meetingIds.remove(meetingId)
         if (place.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
