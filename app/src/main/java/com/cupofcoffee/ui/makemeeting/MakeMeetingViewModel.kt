@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.savemeeting
+package com.cupofcoffee.ui.makemeeting
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel

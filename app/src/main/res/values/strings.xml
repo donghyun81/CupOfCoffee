@@ -16,4 +16,7 @@
     <string name="made_meetings">만든 모임</string>
     <string name="logout">로그아웃</string>
     <string name="cancel_membership">회원 탈퇴</string>
+    <string name="select_previous_date">최근 날짜 이후로 모임을 생성할 수 있습니다.</string>
+    <string name="date_picker_title">모임 날짜 선택</string>
+    <string name="meeting_date_picker_tag">meeting_date</string>
 </resources>

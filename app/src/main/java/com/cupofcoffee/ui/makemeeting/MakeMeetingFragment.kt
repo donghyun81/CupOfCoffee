@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.savemeeting
+package com.cupofcoffee.ui.makemeeting
 
 import android.app.TimePickerDialog
 import android.os.Bundle
@@ -6,23 +6,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
+import com.cupofcoffee.R
 import com.cupofcoffee.databinding.FragmentMakeMeetingBinding
+import com.cupofcoffee.ui.isCurrentDateOver
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
+import com.cupofcoffee.ui.showSnackBar
+import com.cupofcoffee.ui.toCurrentDate
+import com.cupofcoffee.ui.toCurrentTime
+import com.cupofcoffee.ui.toDateFormat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
-
-private const val MEETING_DATE_PICKER_TITLE = "모임 날짜 선택"
-private const val MEETING_DATE_PICKER_TAG = "meeting_date"
-private const val MEETING_DATE_FORMAT = "yyyy-MM-dd"
-private const val MEETING_TIME_FORMAT = "HH:mm"
 
 class MakeMeetingFragment : BottomSheetDialogFragment() {
 
@@ -59,7 +58,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
 
     private fun setMeetingDate() {
         val calendar = Calendar.getInstance()
-        binding.tvDate.text = SimpleDateFormat("yyyy-MM-dd").format(calendar.time)
+        binding.tvDate.text = calendar.toCurrentDate()
         binding.tvDate.setOnClickListener {
             showMeetingDatePicker()
         }
@@ -67,19 +66,15 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
 
     private fun showMeetingDatePicker() {
         val datePicker = MaterialDatePicker.Builder.datePicker().setTitleText(
-            MEETING_DATE_PICKER_TITLE
+            getString(R.string.date_picker_title)
         )
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build()
-        datePicker.show(parentFragmentManager, MEETING_DATE_PICKER_TAG)
+        datePicker.show(parentFragmentManager, getString(R.string.meeting_date_picker_tag))
         datePicker.addOnPositiveButtonClickListener { selectedDateInMillis ->
-            binding.tvDate.text = selectedDateInMillis.toDateFormat()
+            if (selectedDateInMillis.isCurrentDateOver()) binding.tvDate.text =
+                selectedDateInMillis.toDateFormat()
+            else view?.showSnackBar(R.string.select_previous_date)
         }
-    }
-
-    private fun Long.toDateFormat(): String {
-        val date = Date(this)
-        val format = SimpleDateFormat(MEETING_DATE_FORMAT, Locale.getDefault())
-        return format.format(date)
     }
 
     private fun setMeetingTime() {
@@ -89,10 +84,6 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
             showMeetingTimePicker(calendar)
         }
     }
-
-    private fun Calendar.toCurrentTime(): String =
-        SimpleDateFormat(MEETING_TIME_FORMAT).format(this.time)
-
 
     private fun showMeetingTimePicker(calendar: Calendar) {
         val timeSetListener = TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
@@ -112,13 +103,14 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
 
     private fun setSaveButton() {
         binding.btnSave.setOnClickListener {
+            val uid = Firebase.auth.uid!!
             with(binding) {
                 val meeting = MeetingModel(
                     caption = viewModel.args.placeName,
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,
-                    managerId = Firebase.auth.uid!!,
-                    peopleId = mutableListOf(Firebase.auth.uid!!),
+                    managerId = uid,
+                    peopleId = mutableListOf(uid),
                     placeId = viewModel.convertPlaceId(),
                     date = tvDate.text.toString(),
                     time = tvTime.text.toString(),
