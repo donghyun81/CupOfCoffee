@@ -1,6 +1,6 @@
 package com.cupofcoffee.ui.model
 
-import com.cupofcoffee.ui.meetinglist.MeetingListEntry
+import com.cupofcoffee.ui.meetinglist.MeetingEntryWithPeople
 
 data class MeetingEntry(
     val id: String,
@@ -8,6 +8,6 @@ data class MeetingEntry(
 )
 
 fun MeetingEntry.toMeetingListEntry(peopleList: List<UserEntry>) =
-    MeetingListEntry(
+    MeetingEntryWithPeople(
         id, meetingModel.toMeetingListModel(peopleList)
     )

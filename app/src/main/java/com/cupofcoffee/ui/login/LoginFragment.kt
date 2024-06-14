@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.BuildConfig
 import com.cupofcoffee.databinding.FragmentLoginBinding
@@ -21,7 +20,6 @@ import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
-import kotlinx.coroutines.launch
 
 private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
 private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
@@ -46,7 +44,7 @@ class LoginFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentLoginBinding.inflate(inflater)
         return binding.root
     }
@@ -137,11 +135,9 @@ class LoginFragment : Fragment() {
     }
 
     private fun insertUser(naverUser: NaverUser) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val userEntry = naverUser.toUserEntry(Firebase.auth.uid!!)
-            viewModel.insertUser(userEntry)
-            moveToHome()
-        }
+        val userEntry = naverUser.toUserEntry(Firebase.auth.uid!!)
+        viewModel.insertUser(userEntry)
+        moveToHome()
     }
 
 

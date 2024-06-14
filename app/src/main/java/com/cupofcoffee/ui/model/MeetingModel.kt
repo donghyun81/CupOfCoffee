@@ -1,7 +1,7 @@
 package com.cupofcoffee.ui.model
 
 import com.cupofcoffee.data.remote.MeetingDTO
-import com.cupofcoffee.ui.meetinglist.MeetingListModel
+import com.cupofcoffee.ui.meetinglist.MeetingModelWithPeople
 
 data class MeetingModel(
     val caption: String,
@@ -20,4 +20,4 @@ fun MeetingModel.toMeetingDTO() =
     MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 
 fun MeetingModel.toMeetingListModel(people: List<UserEntry>) =
-    MeetingListModel(caption, lat, lng, managerId, people, placeId, date, time, createDate, content)
+    MeetingModelWithPeople(caption, lat, lng, managerId, people, placeId, date, time, createDate, content)

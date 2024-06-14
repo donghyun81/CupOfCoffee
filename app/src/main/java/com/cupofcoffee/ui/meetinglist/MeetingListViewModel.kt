@@ -16,12 +16,16 @@ import com.cupofcoffee.data.remote.toUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
+import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.PlaceEntry
+import com.cupofcoffee.ui.model.PlaceModel
 import com.cupofcoffee.ui.model.toMeetingDTO
 import com.cupofcoffee.ui.model.toMeetingListEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MeetingListViewModel(
     savedStateHandle: SavedStateHandle,
@@ -32,45 +36,58 @@ class MeetingListViewModel(
 
     private val placeId = MeetingListFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
 
-    private val _meetings: MutableLiveData<List<MeetingListEntry>> = MutableLiveData()
-    val meetings: LiveData<List<MeetingListEntry>> = _meetings
-
-    private val _place: MutableLiveData<PlaceEntry> = MutableLiveData()
-    val place: LiveData<PlaceEntry> = _place
+    private val _uiState: MutableLiveData<MeetingListUiState> =
+        MutableLiveData(MeetingListUiState())
+    val uiState: LiveData<MeetingListUiState> = _uiState
 
     init {
-        viewModelScope.launch {
-            initPlace()
-            initMeetings()
+        initUiState()
+    }
+
+    private fun initUiState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val placeEntry = getPlaceEntry(placeId = placeId)
+            val meetings = getMeetings(placeEntry.placeModel)
+            val meetingEntriesWithPeople = getMeetingEntriesWithPeople(meetings)
+            withContext(Dispatchers.Main) {
+                updateUiState(placeEntry, meetingEntriesWithPeople)
+            }
         }
     }
 
-    private suspend fun initPlace() {
-        _place.value = placeRepositoryImpl.getPlaceById(placeId)!!.toPlaceEntry(placeId)
-    }
+    private suspend fun getPlaceEntry(placeId: String) =
+        placeRepositoryImpl.getPlaceById(placeId)!!.toPlaceEntry(placeId)
 
-    private suspend fun initMeetings() {
-        val meetingIds = placeRepositoryImpl.getPlaceById(placeId)!!.meetingIds.keys
-        val meetings = meetingIds.map { meetingId ->
+    private suspend fun getMeetings(placeModel: PlaceModel) =
+        placeModel.meetingIds.keys.map { meetingId ->
             meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
         }
-        val meetingListModel = meetings.map { meetingEntry ->
+
+    private suspend fun getMeetingEntriesWithPeople(meetings: List<MeetingEntry>) =
+        meetings.map { meetingEntry ->
             val users =
                 meetingEntry.meetingModel.personIds.keys.map { id ->
                     userRepositoryImpl.getUserById(id).toUserEntry(id)
                 }
             meetingEntry.toMeetingListEntry(users)
         }
-        _meetings.value = meetingListModel
+
+    private fun updateUiState(placeEntry: PlaceEntry, meetings: List<MeetingEntryWithPeople>) {
+        _uiState.value = uiState.value?.copy(
+            placeEntry = placeEntry,
+            meetingEntriesWithPeople = meetings
+        )
     }
 
-    suspend fun applyMeeting(meetingListEntry: MeetingListEntry) {
-        addMeetingUserId(meetingListEntry)
-        addUserAttendedMeeting(meetingListEntry.id)
+    fun applyMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
+        viewModelScope.launch(Dispatchers.IO) {
+            addMeetingUserId(meetingEntryWithPeople)
+            addUserAttendedMeeting(meetingEntryWithPeople.id)
+        }
     }
 
-    private suspend fun addMeetingUserId(meetingListEntry: MeetingListEntry) {
-        with(meetingListEntry) {
+    private suspend fun addMeetingUserId(meetingEntryWithPeople: MeetingEntryWithPeople) {
+        with(meetingEntryWithPeople) {
             meetingRepositoryImpl.update(
                 id,
                 meetingListModel.toMeetingModel()

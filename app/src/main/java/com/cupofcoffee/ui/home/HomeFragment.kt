@@ -28,7 +28,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater)
         return binding.root
     }
@@ -67,8 +67,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun initMarkers(naverMap: NaverMap) {
-        viewModel.marker.observe(viewLifecycleOwner) { markers ->
-            markers?.map { marker ->
+        viewModel.uiState.observe(viewLifecycleOwner) { uistate ->
+            uistate.markers.map { marker ->
                 marker.map = naverMap
                 marker.setOnClickListener {
                     val action =

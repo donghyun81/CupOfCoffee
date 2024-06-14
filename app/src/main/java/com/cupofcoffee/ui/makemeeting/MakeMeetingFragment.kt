@@ -33,7 +33,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMakeMeetingBinding.inflate(inflater)
         return binding.root
     }

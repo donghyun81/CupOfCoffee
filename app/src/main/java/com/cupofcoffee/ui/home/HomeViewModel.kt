@@ -12,13 +12,14 @@ import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : ViewModel() {
 
-    private val places = placeRepositoryImpl.getPlaces()
-    private val _makers: MutableLiveData<List<Marker>?> = MutableLiveData()
-    val marker: LiveData<List<Marker>?> = _makers
+    private val _uiState: MutableLiveData<HomeUiState> = MutableLiveData(HomeUiState())
+    val uiState: LiveData<HomeUiState> = _uiState
 
     init {
         initMeetings()
@@ -31,9 +32,16 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
     }
 
     private suspend fun initMarkers() {
-        places.collect { placesEntry ->
-            _makers.value = placesEntry.map { placeEntry ->
-                placeEntry.toMarker()
+        viewModelScope.launch {
+            val places = withContext(Dispatchers.IO) {
+                placeRepositoryImpl.getPlaces()
+            }
+            places.collect { places ->
+                _uiState.value = _uiState.value?.copy(
+                    markers = places.map { place ->
+                        place.toMarker()
+                    }
+                )
             }
         }
     }
