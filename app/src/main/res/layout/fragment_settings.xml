@@ -6,6 +6,7 @@
 
     <TextView
         android:id="@+id/tv_logout"
+        style="@style/Settings"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/logout"
@@ -15,6 +16,7 @@
 
     <TextView
         android:id="@+id/cancel_membership"
+        style="@style/Settings"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/cancel_membership"
