@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.user
+package com.cupofcoffee.ui.user.usermettings
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.cupofcoffee.databinding.FragmentUserBinding
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.UserModel
+import com.cupofcoffee.ui.user.usermettings.UserMeetingsPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 
 class UserFragment : Fragment() {
@@ -51,13 +51,13 @@ class UserFragment : Fragment() {
     }
 
     private fun setUserUi() {
-        viewModel.user.observe(viewLifecycleOwner) { userEntry ->
-            val userModel = userEntry.userModel
+        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
+            val userModel = uiState.user?.userModel ?: return@observe
             setUserProfile(userModel)
             with(binding) {
                 tvNickName.text = userModel.nickname
-                tvAttendedMeetingCount.text = userModel.attendedMeetingIds.count().toString()
-                binding.tvMadeMeetingCount.text = userModel.madeMeetingIds.count().toString()
+                tvAttendedMeetingCount.text = uiState.attendedMeetingsCount.toString()
+                binding.tvMadeMeetingCount.text = uiState.madeMeetingsCount.toString()
             }
         }
     }

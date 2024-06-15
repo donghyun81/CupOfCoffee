@@ -10,28 +10,36 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.remote.toUserEntry
 import com.cupofcoffee.data.repository.UserRepositoryImpl
-import com.cupofcoffee.ui.model.UserEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class UserViewModel(
     private val userRepositoryImpl: UserRepositoryImpl
 ) : ViewModel() {
 
-    private val _user: MutableLiveData<UserEntry> = MutableLiveData()
-    val user: LiveData<UserEntry> = _user
+    private val _uiState: MutableLiveData<UserUiState> = MutableLiveData(UserUiState())
+    val uiState: LiveData<UserUiState> = _uiState
 
     init {
-        viewModelScope.launch {
-            initUser()
-        }
+        initUser()
     }
 
-    private suspend fun initUser() {
+    private fun initUser() {
         val uid = Firebase.auth.uid!!
-        userRepositoryImpl.getUserByIdInFlow(uid).collect { userDTO ->
-            _user.value = userDTO?.toUserEntry(uid)
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = userRepositoryImpl.getUserByIdInFlow(uid)
+            withContext(Dispatchers.Main) {
+                user.collect { userDTO ->
+                    _uiState.value = _uiState.value?.copy(
+                        user = userDTO.toUserEntry(uid),
+                        attendedMeetingsCount = userDTO.attendedMeetingIds.count(),
+                        madeMeetingsCount = userDTO.madeMeetingIds.count()
+                    )
+                }
+            }
         }
     }
 
