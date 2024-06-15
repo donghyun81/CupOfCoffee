@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.user
+package com.cupofcoffee.ui.user.usermettings
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,7 +18,12 @@ import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+
+private const val CATEGORY_TAG = "category"
 
 class UserMeetingsViewModel(
     savedStateHandle: SavedStateHandle,
@@ -27,10 +32,11 @@ class UserMeetingsViewModel(
     private val placeRepositoryImpl: PlaceRepositoryImpl
 ) : ViewModel() {
 
-    private val category = savedStateHandle.get<MeetingsCategory>("category")!!
+    private val category = savedStateHandle.get<MeetingsCategory>(CATEGORY_TAG)!!
 
-    private val _meetings: MutableLiveData<List<MeetingEntry>> = MutableLiveData()
-    val meetings: LiveData<List<MeetingEntry>> = _meetings
+    private val _uiState: MutableLiveData<UserMeetingsUiState> =
+        MutableLiveData(UserMeetingsUiState())
+    val uiState: LiveData<UserMeetingsUiState> = _uiState
 
     init {
         viewModelScope.launch {
@@ -42,17 +48,30 @@ class UserMeetingsViewModel(
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getUserByIdInFlow(id = uid)
         user.collect { userDTO ->
-            if (userDTO == null) return@collect
-            _meetings.value =
-                when (category) {
-                    MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.map { id ->
-                        meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
-                    }
-
-                    MeetingsCategory.MADE_MEETINGS -> userDTO.madeMeetingIds.map { id ->
-                        meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
-                    }
+            when (category) {
+                MeetingsCategory.ATTENDED_MEETINGS -> {
+                    updateMeetings(getMeetingEntries(userDTO.attendedMeetingIds.keys))
                 }
+
+                MeetingsCategory.MADE_MEETINGS -> {
+                    updateMeetings(getMeetingEntries(userDTO.madeMeetingIds.keys))
+                }
+            }
+        }
+    }
+
+    private suspend fun getMeetingEntries(meetingIds: Set<String>) =
+        withContext(Dispatchers.IO) {
+            meetingIds.map { id ->
+                meetingRepositoryImpl.getMeeting(id).toMeetingEntry(id)
+            }
+        }
+
+    private suspend fun updateMeetings(meetingEntries: List<MeetingEntry>) {
+        withContext(Dispatchers.Main) {
+            _uiState.value = _uiState.value?.copy(
+                meetings = meetingEntries
+            )
         }
     }
 
@@ -64,7 +83,7 @@ class UserMeetingsViewModel(
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {
-        val placeDTO = placeRepositoryImpl.getPlaceById(placeId) ?: return
+        val placeDTO = placeRepositoryImpl.getPlaceById(placeId)!!
         placeDTO.meetingIds.remove(meetingId)
         if (placeDTO.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
         else placeRepositoryImpl.update(placeId, placeDTO)

@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.user
+package com.cupofcoffee.ui.user.usermettings
 
 import com.cupofcoffee.ui.model.MeetingEntry
 

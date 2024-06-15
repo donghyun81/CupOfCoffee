@@ -19,7 +19,7 @@
 
     <dialog
         android:id="@+id/makeMeetingFragment"
-        android:name="com.cupofcoffee.ui.savemeeting.MakeMeetingFragment"
+        android:name="com.cupofcoffee.ui.makemeeting.MakeMeetingFragment"
         android:label="MakeMeetingFragment">
         <argument
             android:name="placeName"

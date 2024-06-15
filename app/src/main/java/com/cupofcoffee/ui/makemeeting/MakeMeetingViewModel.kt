@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.savemeeting
+package com.cupofcoffee.ui.makemeeting
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -43,16 +43,14 @@ class MakeMeetingViewModel(
     }
 
     private suspend fun updateUserMeeting(meetingId: String) {
-        val uid = Firebase.auth.uid ?: return
-        userRepositoryImpl.getUserByIdInFlow(uid).collect { userDTO ->
-            if (userDTO == null) return@collect
-            val user = userDTO.toUserEntry(uid)
-            addUserMadeMeeting(user, meetingId)
-        }
+        val uid = Firebase.auth.uid!!
+        val userDTO = userRepositoryImpl.getUserById(uid)
+        val user = userDTO.toUserEntry(uid)
+        addUserMadeMeeting(user, meetingId)
     }
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
-        userEntry.userModel.madeMeetingIds.add(meetingId)
+        userEntry.userModel.madeMeetingIds[meetingId] = true
         userRepositoryImpl.update(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
     }
 

@@ -1,12 +1,8 @@
 package com.cupofcoffee.data.remote
 
-import com.cupofcoffee.ui.model.PlaceEntry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import retrofit2.http.Body
-import retrofit2.http.PATCH
-import retrofit2.http.Path
 
 class UserDataSource(
     private val userService: UserService,
@@ -15,7 +11,7 @@ class UserDataSource(
 
     suspend fun insert(id: String, userDTO: UserDTO) = userService.insert(id, userDTO)
 
-    fun getUserByIdInFlow(id: String): Flow<UserDTO?> {
+    fun getUserByIdInFlow(id: String): Flow<UserDTO> {
         return flow {
             try {
                 while (true) {
@@ -24,7 +20,7 @@ class UserDataSource(
                     delay(refreshIntervalMs)
                 }
             } catch (e: Exception) {
-                emit(null)
+                require(false) { e.toString() }
             }
         }
     }

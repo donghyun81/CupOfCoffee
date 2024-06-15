@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.settings
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,8 +9,6 @@ import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
@@ -23,25 +20,30 @@ class SettingsViewModel(
     fun deleteUserData(uid: String) {
         viewModelScope.launch {
             val user = userRepositoryImpl.getUserById(uid)
-            user.attendedMeetingIds.map { meetingId ->
-                val meeting = meetingRepositoryImpl.getMeeting(meetingId)
-                meeting.peopleId.remove(uid)
+            user.attendedMeetingIds.keys.map { meetingId ->
+                cancelMeeting(uid, meetingId)
             }
-            user.madeMeetingIds.map { meetingId ->
-                val meeting = meetingRepositoryImpl.getMeeting(meetingId)
+            user.madeMeetingIds.keys.map { meetingId ->
                 deleteMeeting(meetingId)
-                val placeId = meeting.placeId
-                deleteMadeMeetingsInPlace(placeId, meetingId)
+                deleteMadeMeetingsInPlace(meetingId)
             }
             deleteUser(uid)
         }
+    }
+
+    private suspend fun cancelMeeting(uid: String, meetingId: String) {
+        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
+        meeting.personIds.remove(uid)
+        meetingRepositoryImpl.update(meetingId, meeting)
     }
 
     private suspend fun deleteMeeting(meetingId: String) {
         meetingRepositoryImpl.delete(meetingId)
     }
 
-    private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
+    private suspend fun deleteMadeMeetingsInPlace(meetingId: String) {
+        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
+        val placeId = meeting.placeId
         val place = placeRepositoryImpl.getPlaceById(placeId)!!
         place.meetingIds.remove(meetingId)
         if (place.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)

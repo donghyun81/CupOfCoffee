@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.user
+package com.cupofcoffee.ui.user.usermettings
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter

@@ -17,13 +17,13 @@ class MeetingListFragment : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
     private val viewModel: MeetingListViewModel by viewModels { MeetingListViewModel.Factory }
 
-    private lateinit var adapter: MeetingListAdapter
+    private val adapter: MeetingListAdapter = MeetingListAdapter(applyOnclick())
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMeetingListBinding.inflate(inflater)
         return binding.root
     }
@@ -41,25 +41,23 @@ class MeetingListFragment : BottomSheetDialogFragment() {
     }
 
     private fun initTitle() {
-        viewModel.place.observe(viewLifecycleOwner) { placeEntry ->
+        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
+            val placeEntry = uiState.placeEntry ?: return@observe
             binding.tvTitle.text = placeEntry.placeModel.caption
         }
     }
 
     private fun initAdapter() {
-        adapter = MeetingListAdapter(applyOnclick())
         binding.rvMeetings.adapter = adapter
-        viewModel.meetings.observe(viewLifecycleOwner) { meetingListEntry ->
-            adapter.submitList(meetingListEntry)
+        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
+            adapter.submitList(uiState.meetingEntriesWithPeople)
         }
     }
 
     private fun applyOnclick() = object : MeetingClickListener {
 
-        override fun onClick(meetingListEntry: MeetingListEntry) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.applyMeeting(meetingListEntry)
-            }
+        override fun onClick(meetingEntryWithPeople: MeetingEntryWithPeople) {
+            viewModel.applyMeeting(meetingEntryWithPeople)
         }
     }
 

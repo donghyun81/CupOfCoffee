@@ -25,7 +25,9 @@ class PeopleListAdapter :
 
         fun bind(userEntry: UserEntry) {
             val profileUrl = userEntry.userModel.profileImageWebUrl
-            Glide.with(binding.root.context).load(profileUrl).centerCrop()
+            Glide.with(binding.root.context)
+                .load(profileUrl)
+                .centerCrop()
                 .into(binding.personProfile)
             binding.nickname.text = userEntry.userModel.nickname
         }

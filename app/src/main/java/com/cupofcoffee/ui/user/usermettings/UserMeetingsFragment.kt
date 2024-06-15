@@ -1,4 +1,4 @@
-package com.cupofcoffee.ui.user
+package com.cupofcoffee.ui.user.usermettings
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,7 +24,7 @@ class UserMeetingsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentUserMeetingsBinding.inflate(inflater)
         return binding.root
     }
@@ -32,8 +32,8 @@ class UserMeetingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.rvAttendedMeetings.adapter = adapter
-        viewModel.meetings.observe(viewLifecycleOwner) { meetingEntries ->
-            adapter.submitList(meetingEntries)
+        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
+            adapter.submitList(uiState.meetings)
         }
     }
 

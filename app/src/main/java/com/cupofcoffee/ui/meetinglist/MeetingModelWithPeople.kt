@@ -3,7 +3,7 @@ package com.cupofcoffee.ui.meetinglist
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.UserEntry
 
-data class MeetingListModel(
+data class MeetingModelWithPeople(
     val caption: String,
     val lat: Double,
     val lng: Double,
@@ -16,13 +16,13 @@ data class MeetingListModel(
     val content: String
 )
 
-fun MeetingListModel.toMeetingModel() =
+fun MeetingModelWithPeople.toMeetingModel() =
     MeetingModel(
         caption,
         lat,
         lng,
         managerId,
-        people.map { it.id }.toMutableList(),
+        people.associate { it.id to true }.toMutableMap(),
         placeId,
         date,
         time,
