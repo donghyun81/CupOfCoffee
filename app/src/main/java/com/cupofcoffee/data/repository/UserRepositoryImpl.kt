@@ -1,19 +1,31 @@
 package com.cupofcoffee.data.repository
 
+import com.cupofcoffee.data.local.UserDao
 import com.cupofcoffee.data.remote.UserDTO
 import com.cupofcoffee.data.remote.UserDataSource
 
-class UserRepositoryImpl(private val userDataSource: UserDataSource) {
+class UserRepositoryImpl(
+    private val userDao: UserDao,
+    private val userDataSource: UserDataSource
+) {
 
-    suspend fun insert(id: String, userDTO: UserDTO) = userDataSource.insert(id, userDTO)
+    suspend fun insertLocal(id: String, userDTO: UserDTO) = userDataSource.insert(id, userDTO)
 
+    suspend fun insertRemote(id: String, userDTO: UserDTO) = userDataSource.insert(id, userDTO)
 
-    fun getUserByIdInFlow(id: String) = userDataSource.getUserByIdInFlow(id)
+    fun getLocalUserByIdInFlow(id: String) = userDataSource.getUserByIdInFlow(id)
 
-    suspend fun getUserById(id: String) = userDataSource.getUserById(id)
+    fun getRemoteUserByIdInFlow(id: String) = userDataSource.getUserByIdInFlow(id)
 
-    suspend fun update(id: String, userDTO: UserDTO) =
+    suspend fun getRemoteUserById(id: String) = userDataSource.getUserById(id)
+
+    suspend fun updateLocal(id: String, userDTO: UserDTO) =
         userDataSource.update(id, userDTO)
 
-    suspend fun delete(id: String) = userDataSource.delete(id)
+    suspend fun updateRemote(id: String, userDTO: UserDTO) =
+        userDataSource.update(id, userDTO)
+
+    suspend fun deleteLocal(id: String) = userDataSource.delete(id)
+
+    suspend fun deleteRemote(id: String) = userDataSource.delete(id)
 }

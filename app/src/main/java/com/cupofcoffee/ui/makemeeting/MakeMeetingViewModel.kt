@@ -36,27 +36,29 @@ class MakeMeetingViewModel(
 
     fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
         viewModelScope.launch {
-            val meetingId = meetingRepositoryImpl.insert(meetingModel.toMeetingDTO())
+            val meetingId = meetingRepositoryImpl.insertRemote(meetingModel.toMeetingDTO())
             savePlace(meetingId, placeModel = placeModel)
             updateUserMeeting(meetingId)
         }
     }
 
     private suspend fun updateUserMeeting(meetingId: String) {
-        val uid = Firebase.auth.uid!!
-        val userDTO = userRepositoryImpl.getUserById(uid)
-        val user = userDTO.toUserEntry(uid)
-        addUserMadeMeeting(user, meetingId)
+        val uid = Firebase.auth.uid ?: return
+        userRepositoryImpl.getRemoteUserByIdInFlow(uid).collect { userDTO ->
+            if (userDTO == null) return@collect
+            val user = userDTO.toUserEntry(uid)
+            addUserMadeMeeting(user, meetingId)
+        }
     }
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
         userEntry.userModel.madeMeetingIds[meetingId] = true
-        userRepositoryImpl.update(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
+        userRepositoryImpl.updateRemote(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
     }
 
     private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
         val placeId = convertPlaceId()
-        val prvPlaceDTO = placeRepositoryImpl.getPlaceById(placeId)
+        val prvPlaceDTO = placeRepositoryImpl.getRemotePlaceById(placeId)
         if (prvPlaceDTO != null) updatePlace(placeId, meetingId, prvPlaceDTO)
         else createPlace(placeId, meetingId, placeModel)
     }
@@ -71,12 +73,12 @@ class MakeMeetingViewModel(
 
     private suspend fun createPlace(placeId: String, meetingId: String, placeModel: PlaceModel) {
         placeModel.meetingIds[meetingId] = true
-        placeRepositoryImpl.insert(placeId, placeModel.toPlaceDTO())
+        placeRepositoryImpl.insertRemote(placeId, placeModel.toPlaceDTO())
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String, prvPlaceDTO: PlaceDTO) {
         prvPlaceDTO.meetingIds[meetingId] = true
-        placeRepositoryImpl.update(placeId, prvPlaceDTO)
+        placeRepositoryImpl.updateRemote(placeId, prvPlaceDTO)
     }
 
     companion object {

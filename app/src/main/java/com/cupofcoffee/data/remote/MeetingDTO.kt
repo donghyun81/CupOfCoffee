@@ -20,8 +20,7 @@ data class MeetingDTO(
 
 fun MeetingDTO.toMeetingEntry(id: String) =
     MeetingEntry(
-        id,
-        MeetingModel(
+        id,MeetingModel(
             caption,
             lat,
             lng,

@@ -14,11 +14,9 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(private val userRepository: UserRepositoryImpl) : ViewModel() {
 
-    fun insertUser(userEntry: UserEntry) {
-        viewModelScope.launch(Dispatchers.IO) {
-            with(userEntry) {
-                userRepository.insert(id, userModel.toUserDTO())
-            }
+    suspend fun insertUser(userEntry: UserEntry) {
+        with(userEntry) {
+            userRepository.insertRemote(id, userModel.toUserDTO())
         }
     }
 

@@ -46,15 +46,18 @@ class UserMeetingsViewModel(
 
     private suspend fun setMeetings() {
         val uid = Firebase.auth.uid ?: return
-        val user = userRepositoryImpl.getUserByIdInFlow(id = uid)
+        val user = userRepositoryImpl.getRemoteUserByIdInFlow(id = uid)
         user.collect { userDTO ->
-            when (category) {
-                MeetingsCategory.ATTENDED_MEETINGS -> {
-                    updateMeetings(getMeetingEntries(userDTO.attendedMeetingIds.keys))
-                }
+            if (userDTO == null) return@collect
+            _meetings.value =
+                when (category) {
+                    MeetingsCategory.ATTENDED_MEETINGS -> userDTO.attendedMeetingIds.map { id ->
+                        meetingRepositoryImpl.getRemoteMeeting(id).toMeetingEntry(id)
+                    }
 
-                MeetingsCategory.MADE_MEETINGS -> {
-                    updateMeetings(getMeetingEntries(userDTO.madeMeetingIds.keys))
+                    MeetingsCategory.MADE_MEETINGS -> userDTO.madeMeetingIds.map { id ->
+                        meetingRepositoryImpl.getRemoteMeeting(id).toMeetingEntry(id)
+                    }
                 }
             }
         }
@@ -79,23 +82,22 @@ class UserMeetingsViewModel(
         val placeId = meetingEntry.meetingModel.placeId
         updatePlace(placeId, meetingEntry.id)
         updateUser(meetingEntry.id)
-        meetingRepositoryImpl.delete(meetingEntry.id)
+        meetingRepositoryImpl.deleteRemote(meetingEntry.id)
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {
-        val placeDTO = placeRepositoryImpl.getPlaceById(placeId)!!
+        val placeDTO = placeRepositoryImpl.getRemotePlaceById(placeId) ?: return
         placeDTO.meetingIds.remove(meetingId)
-        if (placeDTO.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
-        else placeRepositoryImpl.update(placeId, placeDTO)
-
+        if (placeDTO.meetingIds.isEmpty()) placeRepositoryImpl.deleteRemote(placeId)
+        else placeRepositoryImpl.updateRemote(placeId, placeDTO)
     }
 
     private suspend fun updateUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getUserById(uid)
+        val user = userRepositoryImpl.getRemoteUserById(uid)
         user.madeMeetingIds.remove(meetingId)
         user.attendedMeetingIds.remove(meetingId)
-        userRepositoryImpl.insert(uid, user)
+        userRepositoryImpl.insertRemote(uid, user)
     }
 
     companion object {

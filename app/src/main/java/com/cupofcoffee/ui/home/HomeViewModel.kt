@@ -20,6 +20,7 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
 
     private val _uiState: MutableLiveData<HomeUiState> = MutableLiveData(HomeUiState())
     val uiState: LiveData<HomeUiState> = _uiState
+    private val _makers: MutableLiveData<List<Marker>?> = MutableLiveData()
 
     init {
         initMeetings()
@@ -34,7 +35,7 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
     private suspend fun initMarkers() {
         viewModelScope.launch {
             val places = withContext(Dispatchers.IO) {
-                placeRepositoryImpl.getPlaces()
+                placeRepositoryImpl.getLocalPlaces()
             }
             places.collect { places ->
                 _uiState.value = _uiState.value?.copy(

@@ -56,18 +56,27 @@ class MeetingListViewModel(
     }
 
     private suspend fun getPlaceEntry(placeId: String) =
-        placeRepositoryImpl.getPlaceById(placeId)!!.toPlaceEntry(placeId)
+        placeRepositoryImpl.getLocalPlaceById(placeId)!!.toPlaceEntry(placeId)
 
     private suspend fun getMeetings(placeModel: PlaceModel) =
         placeModel.meetingIds.keys.map { meetingId ->
-            meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
+            meetingRepositoryImpl.getLocalMeeting(meetingId).to(meetingId) }
+    private suspend fun initPlace() {
+        _place.value = placeRepositoryImpl.getRemotePlaceById(placeId)?.toPlaceEntry(placeId)
+    }
+
+    private suspend fun initMeetings() {
+        val meetingIds = placeRepositoryImpl.getRemotePlaceById(placeId)?.meetingIds?.keys
+        val meetings = meetingIds?.map { meetingId ->
+            meetingRepositoryImpl.getRemoteMeeting(meetingId).toMeetingEntry(meetingId)
         }
+    }
 
     private suspend fun getMeetingEntriesWithPeople(meetings: List<MeetingEntry>) =
         meetings.map { meetingEntry ->
             val users =
                 meetingEntry.meetingModel.personIds.keys.map { id ->
-                    userRepositoryImpl.getUserById(id).toUserEntry(id)
+                    userRepositoryImpl.getRemoteUserById(id).toUserEntry(id)
                 }
             meetingEntry.toMeetingListEntry(users)
         }
@@ -88,7 +97,7 @@ class MeetingListViewModel(
 
     private suspend fun addMeetingUserId(meetingEntryWithPeople: MeetingEntryWithPeople) {
         with(meetingEntryWithPeople) {
-            meetingRepositoryImpl.update(
+            meetingRepositoryImpl.updateRemote(
                 id,
                 meetingListModel.toMeetingModel()
                     .apply { personIds[Firebase.auth.uid!!] = true }
@@ -99,9 +108,9 @@ class MeetingListViewModel(
 
     private suspend fun addUserAttendedMeeting(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getUserById(uid)
+        val user = userRepositoryImpl.getRemoteUserById(uid)
         user.attendedMeetingIds[meetingId] = true
-        userRepositoryImpl.update(uid, user)
+        userRepositoryImpl.updateRemote(uid, user)
     }
 
     companion object {
@@ -116,4 +125,4 @@ class MeetingListViewModel(
             }
         }
     }
-}
+        }

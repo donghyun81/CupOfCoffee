@@ -19,11 +19,13 @@ class SettingsViewModel(
 
     fun deleteUserData(uid: String) {
         viewModelScope.launch {
-            val user = userRepositoryImpl.getUserById(uid)
-            user.attendedMeetingIds.keys.map { meetingId ->
-                cancelMeeting(uid, meetingId)
+            val user = userRepositoryImpl.getRemoteUserById(uid)
+            user.attendedMeetingIds.map { meetingId ->
+                val meeting = meetingRepositoryImpl.getRemoteMeeting(meetingId)
+                meeting.peopleId.remove(uid)
             }
-            user.madeMeetingIds.keys.map { meetingId ->
+            user.madeMeetingIds.map { meetingId ->
+                val meeting = meetingRepositoryImpl.getRemoteMeeting(meetingId)
                 deleteMeeting(meetingId)
                 deleteMadeMeetingsInPlace(meetingId)
             }
@@ -38,20 +40,18 @@ class SettingsViewModel(
     }
 
     private suspend fun deleteMeeting(meetingId: String) {
-        meetingRepositoryImpl.delete(meetingId)
+        meetingRepositoryImpl.deleteRemote(meetingId)
     }
 
-    private suspend fun deleteMadeMeetingsInPlace(meetingId: String) {
-        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
-        val placeId = meeting.placeId
-        val place = placeRepositoryImpl.getPlaceById(placeId)!!
+    private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
+        val place = placeRepositoryImpl.getRemotePlaceById(placeId)!!
         place.meetingIds.remove(meetingId)
-        if (place.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
-        else placeRepositoryImpl.update(placeId, place)
+        if (place.meetingIds.isEmpty()) placeRepositoryImpl.deleteRemote(placeId)
+        else placeRepositoryImpl.updateRemote(placeId, place)
     }
 
     private suspend fun deleteUser(uid: String) {
-        userRepositoryImpl.delete(uid)
+        userRepositoryImpl.deleteRemote(uid)
     }
 
     companion object {

@@ -29,17 +29,9 @@ class UserViewModel(
 
     private fun initUser() {
         val uid = Firebase.auth.uid!!
-        viewModelScope.launch(Dispatchers.IO) {
-            val user = userRepositoryImpl.getUserByIdInFlow(uid)
-            withContext(Dispatchers.Main) {
-                user.collect { userDTO ->
-                    _uiState.value = _uiState.value?.copy(
-                        user = userDTO.toUserEntry(uid),
-                        attendedMeetingsCount = userDTO.attendedMeetingIds.count(),
-                        madeMeetingsCount = userDTO.madeMeetingIds.count()
-                    )
-                }
-            }
+        userRepositoryImpl.getRemoteUserByIdInFlow(uid).collect { userDTO ->
+            if (userDTO == null) return@collect
+            _user.value = userDTO.toUserEntry(uid)
         }
     }
 
