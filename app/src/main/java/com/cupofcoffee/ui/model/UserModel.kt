@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.model
 
+import com.cupofcoffee.data.local.UserEntity
 import com.cupofcoffee.data.remote.UserDTO
 
 data class UserModel(
@@ -9,6 +10,9 @@ data class UserModel(
     val madeMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
     val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
+
+fun UserModel.toUserEntity(id: String) =
+    UserEntity(id, name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
 
 fun UserModel.toUserDTO() =
     UserDTO(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)

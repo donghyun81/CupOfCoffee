@@ -10,7 +10,7 @@ class PlaceDataSource(
     private val refreshIntervalMs: Long = 1000
 ) {
 
-    suspend fun insert(caption: String, placeDTO: PlaceDTO) = placeService.insert(caption, placeDTO)
+    suspend fun insert(id: String, placeDTO: PlaceDTO) = placeService.insert(id, placeDTO)
 
     suspend fun getPlaceById(id: String): PlaceDTO? {
         return try {

@@ -11,6 +11,7 @@ class MeetingRepositoryImpl(
 ) {
 
     suspend fun insertLocal(meetingEntity: MeetingEntity) = meetingDao.insert(meetingEntity)
+
     suspend fun insertRemote(meetingDTO: MeetingDTO) = meetingDataSource.insert(meetingDTO)
 
     suspend fun getLocalMeeting(id: String) = meetingDao.getMeeting(id)

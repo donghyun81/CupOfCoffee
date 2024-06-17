@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.model
 
+import com.cupofcoffee.data.local.PlaceEntity
 import com.cupofcoffee.data.remote.PlaceDTO
 
 data class PlaceModel(
@@ -9,4 +10,5 @@ data class PlaceModel(
     val meetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
+fun PlaceModel.toPlaceEntity(id: String) = PlaceEntity(caption, id, lat, lng, meetingIds)
 fun PlaceModel.toPlaceDTO() = PlaceDTO(caption, lat, lng, meetingIds)

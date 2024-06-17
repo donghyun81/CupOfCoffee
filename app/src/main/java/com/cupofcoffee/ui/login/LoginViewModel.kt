@@ -9,14 +9,20 @@ import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.toUserDTO
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.cupofcoffee.ui.model.toUserEntity
 
 class LoginViewModel(private val userRepository: UserRepositoryImpl) : ViewModel() {
 
     suspend fun insertUser(userEntry: UserEntry) {
         with(userEntry) {
+            userRepository.insertLocal(userModel.toUserEntity(id))
             userRepository.insertRemote(id, userModel.toUserDTO())
+        }
+    }
+
+    suspend fun updateUser(userEntry: UserEntry) {
+        with(userEntry) {
+            userRepository.updateLocal(userModel.toUserEntity(id))
         }
     }
 

@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.model
 
+import com.cupofcoffee.data.local.MeetingEntity
 import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.ui.meetinglist.MeetingModelWithPeople
 
@@ -18,6 +19,21 @@ data class MeetingModel(
 
 fun MeetingModel.toMeetingDTO() =
     MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
+
+fun MeetingModel.toMeetingEntity(id: String) =
+    MeetingEntity(
+        id,
+        caption,
+        lat,
+        lng,
+        managerId,
+        peopleId,
+        placeId,
+        date,
+        time,
+        createDate,
+        content
+    )
 
 fun MeetingModel.toMeetingListModel(people: List<UserEntry>) =
     MeetingModelWithPeople(caption, lat, lng, managerId, people, placeId, date, time, createDate, content)

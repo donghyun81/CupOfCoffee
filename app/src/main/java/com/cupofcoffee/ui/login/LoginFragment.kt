@@ -115,7 +115,11 @@ class LoginFragment : Fragment() {
             auth.signInWithEmailAndPassword(id.toNaverEmail(), id)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        moveToHome()
+                        val uid = Firebase.auth.uid!!
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            viewModel.updateUser(naverUser.toUserEntry(uid))
+                            moveToHome()
+                        }
                     } else {
                         createAccount(naverUser)
                     }
