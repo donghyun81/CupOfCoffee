@@ -29,6 +29,4 @@ class PlaceRepositoryImpl(
     suspend fun deleteRemote(id: String) = placeDataSource.delete(id)
 
     fun getLocalPlaces() = placeDao.getAllPlaces()
-
-    fun getRemotePlaces() = placeDataSource.getPlaces()
 }

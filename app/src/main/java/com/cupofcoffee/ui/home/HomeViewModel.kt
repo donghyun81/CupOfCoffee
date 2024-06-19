@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
+import com.cupofcoffee.data.local.PlaceEntity
+import com.cupofcoffee.data.local.toEntry
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.naver.maps.geometry.LatLng
@@ -20,6 +22,7 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
 
     private val _uiState: MutableLiveData<HomeUiState> = MutableLiveData(HomeUiState())
     val uiState: LiveData<HomeUiState> = _uiState
+
     private val _makers: MutableLiveData<List<Marker>?> = MutableLiveData()
 
     init {
@@ -40,15 +43,15 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
             places.collect { places ->
                 _uiState.value = _uiState.value?.copy(
                     markers = places.map { place ->
-                        place.toMarker()
+                        place.toEntry()
                     }
                 )
             }
         }
     }
 
-    private fun PlaceEntry.toMarker() = Marker().apply {
-        position = LatLng(placeModel.lat, placeModel.lng)
+    private fun PlaceEntity.toMarker() = Marker().apply {
+        position = LatLng(lat, lng)
         tag = id
     }
 
