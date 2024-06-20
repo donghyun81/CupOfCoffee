@@ -44,9 +44,7 @@ class UserMeetingsFragment : Fragment() {
 
     private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
         override fun onClick(meetingEntry: MeetingEntry) {
-            viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.deleteMeeting(meetingEntry)
-            }
         }
     }
 

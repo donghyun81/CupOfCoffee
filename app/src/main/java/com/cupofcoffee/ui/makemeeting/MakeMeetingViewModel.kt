@@ -50,6 +50,7 @@ class MakeMeetingViewModel(
         val uid = Firebase.auth.uid ?: return
         val userFlow = userRepositoryImpl.getLocalUserByIdInFlow(uid)
         userFlow.collect { userEntry ->
+            userEntry ?: return@collect
             addUserMadeMeeting(userEntry, meetingId)
         }
     }

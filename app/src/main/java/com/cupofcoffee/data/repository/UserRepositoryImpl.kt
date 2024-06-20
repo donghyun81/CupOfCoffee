@@ -16,7 +16,7 @@ class UserRepositoryImpl(
 
     suspend fun insertRemote(id: String, userDTO: UserDTO) = userDataSource.insert(id, userDTO)
 
-    fun getLocalUserByIdInFlow(id: String) = userDao.getUserByIdInFlow(id).map { it.asUserEntry() }
+    fun getLocalUserByIdInFlow(id: String) = userDao.getUserByIdInFlow(id).map { it?.asUserEntry() }
 
     fun getLocalUserById(id: String) = userDao.getUserById(id).asUserEntry()
 

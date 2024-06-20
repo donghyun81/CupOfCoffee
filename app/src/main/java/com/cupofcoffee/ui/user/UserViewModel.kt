@@ -33,6 +33,7 @@ class UserViewModel(
         val user = userRepositoryImpl.getLocalUserByIdInFlow(uid).flowOn(Dispatchers.IO)
         viewModelScope.launch {
             user.collect { userEntry ->
+                userEntry ?: return@collect
                 _uiState.value = _uiState.value?.copy(
                     user = userEntry,
                     attendedMeetingsCount = userEntry.userModel.attendedMeetingIds.count(),

@@ -17,6 +17,8 @@ import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.asMeetingEntity
+import com.cupofcoffee.ui.model.asUserDTO
+import com.cupofcoffee.ui.model.asUserEntity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +51,7 @@ class UserMeetingsViewModel(
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
         user.collect { userEntry ->
+            userEntry ?: return@collect
             when (category) {
                 MeetingsCategory.ATTENDED_MEETINGS -> {
                     val meetings = getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys)
@@ -78,12 +81,14 @@ class UserMeetingsViewModel(
         }
     }
 
-    suspend fun deleteMeeting(meetingEntry: MeetingEntry) {
-        val placeId = meetingEntry.meetingModel.placeId
-        updatePlace(placeId, meetingEntry.id)
-        updateUser(meetingEntry.id)
-        meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
-        meetingRepositoryImpl.deleteRemote(meetingEntry.id)
+    fun deleteMeeting(meetingEntry: MeetingEntry) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val placeId = meetingEntry.meetingModel.placeId
+            updatePlace(placeId, meetingEntry.id)
+            updateUser(meetingEntry.id)
+            meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
+            meetingRepositoryImpl.deleteRemote(meetingEntry.id)
+        }
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {
@@ -100,11 +105,10 @@ class UserMeetingsViewModel(
 
     private suspend fun updateUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getRemoteUserById(uid)
-        user.madeMeetingIds.remove(meetingId)
-        user.attendedMeetingIds.remove(meetingId)
-        userRepositoryImpl.updateRemote(uid, user)
-        userRepositoryImpl.updateRemote(uid, user)
+        val user = userRepositoryImpl.getLocalUserById(uid)
+        user.userModel.madeMeetingIds.remove(meetingId)
+        userRepositoryImpl.updateLocal(user.asUserEntity())
+        userRepositoryImpl.updateRemote(uid, user.asUserDTO())
     }
 
     companion object {

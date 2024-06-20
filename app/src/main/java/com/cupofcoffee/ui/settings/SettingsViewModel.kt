@@ -1,8 +1,8 @@
 package com.cupofcoffee.ui.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
@@ -16,7 +16,6 @@ import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.ui.model.asPlaceDTO
 import com.cupofcoffee.ui.model.asPlaceEntity
 import com.cupofcoffee.ui.model.asUserEntity
-import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
@@ -24,19 +23,17 @@ class SettingsViewModel(
     private val placeRepositoryImpl: PlaceRepositoryImpl
 ) : ViewModel() {
 
-    fun deleteUserData(uid: String) {
-        viewModelScope.launch {
-            val user = userRepositoryImpl.getLocalUserById(uid)
-            user.userModel.attendedMeetingIds.keys.map { meetingId ->
-                cancelMeeting(uid, meetingId)
-            }
-            user.userModel.madeMeetingIds.keys.map { meetingId ->
-                val meetingEntry = meetingRepositoryImpl.getLocalMeeting(meetingId)
-                deleteMeeting(meetingEntry)
-                deleteMadeMeetingsInPlace(meetingEntry.meetingModel.placeId, meetingId)
-            }
-            deleteUser(user)
+    suspend fun deleteUserData(uid: String) {
+        val user = userRepositoryImpl.getLocalUserById(uid)
+        user.userModel.attendedMeetingIds.keys.map { meetingId ->
+            cancelMeeting(uid, meetingId)
         }
+        user.userModel.madeMeetingIds.keys.map { meetingId ->
+            val meetingEntry = meetingRepositoryImpl.getLocalMeeting(meetingId)
+            deleteMeeting(meetingEntry)
+            deleteMadeMeetingsInPlace(meetingEntry.meetingModel.placeId, meetingId)
+        }
+        deleteUser(user)
     }
 
     private suspend fun cancelMeeting(uid: String, meetingId: String) {

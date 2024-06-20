@@ -100,6 +100,7 @@ class MeetingListViewModel(
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
         user.collect { userEntry ->
+            userEntry ?: return@collect
             userEntry.userModel.attendedMeetingIds[meetingId] = true
             userRepositoryImpl.updateLocal(userEntry.asUserEntity())
             userRepositoryImpl.updateRemote(uid, userEntry.asUserDTO())

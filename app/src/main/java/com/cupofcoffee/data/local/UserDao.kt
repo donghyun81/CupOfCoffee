@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UserDao {
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(userEntity: UserEntity)
 
     @Query("SELECT * From users where id = :id")
-    fun getUserByIdInFlow(id: String): Flow<UserEntity>
+    fun getUserByIdInFlow(id: String): Flow<UserEntity?>
 
     @Query("SELECT * From users where id = :id")
     fun getUserById(id: String): UserEntity

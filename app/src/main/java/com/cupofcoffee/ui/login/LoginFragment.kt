@@ -119,8 +119,8 @@ class LoginFragment : Fragment() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
-                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                            viewModel.updateLocalUser(naverUser.asUserEntry(uid))
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            viewModel.loginUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }
                     } else {
@@ -136,7 +136,7 @@ class LoginFragment : Fragment() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
-                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        viewLifecycleOwner.lifecycleScope.launch {
                             viewModel.insertUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }

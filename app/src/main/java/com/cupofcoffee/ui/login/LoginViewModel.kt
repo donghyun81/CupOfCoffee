@@ -19,10 +19,8 @@ class LoginViewModel(private val userRepository: UserRepositoryImpl) : ViewModel
         }
     }
 
-    suspend fun updateLocalUser(userEntry: UserEntry) {
-        with(userEntry) {
-            userRepository.updateLocal(userModel.asUserEntity(id))
-        }
+    suspend fun loginUser(userEntry: UserEntry) {
+        userRepository.insertLocal(userEntry.asUserEntity())
     }
 
     companion object {

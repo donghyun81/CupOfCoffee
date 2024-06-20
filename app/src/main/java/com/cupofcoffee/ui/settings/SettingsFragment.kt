@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
 import com.cupofcoffee.databinding.FragmentSettingsBinding
@@ -13,6 +14,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SettingsFragment : Fragment() {
 
@@ -24,7 +28,7 @@ class SettingsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentSettingsBinding.inflate(inflater)
         return binding.root
     }
@@ -58,12 +62,16 @@ class SettingsFragment : Fragment() {
 
     private fun cancelMembership() {
         val user = Firebase.auth.currentUser!!
-        viewModel.deleteUserData(user.uid)
-        NaverIdLoginSDK.logout()
-        user.delete()
-            .addOnCompleteListener {
-                moveToLogin()
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.deleteUserData(user.uid)
+            NaverIdLoginSDK.logout()
+            withContext(Dispatchers.Main) {
+                user.delete()
+                    .addOnCompleteListener {
+                        moveToLogin()
+                    }
             }
+        }
     }
 
     private fun moveToLogin() {
