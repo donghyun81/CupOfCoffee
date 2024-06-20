@@ -2,7 +2,6 @@ package com.cupofcoffee.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
@@ -20,7 +19,7 @@ class LoginViewModel(private val userRepository: UserRepositoryImpl) : ViewModel
         }
     }
 
-    suspend fun updateUser(userEntry: UserEntry) {
+    suspend fun updateLocalUser(userEntry: UserEntry) {
         with(userEntry) {
             userRepository.updateLocal(userModel.toUserEntity(id))
         }

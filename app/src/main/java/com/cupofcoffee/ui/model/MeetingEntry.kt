@@ -11,3 +11,6 @@ fun MeetingEntry.toMeetingListEntry(peopleList: List<UserEntry>) =
     MeetingEntryWithPeople(
         id, meetingModel.toMeetingListModel(peopleList)
     )
+
+fun MeetingEntry.toMeetingEntity() = meetingModel.toMeetingEntity(id)
+

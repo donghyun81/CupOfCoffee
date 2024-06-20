@@ -9,9 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.local.toUserEntry
-import com.cupofcoffee.data.remote.PlaceDTO
 import com.cupofcoffee.data.remote.toPlaceEntry
-import com.cupofcoffee.data.remote.toUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
@@ -26,6 +24,7 @@ import com.cupofcoffee.ui.model.toUserDTO
 import com.cupofcoffee.ui.model.toUserEntity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 const val POSITION_COUNT = 10
@@ -40,7 +39,7 @@ class MakeMeetingViewModel(
     val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
     fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val meetingId = meetingRepositoryImpl.insertRemote(meetingModel.toMeetingDTO())
             meetingRepositoryImpl.insertLocal(meetingModel.toMeetingEntity(meetingId))
             savePlace(meetingId, placeModel)
@@ -50,8 +49,8 @@ class MakeMeetingViewModel(
 
     private suspend fun updateUserMeeting(meetingId: String) {
         val uid = Firebase.auth.uid ?: return
-        userRepositoryImpl.getLocalUserByIdInFlow(uid).collect { userEntity ->
-            if (userEntity == null) return@collect
+        val userFlow = userRepositoryImpl.getLocalUserByIdInFlow(uid)
+        userFlow.collect { userEntity ->
             val user = userEntity.toUserEntry()
             addUserMadeMeeting(user, meetingId)
         }

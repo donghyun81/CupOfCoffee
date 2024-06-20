@@ -16,8 +16,6 @@ class UserRepositoryImpl(
 
     fun getLocalUserByIdInFlow(id: String) = userDao.getUserByIdInFlow(id)
 
-    fun getRemoteUserByIdInFlow(id: String) = userDataSource.getUserByIdInFlow(id)
-
     suspend fun getRemoteUserById(id: String) = userDataSource.getUserById(id)
 
     suspend fun updateLocal(userEntity: UserEntity) =

@@ -9,21 +9,17 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.local.PlaceEntity
-import com.cupofcoffee.data.local.toEntry
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
-import com.cupofcoffee.ui.model.PlaceEntry
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : ViewModel() {
 
     private val _uiState: MutableLiveData<HomeUiState> = MutableLiveData(HomeUiState())
     val uiState: LiveData<HomeUiState> = _uiState
-
-    private val _makers: MutableLiveData<List<Marker>?> = MutableLiveData()
 
     init {
         initMeetings()
@@ -37,13 +33,11 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
 
     private suspend fun initMarkers() {
         viewModelScope.launch {
-            val places = withContext(Dispatchers.IO) {
-                placeRepositoryImpl.getLocalPlaces()
-            }
-            places.collect { places ->
+            val placesFlow = placeRepositoryImpl.getLocalPlaces().flowOn(Dispatchers.IO)
+            placesFlow.collect { places ->
                 _uiState.value = _uiState.value?.copy(
                     markers = places.map { place ->
-                        place.toEntry()
+                        place.toMarker()
                     }
                 )
             }

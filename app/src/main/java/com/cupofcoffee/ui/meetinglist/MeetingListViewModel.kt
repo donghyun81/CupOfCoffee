@@ -10,8 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.remote.toMeetingEntry
-import com.cupofcoffee.data.remote.toPlaceEntry
+import com.cupofcoffee.data.local.toEntry
+import com.cupofcoffee.data.local.toUserDTO
 import com.cupofcoffee.data.remote.toUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
@@ -56,21 +56,12 @@ class MeetingListViewModel(
     }
 
     private suspend fun getPlaceEntry(placeId: String) =
-        placeRepositoryImpl.getLocalPlaceById(placeId)!!.toPlaceEntry(placeId)
+        placeRepositoryImpl.getLocalPlaceById(placeId).toEntry()
 
     private suspend fun getMeetings(placeModel: PlaceModel) =
         placeModel.meetingIds.keys.map { meetingId ->
-            meetingRepositoryImpl.getLocalMeeting(meetingId).to(meetingId) }
-    private suspend fun initPlace() {
-        _place.value = placeRepositoryImpl.getRemotePlaceById(placeId)?.toPlaceEntry(placeId)
-    }
-
-    private suspend fun initMeetings() {
-        val meetingIds = placeRepositoryImpl.getRemotePlaceById(placeId)?.meetingIds?.keys
-        val meetings = meetingIds?.map { meetingId ->
-            meetingRepositoryImpl.getRemoteMeeting(meetingId).toMeetingEntry(meetingId)
+            meetingRepositoryImpl.getLocalMeeting(meetingId).toEntry()
         }
-    }
 
     private suspend fun getMeetingEntriesWithPeople(meetings: List<MeetingEntry>) =
         meetings.map { meetingEntry ->
@@ -108,9 +99,12 @@ class MeetingListViewModel(
 
     private suspend fun addUserAttendedMeeting(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getRemoteUserById(uid)
-        user.attendedMeetingIds[meetingId] = true
-        userRepositoryImpl.updateRemote(uid, user)
+        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
+        user.collect { userEntity ->
+            userEntity.attendedMeetingIds[meetingId] = true
+            userRepositoryImpl.updateLocal(userEntity)
+            userRepositoryImpl.updateRemote(uid, userEntity.toUserDTO())
+        }
     }
 
     companion object {
@@ -125,4 +119,4 @@ class MeetingListViewModel(
             }
         }
     }
-        }
+}

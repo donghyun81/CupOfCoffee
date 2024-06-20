@@ -8,13 +8,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.remote.toUserEntry
+import com.cupofcoffee.data.local.toUserEntry
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class UserViewModel(
     private val userRepositoryImpl: UserRepositoryImpl
@@ -27,11 +27,18 @@ class UserViewModel(
         initUser()
     }
 
+
     private fun initUser() {
         val uid = Firebase.auth.uid!!
-        userRepositoryImpl.getRemoteUserByIdInFlow(uid).collect { userDTO ->
-            if (userDTO == null) return@collect
-            _user.value = userDTO.toUserEntry(uid)
+        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid).flowOn(Dispatchers.IO)
+        viewModelScope.launch {
+            user.collect { userEntity ->
+                _uiState.value = _uiState.value?.copy(
+                    user = userEntity.toUserEntry(),
+                    attendedMeetingsCount = userEntity.attendedMeetingIds.count(),
+                    madeMeetingsCount = userEntity.madeMeetingIds.count()
+                )
+            }
         }
     }
 

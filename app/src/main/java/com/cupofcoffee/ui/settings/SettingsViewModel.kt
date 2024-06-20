@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
+import com.cupofcoffee.data.remote.toMeetingEntity
+import com.cupofcoffee.data.remote.toPlaceEntity
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
@@ -20,23 +22,23 @@ class SettingsViewModel(
     fun deleteUserData(uid: String) {
         viewModelScope.launch {
             val user = userRepositoryImpl.getRemoteUserById(uid)
-            user.attendedMeetingIds.map { meetingId ->
-                val meeting = meetingRepositoryImpl.getRemoteMeeting(meetingId)
-                meeting.peopleId.remove(uid)
+            user.attendedMeetingIds.keys.map { meetingId ->
+                cancelMeeting(uid, meetingId)
             }
-            user.madeMeetingIds.map { meetingId ->
+            user.madeMeetingIds.keys.map { meetingId ->
                 val meeting = meetingRepositoryImpl.getRemoteMeeting(meetingId)
                 deleteMeeting(meetingId)
-                deleteMadeMeetingsInPlace(meetingId)
+                deleteMadeMeetingsInPlace(meeting.placeId, meetingId)
             }
             deleteUser(uid)
         }
     }
 
     private suspend fun cancelMeeting(uid: String, meetingId: String) {
-        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
-        meeting.personIds.remove(uid)
-        meetingRepositoryImpl.update(meetingId, meeting)
+        val meetingDTO = meetingRepositoryImpl.getRemoteMeeting(meetingId)
+        meetingDTO.personIds.remove(uid)
+        meetingRepositoryImpl.updateRemote(meetingId, meetingDTO)
+        meetingRepositoryImpl.updateLocal(meetingDTO.toMeetingEntity(meetingId))
     }
 
     private suspend fun deleteMeeting(meetingId: String) {
@@ -46,8 +48,13 @@ class SettingsViewModel(
     private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
         val place = placeRepositoryImpl.getRemotePlaceById(placeId)!!
         place.meetingIds.remove(meetingId)
-        if (place.meetingIds.isEmpty()) placeRepositoryImpl.deleteRemote(placeId)
-        else placeRepositoryImpl.updateRemote(placeId, place)
+        if (place.meetingIds.isEmpty()) {
+            placeRepositoryImpl.deleteLocal(place.toPlaceEntity(placeId))
+            placeRepositoryImpl.deleteRemote(placeId)
+        } else {
+            placeRepositoryImpl.updateLocal(place.toPlaceEntity(placeId))
+            placeRepositoryImpl.updateRemote(placeId, place)
+        }
     }
 
     private suspend fun deleteUser(uid: String) {
