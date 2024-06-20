@@ -2,6 +2,7 @@ package com.cupofcoffee.data.repository
 
 import com.cupofcoffee.data.local.MeetingDao
 import com.cupofcoffee.data.local.MeetingEntity
+import com.cupofcoffee.data.local.asMeetingEntry
 import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.data.remote.MeetingDataSource
 
@@ -14,9 +15,7 @@ class MeetingRepositoryImpl(
 
     suspend fun insertRemote(meetingDTO: MeetingDTO) = meetingDataSource.insert(meetingDTO)
 
-    suspend fun getLocalMeeting(id: String) = meetingDao.getMeeting(id)
-
-    suspend fun getRemoteMeeting(id: String) = meetingDataSource.getMeeting(id)
+    suspend fun getLocalMeeting(id: String) = meetingDao.getMeeting(id).asMeetingEntry()
 
     suspend fun updateLocal(meetingEntity: MeetingEntity) =
         meetingDao.update(meetingEntity)

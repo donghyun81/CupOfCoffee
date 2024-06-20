@@ -37,7 +37,7 @@ class PlaceDataSource(
         return try {
             val latestNews = placeService.getPlaces().map { entry ->
                 val (id, place) = entry
-                place.toPlaceEntry(id)
+                place.asPlaceEntry(id)
             }
             latestNews
         } catch (e: Exception) {

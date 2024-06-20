@@ -16,7 +16,7 @@ data class MeetingModelWithPeople(
     val content: String
 )
 
-fun MeetingModelWithPeople.toMeetingModel() =
+fun MeetingModelWithPeople.asMeetingModel() =
     MeetingModel(
         caption,
         lat,

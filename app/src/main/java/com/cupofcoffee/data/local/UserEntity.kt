@@ -17,8 +17,8 @@ data class UserEntity(
     val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
 )
 
-fun UserEntity.toUserEntry() =
+fun UserEntity.asUserEntry() =
     UserEntry(id, UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds))
 
-fun UserEntity.toUserDTO() =
+fun UserEntity.asUserDTO() =
     UserDTO(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)

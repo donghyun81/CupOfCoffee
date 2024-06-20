@@ -2,6 +2,7 @@ package com.cupofcoffee.data.repository
 
 import com.cupofcoffee.data.local.PlaceDao
 import com.cupofcoffee.data.local.PlaceEntity
+import com.cupofcoffee.data.local.asMeetingEntry
 import com.cupofcoffee.data.remote.PlaceDTO
 import com.cupofcoffee.data.remote.PlaceDataSource
 
@@ -16,7 +17,7 @@ class PlaceRepositoryImpl(
     suspend fun insertRemote(id: String, placeDTO: PlaceDTO) =
         placeDataSource.insert(id, placeDTO)
 
-    suspend fun getLocalPlaceById(position: String) = placeDao.getPlaceById(position)
+    suspend fun getLocalPlaceById(position: String) = placeDao.getPlaceById(position).asMeetingEntry()
 
     suspend fun getRemotePlaceById(position: String) = placeDataSource.getPlaceById(position)
 

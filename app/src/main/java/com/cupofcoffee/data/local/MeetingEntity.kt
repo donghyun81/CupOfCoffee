@@ -21,7 +21,7 @@ data class MeetingEntity(
     val content: String
 )
 
-fun MeetingEntity.toEntry() = MeetingEntry(
+fun MeetingEntity.asMeetingEntry() = MeetingEntry(
     id,
     MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 )

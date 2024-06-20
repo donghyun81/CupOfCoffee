@@ -13,6 +13,6 @@ data class PlaceDTO(
     val meetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun PlaceDTO.toPlaceEntry(id: String) = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
+fun PlaceDTO.asPlaceEntry(id: String) = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
 
-fun PlaceDTO.toPlaceEntity(id: String) = PlaceEntity(id, caption, lat, lng, meetingIds)
+fun PlaceDTO.asPlaceEntity(id: String) = PlaceEntity(id, caption, lat, lng, meetingIds)

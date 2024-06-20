@@ -9,8 +9,11 @@ data class MeetingEntry(
 
 fun MeetingEntry.toMeetingListEntry(peopleList: List<UserEntry>) =
     MeetingEntryWithPeople(
-        id, meetingModel.toMeetingListModel(peopleList)
+        id, meetingModel.asMeetingListModel(peopleList)
     )
 
-fun MeetingEntry.toMeetingEntity() = meetingModel.toMeetingEntity(id)
+fun MeetingEntry.asMeetingEntity() = meetingModel.asMeetingEntity(id)
+
+fun MeetingEntry.asMeetingDTO() = meetingModel.asMeetingDTO()
+
 

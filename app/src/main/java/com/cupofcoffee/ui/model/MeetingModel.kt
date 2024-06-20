@@ -17,10 +17,10 @@ data class MeetingModel(
     val content: String
 )
 
-fun MeetingModel.toMeetingDTO() =
+fun MeetingModel.asMeetingDTO() =
     MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 
-fun MeetingModel.toMeetingEntity(id: String) =
+fun MeetingModel.asMeetingEntity(id: String) =
     MeetingEntity(
         id,
         caption,
@@ -35,7 +35,7 @@ fun MeetingModel.toMeetingEntity(id: String) =
         content
     )
 
-fun MeetingModel.toMeetingListModel(people: List<UserEntry>) =
+fun MeetingModel.asMeetingListModel(people: List<UserEntry>) =
     MeetingModelWithPeople(
         caption,
         lat,

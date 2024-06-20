@@ -10,16 +10,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.local.toEntry
-import com.cupofcoffee.data.local.toUserDTO
-import com.cupofcoffee.data.remote.toUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.PlaceModel
-import com.cupofcoffee.ui.model.toMeetingDTO
+import com.cupofcoffee.ui.model.asMeetingDTO
+import com.cupofcoffee.ui.model.asUserDTO
+import com.cupofcoffee.ui.model.asUserEntity
 import com.cupofcoffee.ui.model.toMeetingListEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -56,18 +55,18 @@ class MeetingListViewModel(
     }
 
     private suspend fun getPlaceEntry(placeId: String) =
-        placeRepositoryImpl.getLocalPlaceById(placeId).toEntry()
+        placeRepositoryImpl.getLocalPlaceById(placeId)
 
     private suspend fun getMeetings(placeModel: PlaceModel) =
         placeModel.meetingIds.keys.map { meetingId ->
-            meetingRepositoryImpl.getLocalMeeting(meetingId).toEntry()
+            meetingRepositoryImpl.getLocalMeeting(meetingId)
         }
 
-    private suspend fun getMeetingEntriesWithPeople(meetings: List<MeetingEntry>) =
+    private fun getMeetingEntriesWithPeople(meetings: List<MeetingEntry>) =
         meetings.map { meetingEntry ->
             val users =
                 meetingEntry.meetingModel.personIds.keys.map { id ->
-                    userRepositoryImpl.getRemoteUserById(id).toUserEntry(id)
+                    userRepositoryImpl.getLocalUserById(id)
                 }
             meetingEntry.toMeetingListEntry(users)
         }
@@ -90,9 +89,9 @@ class MeetingListViewModel(
         with(meetingEntryWithPeople) {
             meetingRepositoryImpl.updateRemote(
                 id,
-                meetingListModel.toMeetingModel()
+                meetingListModel.asMeetingModel()
                     .apply { personIds[Firebase.auth.uid!!] = true }
-                    .toMeetingDTO()
+                    .asMeetingDTO()
             )
         }
     }
@@ -100,10 +99,10 @@ class MeetingListViewModel(
     private suspend fun addUserAttendedMeeting(meetingId: String) {
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
-        user.collect { userEntity ->
-            userEntity.attendedMeetingIds[meetingId] = true
-            userRepositoryImpl.updateLocal(userEntity)
-            userRepositoryImpl.updateRemote(uid, userEntity.toUserDTO())
+        user.collect { userEntry ->
+            userEntry.userModel.attendedMeetingIds[meetingId] = true
+            userRepositoryImpl.updateLocal(userEntry.asUserEntity())
+            userRepositoryImpl.updateRemote(uid, userEntry.asUserDTO())
         }
     }
 

@@ -17,6 +17,9 @@ interface UserDao {
     @Query("SELECT * From users where id = :id")
     fun getUserByIdInFlow(id: String): Flow<UserEntity>
 
+    @Query("SELECT * From users where id = :id")
+    fun getUserById(id: String): UserEntity
+
     @Update
     suspend fun update(userEntity: UserEntity): Int
 

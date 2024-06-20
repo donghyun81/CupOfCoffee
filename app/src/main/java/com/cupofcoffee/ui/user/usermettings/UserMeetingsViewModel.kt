@@ -10,14 +10,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.local.toEntry
-import com.cupofcoffee.data.remote.toPlaceEntity
+import com.cupofcoffee.data.remote.asPlaceEntity
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
-import com.cupofcoffee.ui.model.toMeetingEntity
+import com.cupofcoffee.ui.model.asMeetingEntity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -49,15 +48,15 @@ class UserMeetingsViewModel(
     private suspend fun setMeetings() {
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
-        user.collect { userEntity ->
+        user.collect { userEntry ->
             when (category) {
                 MeetingsCategory.ATTENDED_MEETINGS -> {
-                    val meetings = getMeetingEntries(userEntity.attendedMeetingIds.keys)
+                    val meetings = getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys)
                     updateMeetings(meetings)
                 }
 
                 MeetingsCategory.MADE_MEETINGS -> {
-                    val meetings = getMeetingEntries(userEntity.madeMeetingIds.keys)
+                    val meetings = getMeetingEntries(userEntry.userModel.madeMeetingIds.keys)
                     updateMeetings(meetings)
                 }
             }
@@ -67,7 +66,7 @@ class UserMeetingsViewModel(
     private suspend fun getMeetingEntries(meetingIds: Set<String>) =
         withContext(Dispatchers.IO) {
             meetingIds.map { id ->
-                meetingRepositoryImpl.getLocalMeeting(id).toEntry()
+                meetingRepositoryImpl.getLocalMeeting(id)
             }
         }
 
@@ -83,7 +82,7 @@ class UserMeetingsViewModel(
         val placeId = meetingEntry.meetingModel.placeId
         updatePlace(placeId, meetingEntry.id)
         updateUser(meetingEntry.id)
-        meetingRepositoryImpl.deleteLocal(meetingEntry.toMeetingEntity())
+        meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
         meetingRepositoryImpl.deleteRemote(meetingEntry.id)
     }
 
@@ -91,10 +90,10 @@ class UserMeetingsViewModel(
         val placeDTO = placeRepositoryImpl.getRemotePlaceById(placeId) ?: return
         placeDTO.meetingIds.remove(meetingId)
         if (placeDTO.meetingIds.isEmpty()) {
-            placeRepositoryImpl.deleteLocal(placeDTO.toPlaceEntity(placeId))
+            placeRepositoryImpl.deleteLocal(placeDTO.asPlaceEntity(placeId))
             placeRepositoryImpl.deleteRemote(placeId)
         } else {
-            placeRepositoryImpl.updateLocal(placeDTO.toPlaceEntity(placeId))
+            placeRepositoryImpl.updateLocal(placeDTO.asPlaceEntity(placeId))
             placeRepositoryImpl.updateRemote(placeId, placeDTO)
         }
     }

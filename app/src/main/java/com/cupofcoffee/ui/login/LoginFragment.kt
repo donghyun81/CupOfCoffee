@@ -11,7 +11,7 @@ import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.BuildConfig
 import com.cupofcoffee.databinding.FragmentLoginBinding
 import com.cupofcoffee.ui.model.NaverUser
-import com.cupofcoffee.ui.model.toUserEntry
+import com.cupofcoffee.ui.model.asUserEntry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -120,7 +120,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                            viewModel.updateLocalUser(naverUser.toUserEntry(uid))
+                            viewModel.updateLocalUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }
                     } else {
@@ -137,7 +137,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                            viewModel.insertUser(naverUser.toUserEntry(uid))
+                            viewModel.insertUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }
                     } else throwLoginError(task.isSuccessful)

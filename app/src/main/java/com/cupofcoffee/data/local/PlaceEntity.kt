@@ -16,4 +16,4 @@ data class PlaceEntity(
 )
 
 
-fun PlaceEntity.toEntry() = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
+fun PlaceEntity.asMeetingEntry() = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
