@@ -2,6 +2,7 @@ package com.cupofcoffee.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.cupofcoffee.data.remote.MeetingDTO
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingModel
 
@@ -18,10 +19,14 @@ data class MeetingEntity(
     val date: String,
     val time: String,
     val createDate: Long,
-    val content: String
+    val content: String,
+    val isSynced: Boolean = true,
 )
 
 fun MeetingEntity.asMeetingEntry() = MeetingEntry(
     id,
     MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 )
+
+fun MeetingEntity.asMeetingDTO() =
+    MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)

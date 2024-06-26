@@ -24,24 +24,5 @@ class PlaceDataSource(
 
     suspend fun delete(id: String) = placeService.delete(id)
 
-    fun getPlaces(): Flow<List<PlaceEntry>> {
-        return flow {
-            while (true) {
-                emit(tryGetPlaces())
-                delay(refreshIntervalMs)
-            }
-        }
-    }
-
-    private suspend fun tryGetPlaces(): List<PlaceEntry> {
-        return try {
-            val latestNews = placeService.getPlaces().map { entry ->
-                val (id, place) = entry
-                place.asPlaceEntry(id)
-            }
-            latestNews
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+    suspend fun getAllPlaces(): Map<String,PlaceDTO> = placeService.getPlaces()
 }

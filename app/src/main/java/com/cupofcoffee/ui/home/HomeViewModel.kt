@@ -33,7 +33,7 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
 
     private suspend fun initMarkers() {
         viewModelScope.launch {
-            val placesFlow = placeRepositoryImpl.getLocalPlaces().flowOn(Dispatchers.IO)
+            val placesFlow = placeRepositoryImpl.getLocalPlacesInFlow().flowOn(Dispatchers.IO)
             placesFlow.collect { places ->
                 _uiState.value = _uiState.value?.copy(
                     markers = places.map { place ->

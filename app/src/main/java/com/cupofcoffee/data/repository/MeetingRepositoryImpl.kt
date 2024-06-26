@@ -17,6 +17,8 @@ class MeetingRepositoryImpl(
 
     suspend fun getLocalMeeting(id: String) = meetingDao.getMeeting(id).asMeetingEntry()
 
+    fun getAllMeetings():List<MeetingEntity> = meetingDao.getAllMeetings()
+
     suspend fun updateLocal(meetingEntity: MeetingEntity) =
         meetingDao.update(meetingEntity)
 

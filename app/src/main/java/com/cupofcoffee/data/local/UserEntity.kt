@@ -15,10 +15,11 @@ data class UserEntity(
     val profileImageWebUrl: String? = null,
     val madeMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
     val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
+    val isSynced: Boolean = true,
 )
 
 fun UserEntity.asUserEntry() =
     UserEntry(id, UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds))
 
 fun UserEntity.asUserDTO() =
-    UserDTO(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
+    UserDTO(name, nickname, profileImageWebUrl, madeMeetingIds)

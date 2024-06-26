@@ -8,8 +8,9 @@ data class UserModel(
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
     val madeMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
-    val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf()
-)
+    val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
+    val isSynced: Boolean = false
+    )
 
 fun UserModel.asUserEntity(id: String) =
     UserEntity(id, name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)

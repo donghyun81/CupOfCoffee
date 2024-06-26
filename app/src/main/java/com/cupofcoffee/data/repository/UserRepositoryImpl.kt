@@ -20,8 +20,6 @@ class UserRepositoryImpl(
 
     fun getLocalUserById(id: String) = userDao.getUserById(id).asUserEntry()
 
-    suspend fun getRemoteUserById(id: String) = userDataSource.getUserById(id)
-
     suspend fun updateLocal(userEntity: UserEntity) =
         userDao.update(userEntity)
 
@@ -31,4 +29,6 @@ class UserRepositoryImpl(
     suspend fun deleteLocal(userEntity: UserEntity) = userDao.delete(userEntity)
 
     suspend fun deleteRemote(id: String) = userDataSource.delete(id)
+
+    fun getAllUsers(): List<UserEntity> = userDao.getAllUsers()
 }

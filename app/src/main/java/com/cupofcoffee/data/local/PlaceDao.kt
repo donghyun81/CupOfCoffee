@@ -19,9 +19,13 @@ interface PlaceDao {
     @Update
     suspend fun update(placeEntity: PlaceEntity)
 
-    @Query("SELECT * FROM places")
-    fun getAllPlaces(): Flow<List<PlaceEntity>>
 
     @Delete
     suspend fun delete(placeEntity: PlaceEntity)
+
+    @Query("SELECT * From places")
+    fun getAllPlaces(): List<PlaceEntity>
+
+    @Query("SELECT * FROM places")
+    fun getAllPlacesInFlow(): Flow<List<PlaceEntity>>
 }

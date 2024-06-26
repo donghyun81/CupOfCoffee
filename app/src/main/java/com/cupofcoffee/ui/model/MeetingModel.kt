@@ -14,7 +14,8 @@ data class MeetingModel(
     val date: String,
     val time: String,
     val createDate: Long,
-    val content: String
+    val content: String,
+    val isSynced: Boolean = true,
 )
 
 fun MeetingModel.asMeetingDTO() =
