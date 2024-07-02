@@ -8,18 +8,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.local.PlaceEntity
+import com.cupofcoffee.data.DataResult
+import com.cupofcoffee.data.local.model.PlaceEntity
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : ViewModel() {
 
-    private val _uiState: MutableLiveData<HomeUiState> = MutableLiveData(HomeUiState())
-    val uiState: LiveData<HomeUiState> = _uiState
+    private val _uiState: MutableLiveData<DataResult<HomeUiState>> =
+        MutableLiveData(DataResult.Loading)
+    val uiState: LiveData<DataResult<HomeUiState>> = _uiState
 
     init {
         initMeetings()
@@ -33,13 +33,13 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
 
     private suspend fun initMarkers() {
         viewModelScope.launch {
-            val placesFlow = placeRepositoryImpl.getLocalPlacesInFlow().flowOn(Dispatchers.IO)
+            val placesFlow = placeRepositoryImpl.getLocalPlacesInFlow()
             placesFlow.collect { places ->
-                _uiState.value = _uiState.value?.copy(
-                    markers = places.map { place ->
-                        place.toMarker()
-                    }
-                )
+                try {
+                    _uiState.value = DataResult.Success(HomeUiState(places.map { it.toMarker() }))
+                } catch (e: Exception) {
+                    _uiState.value = DataResult.Error(e)
+                }
             }
         }
     }

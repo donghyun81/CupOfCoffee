@@ -1,33 +1,33 @@
 package com.cupofcoffee.data.module
 
 import android.content.Context
-import androidx.room.RoomDatabase
-import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.local.CupOfCoffeeDatabase
-import com.cupofcoffee.data.remote.MeetingDataSource
-import com.cupofcoffee.data.remote.PlaceDataSource
-import com.cupofcoffee.data.remote.UserDataSource
+import com.cupofcoffee.data.remote.datasource.MeetingRemoteDataSource
+import com.cupofcoffee.data.remote.datasource.PlaceRemoteDataSource
+import com.cupofcoffee.data.remote.datasource.UserRemoteDataSource
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 
 object RepositoryModule {
 
-    private val meetingDataSource = MeetingDataSource(NetworkModule.getMeetingService())
-    private val placeDataSource = PlaceDataSource(NetworkModule.getPlaceService())
-    private val userDataSource = UserDataSource(NetworkModule.getUserService())
+    private val meetingRemoteDataSource = MeetingRemoteDataSource(NetworkModule.getMeetingService())
+    private val placeDataSource = PlaceRemoteDataSource(NetworkModule.getPlaceService())
+    private val userRemoteDataSource = UserRemoteDataSource(NetworkModule.getUserService())
 
     private lateinit var database: CupOfCoffeeDatabase
 
-    private val meetingDao by lazy { LocalModule.provideMeetingDao(database) }
-    private val placeDao by lazy { LocalModule.providePlaceDao(database) }
-    private val userDao by lazy { LocalModule.provideUserDao(database) }
+    private val meetingLocalDataSource by lazy { LocalModule.provideMeetingLocalDataSource(database) }
+    private val placeLocalDataSource by lazy { LocalModule.providePlaceLocalDataSource(database) }
+    private val userLocalDataSource by lazy { LocalModule.provideUserLocalDataSource(database) }
 
     fun initDatabase(context: Context) {
         database = LocalModule.provideDatabase(context)
     }
 
-    fun getMeetingRepository() = MeetingRepositoryImpl(meetingDao, meetingDataSource)
-    fun getPlaceRepository() = PlaceRepositoryImpl(placeDao, placeDataSource)
-    fun getUserRepository() = UserRepositoryImpl(userDao, userDataSource)
+    fun getMeetingRepository() =
+        MeetingRepositoryImpl(meetingLocalDataSource, meetingRemoteDataSource)
+
+    fun getPlaceRepository() = PlaceRepositoryImpl(placeLocalDataSource, placeDataSource)
+    fun getUserRepository() = UserRepositoryImpl(userLocalDataSource, userRemoteDataSource)
 }

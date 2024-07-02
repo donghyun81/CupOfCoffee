@@ -1,7 +1,7 @@
 package com.cupofcoffee.ui.model
 
-import com.cupofcoffee.data.local.PlaceEntity
-import com.cupofcoffee.data.remote.PlaceDTO
+import com.cupofcoffee.data.local.model.PlaceEntity
+import com.cupofcoffee.data.remote.model.PlaceDTO
 
 data class PlaceModel(
     val caption: String,

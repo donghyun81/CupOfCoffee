@@ -1,37 +1,38 @@
 package com.cupofcoffee.data.repository
 
-import com.cupofcoffee.data.local.PlaceDao
-import com.cupofcoffee.data.local.PlaceEntity
-import com.cupofcoffee.data.local.asMeetingEntry
-import com.cupofcoffee.data.remote.PlaceDTO
-import com.cupofcoffee.data.remote.PlaceDataSource
+import com.cupofcoffee.data.local.datasource.PlaceLocalDataSource
+import com.cupofcoffee.data.local.model.PlaceEntity
+import com.cupofcoffee.data.remote.datasource.PlaceRemoteDataSource
+import com.cupofcoffee.data.remote.model.PlaceDTO
+import kotlinx.coroutines.flow.Flow
 
 class PlaceRepositoryImpl(
-    private val placeDao: PlaceDao,
-    private val placeDataSource: PlaceDataSource
+    private val placeLocalDataSource: PlaceLocalDataSource,
+    private val placeDataSource: PlaceRemoteDataSource
 ) {
 
     suspend fun insertLocal(placeEntity: PlaceEntity) =
-        placeDao.insert(placeEntity)
+        placeLocalDataSource.insert(placeEntity)
 
     suspend fun insertRemote(id: String, placeDTO: PlaceDTO) =
         placeDataSource.insert(id, placeDTO)
 
-    suspend fun getLocalPlaceById(position: String) = placeDao.getPlaceById(position).asMeetingEntry()
+    suspend fun getLocalPlaceById(id: String) = placeLocalDataSource.getPlaceById(id)
 
-    suspend fun getRemotePlaceById(position: String) = placeDataSource.getPlaceById(position)
+    suspend fun getRemotePlaceById(id: String) = placeDataSource.getPlaceById(id)
 
-    suspend fun updateLocal(placeEntity: PlaceEntity) = placeDao.update(placeEntity)
+    suspend fun updateLocal(placeEntity: PlaceEntity) = placeLocalDataSource.update(placeEntity)
 
     suspend fun updateRemote(id: String, placeDTO: PlaceDTO) = placeDataSource.update(id, placeDTO)
 
-    suspend fun deleteLocal(placeEntity: PlaceEntity) = placeDao.delete(placeEntity)
+    suspend fun deleteLocal(placeEntity: PlaceEntity) = placeLocalDataSource.delete(placeEntity)
 
     suspend fun deleteRemote(id: String) = placeDataSource.delete(id)
 
-    fun getAllLocalPlaces() = placeDao.getAllPlaces()
+    suspend fun getAllLocalPlaces() = placeLocalDataSource.getAllPlaces()
 
     suspend fun getAllRemotePlaces() = placeDataSource.getAllPlaces()
 
-    fun getLocalPlacesInFlow() = placeDao.getAllPlacesInFlow()
+    fun getLocalPlacesInFlow(): Flow<List<PlaceEntity>> =
+        placeLocalDataSource.getAllPlacesInFlow()
 }

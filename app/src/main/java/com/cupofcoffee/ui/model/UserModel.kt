@@ -1,7 +1,7 @@
 package com.cupofcoffee.ui.model
 
-import com.cupofcoffee.data.local.UserEntity
-import com.cupofcoffee.data.remote.UserDTO
+import com.cupofcoffee.data.local.model.UserEntity
+import com.cupofcoffee.data.remote.model.UserDTO
 
 data class UserModel(
     val name: String? = null,

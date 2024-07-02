@@ -1,8 +1,8 @@
-package com.cupofcoffee.data.local
+package com.cupofcoffee.data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.cupofcoffee.data.remote.UserDTO
+import com.cupofcoffee.data.remote.model.UserDTO
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.UserModel
 

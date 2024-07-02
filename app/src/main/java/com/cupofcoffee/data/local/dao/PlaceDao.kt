@@ -1,16 +1,18 @@
-package com.cupofcoffee.data.local
+package com.cupofcoffee.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.cupofcoffee.data.local.model.PlaceEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlaceDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(placeEntity: PlaceEntity)
 
     @Query("SELECT * FROM places Where id = :id")

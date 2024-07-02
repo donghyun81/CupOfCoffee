@@ -5,6 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.cupofcoffee.data.local.dao.MeetingDao
+import com.cupofcoffee.data.local.dao.PlaceDao
+import com.cupofcoffee.data.local.dao.UserDao
+import com.cupofcoffee.data.local.model.MeetingEntity
+import com.cupofcoffee.data.local.model.PlaceEntity
+import com.cupofcoffee.data.local.model.UserEntity
 
 @Database(
     entities = [MeetingEntity::class, PlaceEntity::class, UserEntity::class],

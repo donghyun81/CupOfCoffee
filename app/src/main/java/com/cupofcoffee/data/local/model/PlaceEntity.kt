@@ -1,8 +1,8 @@
-package com.cupofcoffee.data.local
+package com.cupofcoffee.data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.cupofcoffee.data.remote.PlaceDTO
+import com.cupofcoffee.data.remote.model.PlaceDTO
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.PlaceModel
 

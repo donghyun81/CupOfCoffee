@@ -1,5 +1,7 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.service
 
+import com.cupofcoffee.data.remote.RemoteIdWrapper
+import com.cupofcoffee.data.remote.model.UserDTO
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET

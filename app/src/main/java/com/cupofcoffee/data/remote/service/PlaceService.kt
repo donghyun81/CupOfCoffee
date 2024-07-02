@@ -1,5 +1,6 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.service
 
+import com.cupofcoffee.data.remote.model.PlaceDTO
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -8,6 +9,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 private const val PlACE_PATH = "places"
+
 
 interface PlaceService {
 

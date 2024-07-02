@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.local.asMeetingDTO
-import com.cupofcoffee.data.local.asPlaceDTO
-import com.cupofcoffee.data.local.asUserDTO
+import com.cupofcoffee.data.local.model.asMeetingDTO
+import com.cupofcoffee.data.local.model.asPlaceDTO
+import com.cupofcoffee.data.local.model.asUserDTO
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
@@ -16,7 +16,8 @@ class SyncRemoteWorker(
     workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
 
-    private val meetingRepositoryImpl: MeetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository
+    private val meetingRepositoryImpl: MeetingRepositoryImpl =
+        CupOfCoffeeApplication.meetingRepository
     private val placeRepositoryImpl: PlaceRepositoryImpl = CupOfCoffeeApplication.placeRepository
     private val userRepositoryImpl: UserRepositoryImpl = CupOfCoffeeApplication.userRepository
 

@@ -1,8 +1,8 @@
-package com.cupofcoffee.data.local
+package com.cupofcoffee.data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.cupofcoffee.data.remote.MeetingDTO
+import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingModel
 

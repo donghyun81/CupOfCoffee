@@ -1,34 +1,36 @@
 package com.cupofcoffee.data.repository
 
-import com.cupofcoffee.data.local.UserDao
-import com.cupofcoffee.data.local.UserEntity
-import com.cupofcoffee.data.local.asUserEntry
-import com.cupofcoffee.data.remote.UserDTO
-import com.cupofcoffee.data.remote.UserDataSource
-import kotlinx.coroutines.flow.map
+import com.cupofcoffee.data.local.datasource.UserLocalDataSource
+import com.cupofcoffee.data.local.model.UserEntity
+import com.cupofcoffee.data.remote.datasource.UserRemoteDataSource
+import com.cupofcoffee.data.remote.model.UserDTO
 
 class UserRepositoryImpl(
-    private val userDao: UserDao,
-    private val userDataSource: UserDataSource
+    private val userLocalDataSource: UserLocalDataSource,
+    private val userRemoteDataSource: UserRemoteDataSource,
 ) {
 
-    suspend fun insertLocal(userEntity: UserEntity) = userDao.insert(userEntity)
+    suspend fun insertLocal(userEntity: UserEntity) = userLocalDataSource.insert(userEntity)
 
-    suspend fun insertRemote(id: String, userDTO: UserDTO) = userDataSource.insert(id, userDTO)
+    suspend fun insertRemote(id: String, userDTO: UserDTO) =
+        userRemoteDataSource.insert(id, userDTO)
 
-    fun getLocalUserByIdInFlow(id: String) = userDao.getUserByIdInFlow(id).map { it?.asUserEntry() }
+    fun getLocalUserByIdInFlow(id: String) =
+        userLocalDataSource.getUserByIdInFlow(id)
 
-    fun getLocalUserById(id: String) = userDao.getUserById(id).asUserEntry()
+    suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id)
+
+    suspend fun getRemoteUsersByIds(ids: List<String>) = userRemoteDataSource.getUsersByIds(ids)
 
     suspend fun updateLocal(userEntity: UserEntity) =
-        userDao.update(userEntity)
+        userLocalDataSource.update(userEntity)
 
     suspend fun updateRemote(id: String, userDTO: UserDTO) =
-        userDataSource.update(id, userDTO)
+        userRemoteDataSource.update(id, userDTO)
 
-    suspend fun deleteLocal(userEntity: UserEntity) = userDao.delete(userEntity)
+    suspend fun deleteLocal(userEntity: UserEntity) = userLocalDataSource.delete(userEntity)
 
-    suspend fun deleteRemote(id: String) = userDataSource.delete(id)
+    suspend fun deleteRemote(id: String) = userRemoteDataSource.delete(id)
 
-    fun getAllUsers(): List<UserEntity> = userDao.getAllUsers()
+    suspend fun getAllUsers(): List<UserEntity> = userLocalDataSource.getAllUsers()
 }

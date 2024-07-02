@@ -8,7 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
+import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentHomeBinding
+import com.cupofcoffee.ui.showLoading
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraUpdate
@@ -67,16 +69,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun initMarkers(naverMap: NaverMap) {
-        viewModel.uiState.observe(viewLifecycleOwner) { uistate ->
-            uistate.markers.map { marker ->
-                marker.map = naverMap
-                marker.setOnClickListener {
-                    val action =
-                        HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(marker.tag.toString())
-                    findNavController().navigate(action)
-                    true
+        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+            result.handle(
+                onLoading = {
+                    binding.cpiLoading.showLoading(result)
+                },
+                onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
+                    uiState.markers.map { marker ->
+                        marker.map = naverMap
+                        marker.setOnClickListener {
+                            val action =
+                                HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(
+                                    marker.tag.toString()
+                                )
+                            findNavController().navigate(action)
+                            true
+                        }
+                    }
+                },
+                onError = {
+                    binding.cpiLoading.showLoading(result)
                 }
-            }
+            )
         }
     }
 

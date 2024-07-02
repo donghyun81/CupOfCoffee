@@ -2,13 +2,19 @@ package com.cupofcoffee.data.module
 
 import android.content.Context
 import com.cupofcoffee.data.local.CupOfCoffeeDatabase
+import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
+import com.cupofcoffee.data.local.datasource.PlaceLocalDataSource
+import com.cupofcoffee.data.local.datasource.UserLocalDataSource
 
 object LocalModule {
     fun provideDatabase(context: Context) = CupOfCoffeeDatabase.from(context)
 
-    fun provideMeetingDao(database: CupOfCoffeeDatabase) = database.meetingDao()
+    fun provideMeetingLocalDataSource(database: CupOfCoffeeDatabase) =
+        MeetingLocalDataSource(database.meetingDao())
 
-    fun providePlaceDao(database: CupOfCoffeeDatabase) = database.placeDao()
+    fun providePlaceLocalDataSource(database: CupOfCoffeeDatabase) =
+        PlaceLocalDataSource(database.placeDao())
 
-    fun provideUserDao(database: CupOfCoffeeDatabase) = database.userDao()
+    fun provideUserLocalDataSource(database: CupOfCoffeeDatabase) =
+        UserLocalDataSource(database.userDao())
 }

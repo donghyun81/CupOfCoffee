@@ -1,6 +1,6 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.model
 
-import com.cupofcoffee.data.local.MeetingEntity
+import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingModel
 import kotlinx.serialization.Serializable

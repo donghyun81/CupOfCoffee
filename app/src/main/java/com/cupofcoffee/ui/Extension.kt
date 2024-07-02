@@ -1,6 +1,7 @@
 package com.cupofcoffee.ui
 
 import android.view.View
+import com.cupofcoffee.data.DataResult
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
@@ -32,4 +33,12 @@ fun View.showSnackBar(stringId: Int) {
         stringId,
         Snackbar.LENGTH_SHORT
     ).show()
+}
+
+fun <T> View.showLoading(result: DataResult<T>) {
+    visibility = when (result) {
+        is DataResult.Error -> View.GONE
+        DataResult.Loading -> View.VISIBLE
+        is DataResult.Success -> View.GONE
+    }
 }

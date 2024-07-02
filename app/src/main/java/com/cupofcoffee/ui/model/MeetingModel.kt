@@ -1,7 +1,7 @@
 package com.cupofcoffee.ui.model
 
-import com.cupofcoffee.data.local.MeetingEntity
-import com.cupofcoffee.data.remote.MeetingDTO
+import com.cupofcoffee.data.local.model.MeetingEntity
+import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.ui.meetinglist.MeetingModelWithPeople
 
 data class MeetingModel(

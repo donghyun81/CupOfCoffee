@@ -1,4 +1,4 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.model
 
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.UserModel

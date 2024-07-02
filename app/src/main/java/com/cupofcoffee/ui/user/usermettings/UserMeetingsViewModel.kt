@@ -10,20 +10,23 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.remote.asPlaceEntity
+import com.cupofcoffee.data.DataResult
+import com.cupofcoffee.data.DataResult.Companion.error
+import com.cupofcoffee.data.DataResult.Companion.success
+import com.cupofcoffee.data.local.model.MeetingEntity
+import com.cupofcoffee.data.local.model.asMeetingEntry
+import com.cupofcoffee.data.local.model.asUserDTO
+import com.cupofcoffee.data.local.model.asUserEntry
+import com.cupofcoffee.data.remote.model.asPlaceEntity
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.asMeetingEntity
-import com.cupofcoffee.ui.model.asUserDTO
-import com.cupofcoffee.ui.model.asUserEntity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 private const val CATEGORY_TAG = "category"
@@ -37,9 +40,9 @@ class UserMeetingsViewModel(
 
     private val category = savedStateHandle.get<MeetingsCategory>(CATEGORY_TAG)!!
 
-    private val _uiState: MutableLiveData<UserMeetingsUiState> =
-        MutableLiveData(UserMeetingsUiState())
-    val uiState: LiveData<UserMeetingsUiState> = _uiState
+    private val _uiState: MutableLiveData<DataResult<UserMeetingsUiState>> =
+        MutableLiveData()
+    val uiState: LiveData<DataResult<UserMeetingsUiState>> = _uiState
 
     init {
         viewModelScope.launch {
@@ -50,8 +53,8 @@ class UserMeetingsViewModel(
     private suspend fun setMeetings() {
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
-        user.collect { userEntry ->
-            userEntry ?: return@collect
+        user.collect { userEntity ->
+            val userEntry = userEntity?.asUserEntry() ?: return@collect
             when (category) {
                 MeetingsCategory.ATTENDED_MEETINGS -> {
                     val meetings = getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys)
@@ -67,22 +70,19 @@ class UserMeetingsViewModel(
     }
 
     private suspend fun getMeetingEntries(meetingIds: Set<String>) =
-        withContext(Dispatchers.IO) {
-            meetingIds.map { id ->
-                meetingRepositoryImpl.getLocalMeeting(id)
-            }
-        }
+        meetingRepositoryImpl.getLocalMeetingsByIds(meetingIds.toList())
 
-    private suspend fun updateMeetings(meetingEntries: List<MeetingEntry>) {
-        withContext(Dispatchers.Main) {
-            _uiState.value = _uiState.value?.copy(
-                meetings = meetingEntries
-            )
+    private fun updateMeetings(meetingEntities: List<MeetingEntity>) {
+        try {
+            val meetingEntries = meetingEntities.map { it.asMeetingEntry() }
+            _uiState.value = success(UserMeetingsUiState(meetingEntries))
+        } catch (e: Exception) {
+            _uiState.value = error(e)
         }
     }
 
     fun deleteMeeting(meetingEntry: MeetingEntry) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val placeId = meetingEntry.meetingModel.placeId
             updatePlace(placeId, meetingEntry.id)
             updateUser(meetingEntry.id)
@@ -106,8 +106,8 @@ class UserMeetingsViewModel(
     private suspend fun updateUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserById(uid)
-        user.userModel.madeMeetingIds.remove(meetingId)
-        userRepositoryImpl.updateLocal(user.asUserEntity())
+        user.madeMeetingIds.remove(meetingId)
+        userRepositoryImpl.updateLocal(user)
         userRepositoryImpl.updateRemote(uid, user.asUserDTO())
     }
 

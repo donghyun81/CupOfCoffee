@@ -5,11 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMeetingListBinding
+import com.cupofcoffee.ui.showLoading
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.coroutines.launch
 
 class MeetingListFragment : BottomSheetDialogFragment() {
 
@@ -41,16 +41,33 @@ class MeetingListFragment : BottomSheetDialogFragment() {
     }
 
     private fun initTitle() {
-        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
-            val placeEntry = uiState.placeEntry ?: return@observe
-            binding.tvTitle.text = placeEntry.placeModel.caption
+        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+            result.handle(
+                onLoading = {
+                    binding.cpiLoading.showLoading(result)
+                },
+                onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
+                    val placeEntry = uiState.placeEntry ?: return@observe
+                    binding.tvTitle.text = placeEntry.placeModel.caption
+                },
+                onError = {
+                    binding.cpiLoading.showLoading(result)
+                }
+            )
         }
     }
 
     private fun initAdapter() {
         binding.rvMeetings.adapter = adapter
-        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
-            adapter.submitList(uiState.meetingEntriesWithPeople)
+        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+            result.handle(
+                onLoading = {},
+                onSuccess = { uiState ->
+                    adapter.submitList(uiState.meetingEntriesWithPeople)
+                },
+                onError = {}
+            )
         }
     }
 

@@ -8,20 +8,22 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.local.asUserEntry
+import com.cupofcoffee.data.DataResult
+import com.cupofcoffee.data.DataResult.Companion.error
+import com.cupofcoffee.data.DataResult.Companion.loading
+import com.cupofcoffee.data.DataResult.Companion.success
+import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 class UserViewModel(
     private val userRepositoryImpl: UserRepositoryImpl
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<UserUiState> = MutableLiveData(UserUiState())
-    val uiState: LiveData<UserUiState> = _uiState
+    private val _uiState: MutableLiveData<DataResult<UserUiState>> = MutableLiveData(loading())
+    val uiState: LiveData<DataResult<UserUiState>> = _uiState
 
     init {
         initUser()
@@ -30,18 +32,25 @@ class UserViewModel(
 
     private fun initUser() {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid).flowOn(Dispatchers.IO)
+        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
         viewModelScope.launch {
-            user.collect { userEntry ->
-                userEntry ?: return@collect
-                _uiState.value = _uiState.value?.copy(
-                    user = userEntry,
-                    attendedMeetingsCount = userEntry.userModel.attendedMeetingIds.count(),
-                    madeMeetingsCount = userEntry.userModel.madeMeetingIds.count()
-                )
+            user.collect { userEntity ->
+                try {
+                    val userEntry = userEntity?.asUserEntry() ?: return@collect
+                    _uiState.value = success(
+                        UserUiState(
+                            user = userEntry,
+                            attendedMeetingsCount = userEntry.userModel.attendedMeetingIds.count(),
+                            madeMeetingsCount = userEntry.userModel.madeMeetingIds.count()
+                        )
+                    )
+                } catch (e: Exception) {
+                    error(e)
+                }
             }
         }
     }
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
