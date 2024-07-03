@@ -11,6 +11,7 @@ import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentHomeBinding
 import com.cupofcoffee.ui.showLoading
+import com.cupofcoffee.ui.showSnackBar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraUpdate
@@ -78,10 +79,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     binding.cpiLoading.showLoading(result)
                     uiState.markers.map { marker ->
                         marker.map = naverMap
+                        val placeId = marker.tag.toString()
                         marker.setOnClickListener {
                             val action =
                                 HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(
-                                    marker.tag.toString()
+                                    placeId
                                 )
                             findNavController().navigate(action)
                             true
@@ -90,6 +92,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
+                    view?.showSnackBar(R.string.data_error_message)
                 }
             )
         }

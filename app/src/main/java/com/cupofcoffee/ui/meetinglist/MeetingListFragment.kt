@@ -6,9 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMeetingListBinding
 import com.cupofcoffee.ui.showLoading
+import com.cupofcoffee.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class MeetingListFragment : BottomSheetDialogFragment() {
@@ -53,6 +55,7 @@ class MeetingListFragment : BottomSheetDialogFragment() {
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
+                    view?.showSnackBar(R.string.data_error_message)
                 }
             )
         }

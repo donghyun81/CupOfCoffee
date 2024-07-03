@@ -6,11 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentUserMeetingsBinding
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.showLoading
+import com.cupofcoffee.ui.showSnackBar
 
 class UserMeetingsFragment : Fragment() {
 
@@ -31,6 +33,15 @@ class UserMeetingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setUserMeetingsAdapter()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun setUserMeetingsAdapter() {
         binding.rvAttendedMeetings.adapter = adapter
         viewModel.uiState.observe(viewLifecycleOwner) { result ->
             result.handle(
@@ -44,14 +55,11 @@ class UserMeetingsFragment : Fragment() {
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
+                    view?.showSnackBar(R.string.data_error_message)
                 }
             )
         }
-    }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
