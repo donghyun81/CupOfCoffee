@@ -1,5 +1,7 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.service
 
+import com.cupofcoffee.data.remote.RemoteIdWrapper
+import com.cupofcoffee.data.remote.model.UserDTO
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -15,7 +17,7 @@ interface UserService {
     suspend fun insert(@Path("id") id: String, @Body userDTO: UserDTO): RemoteIdWrapper
 
     @GET("$USER_PATH/{id}.json")
-    suspend fun getUserById(@Path("id") id: String): UserDTO
+    suspend fun getUserById(@Path("id") id: String): UserDTO?
 
     @PATCH("$USER_PATH/{id}.json")
     suspend fun update(

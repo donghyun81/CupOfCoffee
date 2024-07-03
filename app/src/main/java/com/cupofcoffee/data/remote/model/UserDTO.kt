@@ -1,4 +1,4 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.model
 
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.UserModel
@@ -9,17 +9,17 @@ data class UserDTO(
     val name: String? = null,
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
-    val madeMeetingIds: MutableMap<String,Boolean> = mutableMapOf(),
-    val attendedMeetingIds: MutableMap<String,Boolean> = mutableMapOf()
+    val madeMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
+    val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun UserDTO.toUserEntry(id: String): UserEntry {
+fun UserDTO.asUserEntry(id: String): UserEntry {
     return UserEntry(
         id,
         UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
     )
 }
 
-fun UserDTO.toUserModel() =
+fun UserDTO.asUserModel() =
     UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
 

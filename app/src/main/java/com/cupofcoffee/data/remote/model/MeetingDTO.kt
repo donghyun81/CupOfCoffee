@@ -1,5 +1,6 @@
-package com.cupofcoffee.data.remote
+package com.cupofcoffee.data.remote.model
 
+import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingModel
 import kotlinx.serialization.Serializable
@@ -18,10 +19,9 @@ data class MeetingDTO(
     val content: String
 )
 
-fun MeetingDTO.toMeetingEntry(id: String) =
+fun MeetingDTO.asMeetingEntry(id: String) =
     MeetingEntry(
-        id,
-        MeetingModel(
+        id, MeetingModel(
             caption,
             lat,
             lng,
@@ -34,3 +34,17 @@ fun MeetingDTO.toMeetingEntry(id: String) =
             content
         )
     )
+
+fun MeetingDTO.asMeetingEntity(id: String) = MeetingEntity(
+    id,
+    caption,
+    lat,
+    lng,
+    managerId,
+    personIds,
+    placeId,
+    date,
+    time,
+    createDate,
+    content
+)

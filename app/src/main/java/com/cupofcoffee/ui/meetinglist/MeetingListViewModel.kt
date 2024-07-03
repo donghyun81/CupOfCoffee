@@ -10,22 +10,26 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.remote.toMeetingEntry
-import com.cupofcoffee.data.remote.toPlaceEntry
-import com.cupofcoffee.data.remote.toUserEntry
+import com.cupofcoffee.data.DataResult
+import com.cupofcoffee.data.DataResult.Companion.error
+import com.cupofcoffee.data.DataResult.Companion.loading
+import com.cupofcoffee.data.DataResult.Companion.success
+import com.cupofcoffee.data.local.model.asMeetingEntry
+import com.cupofcoffee.data.local.model.asUserEntry
+import com.cupofcoffee.data.remote.model.asUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.PlaceEntry
-import com.cupofcoffee.ui.model.PlaceModel
-import com.cupofcoffee.ui.model.toMeetingDTO
+import com.cupofcoffee.ui.model.asMeetingDTO
+import com.cupofcoffee.ui.model.asMeetingEntity
+import com.cupofcoffee.ui.model.asUserDTO
+import com.cupofcoffee.ui.model.asUserEntity
 import com.cupofcoffee.ui.model.toMeetingListEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MeetingListViewModel(
     savedStateHandle: SavedStateHandle,
@@ -36,51 +40,42 @@ class MeetingListViewModel(
 
     private val placeId = MeetingListFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
 
-    private val _uiState: MutableLiveData<MeetingListUiState> =
-        MutableLiveData(MeetingListUiState())
-    val uiState: LiveData<MeetingListUiState> = _uiState
+    private val _uiState: MutableLiveData<DataResult<MeetingListUiState>> =
+        MutableLiveData(loading())
+    val uiState: LiveData<DataResult<MeetingListUiState>> = _uiState
 
     init {
         initUiState()
     }
 
     private fun initUiState() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val placeEntry = getPlaceEntry(placeId = placeId)
-            val meetings = getMeetings(placeEntry.placeModel)
-            val meetingEntriesWithPeople = getMeetingEntriesWithPeople(meetings)
-            withContext(Dispatchers.Main) {
-                updateUiState(placeEntry, meetingEntriesWithPeople)
+        viewModelScope.launch {
+            try {
+                val placeEntry = placeRepositoryImpl.getLocalPlaceById(placeId).asMeetingEntry()
+                val meetingEntriesWithPeople = getMeetingEntriesWithPeople(placeEntry)
+                _uiState.value = success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
+            } catch (e: Exception) {
+                _uiState.value = error(e)
             }
         }
     }
 
-    private suspend fun getPlaceEntry(placeId: String) =
-        placeRepositoryImpl.getPlaceById(placeId)!!.toPlaceEntry(placeId)
-
-    private suspend fun getMeetings(placeModel: PlaceModel) =
-        placeModel.meetingIds.keys.map { meetingId ->
-            meetingRepositoryImpl.getMeeting(meetingId).toMeetingEntry(meetingId)
+    private suspend fun getMeetingEntriesWithPeople(placeEntry: PlaceEntry): List<MeetingEntryWithPeople> {
+        val meetingsResult =
+            meetingRepositoryImpl.getLocalMeetingsByIds(placeEntry.placeModel.meetingIds.keys.toList())
+        return meetingsResult.map { meetingEntity ->
+            convertMeetingListEntry(meetingEntity.asMeetingEntry())
         }
+    }
 
-    private suspend fun getMeetingEntriesWithPeople(meetings: List<MeetingEntry>) =
-        meetings.map { meetingEntry ->
-            val users =
-                meetingEntry.meetingModel.personIds.keys.map { id ->
-                    userRepositoryImpl.getUserById(id).toUserEntry(id)
-                }
-            meetingEntry.toMeetingListEntry(users)
-        }
-
-    private fun updateUiState(placeEntry: PlaceEntry, meetings: List<MeetingEntryWithPeople>) {
-        _uiState.value = uiState.value?.copy(
-            placeEntry = placeEntry,
-            meetingEntriesWithPeople = meetings
-        )
+    private suspend fun convertMeetingListEntry(meeting: MeetingEntry): MeetingEntryWithPeople {
+        val users =
+            userRepositoryImpl.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
+        return meeting.toMeetingListEntry(users.map { it.value.asUserEntry(it.key) })
     }
 
     fun applyMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             addMeetingUserId(meetingEntryWithPeople)
             addUserAttendedMeeting(meetingEntryWithPeople.id)
         }
@@ -88,20 +83,29 @@ class MeetingListViewModel(
 
     private suspend fun addMeetingUserId(meetingEntryWithPeople: MeetingEntryWithPeople) {
         with(meetingEntryWithPeople) {
-            meetingRepositoryImpl.update(
+            meetingRepositoryImpl.updateRemote(
                 id,
-                meetingListModel.toMeetingModel()
+                meetingListModel.asMeetingModel()
                     .apply { personIds[Firebase.auth.uid!!] = true }
-                    .toMeetingDTO()
+                    .asMeetingDTO()
+            )
+            meetingRepositoryImpl.updateLocal(
+                meetingListModel.asMeetingModel()
+                    .apply { personIds[Firebase.auth.uid!!] = true }
+                    .asMeetingEntity(id)
             )
         }
     }
 
     private suspend fun addUserAttendedMeeting(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getUserById(uid)
-        user.attendedMeetingIds[meetingId] = true
-        userRepositoryImpl.update(uid, user)
+        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
+        user.collect { userEntity ->
+            val userEntry = userEntity?.asUserEntry() ?: return@collect
+            userEntry.userModel.attendedMeetingIds[meetingId] = true
+            userRepositoryImpl.updateLocal(userEntry.asUserEntity())
+            userRepositoryImpl.updateRemote(uid, userEntry.asUserDTO())
+        }
     }
 
     companion object {

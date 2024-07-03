@@ -1,9 +1,9 @@
 package com.cupofcoffee.data.module
 
 import com.cupofcoffee.BuildConfig
-import com.cupofcoffee.data.remote.MeetingService
-import com.cupofcoffee.data.remote.PlaceService
-import com.cupofcoffee.data.remote.UserService
+import com.cupofcoffee.data.remote.service.MeetingService
+import com.cupofcoffee.data.remote.service.PlaceService
+import com.cupofcoffee.data.remote.service.UserService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json

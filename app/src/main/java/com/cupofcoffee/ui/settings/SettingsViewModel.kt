@@ -2,14 +2,20 @@ package com.cupofcoffee.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
+import com.cupofcoffee.data.local.model.MeetingEntity
+import com.cupofcoffee.data.local.model.asMeetingEntry
+import com.cupofcoffee.data.local.model.asPlaceDTO
+import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
-import kotlinx.coroutines.launch
+import com.cupofcoffee.ui.model.UserEntry
+import com.cupofcoffee.ui.model.asMeetingDTO
+import com.cupofcoffee.ui.model.asMeetingEntity
+import com.cupofcoffee.ui.model.asUserEntity
 
 class SettingsViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
@@ -17,41 +23,46 @@ class SettingsViewModel(
     private val placeRepositoryImpl: PlaceRepositoryImpl
 ) : ViewModel() {
 
-    fun deleteUserData(uid: String) {
-        viewModelScope.launch {
-            val user = userRepositoryImpl.getUserById(uid)
-            user.attendedMeetingIds.keys.map { meetingId ->
-                cancelMeeting(uid, meetingId)
-            }
-            user.madeMeetingIds.keys.map { meetingId ->
-                deleteMeeting(meetingId)
-                deleteMadeMeetingsInPlace(meetingId)
-            }
-            deleteUser(uid)
+    suspend fun deleteUserData(uid: String) {
+        val user = userRepositoryImpl.getLocalUserById(uid).asUserEntry()
+        user.userModel.attendedMeetingIds.keys.map { meetingId ->
+            cancelMeeting(uid, meetingId)
         }
+        user.userModel.madeMeetingIds.keys.map { meetingId ->
+            val meetingEntity = meetingRepositoryImpl.getLocalMeeting(meetingId)
+            deleteMeeting(meetingEntity)
+            deleteMadeMeetingsInPlace(meetingEntity.placeId, meetingId)
+        }
+        deleteUser(user)
     }
 
     private suspend fun cancelMeeting(uid: String, meetingId: String) {
-        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
-        meeting.personIds.remove(uid)
-        meetingRepositoryImpl.update(meetingId, meeting)
+        val meetingEntry = meetingRepositoryImpl.getLocalMeeting(meetingId).asMeetingEntry()
+        meetingEntry.meetingModel.personIds.remove(uid)
+        meetingRepositoryImpl.updateRemote(meetingId, meetingEntry.asMeetingDTO())
+        meetingRepositoryImpl.updateLocal(meetingEntry.asMeetingEntity())
     }
 
-    private suspend fun deleteMeeting(meetingId: String) {
-        meetingRepositoryImpl.delete(meetingId)
+    private suspend fun deleteMeeting(meetingEntity: MeetingEntity) {
+        meetingRepositoryImpl.deleteLocal(meetingEntity)
+        meetingRepositoryImpl.deleteRemote(meetingEntity.id)
     }
 
-    private suspend fun deleteMadeMeetingsInPlace(meetingId: String) {
-        val meeting = meetingRepositoryImpl.getMeeting(meetingId)
-        val placeId = meeting.placeId
-        val place = placeRepositoryImpl.getPlaceById(placeId)!!
-        place.meetingIds.remove(meetingId)
-        if (place.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeId)
-        else placeRepositoryImpl.update(placeId, place)
+    private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
+        val placeEntity = placeRepositoryImpl.getLocalPlaceById(placeId)
+        placeEntity.meetingIds.remove(meetingId)
+        if (placeEntity.meetingIds.isEmpty()) {
+            placeRepositoryImpl.deleteLocal(placeEntity)
+            placeRepositoryImpl.deleteRemote(placeId)
+        } else {
+            placeRepositoryImpl.updateLocal(placeEntity)
+            placeRepositoryImpl.updateRemote(placeId, placeEntity.asPlaceDTO())
+        }
     }
 
-    private suspend fun deleteUser(uid: String) {
-        userRepositoryImpl.delete(uid)
+    private suspend fun deleteUser(userEntry: UserEntry) {
+        userRepositoryImpl.deleteLocal(userEntry.asUserEntity())
+        userRepositoryImpl.deleteRemote(userEntry.id)
     }
 
     companion object {

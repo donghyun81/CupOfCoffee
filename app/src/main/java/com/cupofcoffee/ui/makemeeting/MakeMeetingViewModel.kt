@@ -8,17 +8,20 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
-import com.cupofcoffee.data.remote.PlaceDTO
-import com.cupofcoffee.data.remote.toUserEntry
+import com.cupofcoffee.data.local.model.asUserEntry
+import com.cupofcoffee.data.remote.model.asPlaceEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
 import com.cupofcoffee.ui.model.UserEntry
-import com.cupofcoffee.ui.model.toMeetingDTO
-import com.cupofcoffee.ui.model.toPlaceDTO
-import com.cupofcoffee.ui.model.toUserDTO
+import com.cupofcoffee.ui.model.asMeetingDTO
+import com.cupofcoffee.ui.model.asMeetingEntity
+import com.cupofcoffee.ui.model.asPlaceDTO
+import com.cupofcoffee.ui.model.asPlaceEntity
+import com.cupofcoffee.ui.model.asUserDTO
+import com.cupofcoffee.ui.model.asUserEntity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -36,28 +39,33 @@ class MakeMeetingViewModel(
 
     fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
         viewModelScope.launch {
-            val meetingId = meetingRepositoryImpl.insert(meetingModel.toMeetingDTO())
-            savePlace(meetingId, placeModel = placeModel)
+            val meetingId = meetingRepositoryImpl.insertRemote(meetingModel.asMeetingDTO())
+            meetingRepositoryImpl.insertLocal(meetingModel.asMeetingEntity(meetingId))
+            savePlace(meetingId, placeModel)
             updateUserMeeting(meetingId)
         }
     }
 
     private suspend fun updateUserMeeting(meetingId: String) {
-        val uid = Firebase.auth.uid!!
-        val userDTO = userRepositoryImpl.getUserById(uid)
-        val user = userDTO.toUserEntry(uid)
-        addUserMadeMeeting(user, meetingId)
+        val uid = Firebase.auth.uid ?: return
+        val userFlow = userRepositoryImpl.getLocalUserByIdInFlow(uid)
+        userFlow.collect { userEntity ->
+            val userEntry = userEntity?.asUserEntry() ?: return@collect
+            addUserMadeMeeting(userEntry, meetingId)
+        }
     }
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
         userEntry.userModel.madeMeetingIds[meetingId] = true
-        userRepositoryImpl.update(userEntry.id, userDTO = userEntry.userModel.toUserDTO())
+        val uid = userEntry.id
+        userRepositoryImpl.updateLocal(userEntry.userModel.asUserEntity(uid))
+        userRepositoryImpl.updateRemote(uid, userDTO = userEntry.userModel.asUserDTO())
     }
 
     private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
         val placeId = convertPlaceId()
-        val prvPlaceDTO = placeRepositoryImpl.getPlaceById(placeId)
-        if (prvPlaceDTO != null) updatePlace(placeId, meetingId, prvPlaceDTO)
+        val prvPlaceEntry = placeRepositoryImpl.getRemotePlaceById(placeId)?.asPlaceEntry(placeId)
+        if (prvPlaceEntry != null) updatePlace(placeId, meetingId, prvPlaceEntry.placeModel)
         else createPlace(placeId, meetingId, placeModel)
     }
 
@@ -71,12 +79,14 @@ class MakeMeetingViewModel(
 
     private suspend fun createPlace(placeId: String, meetingId: String, placeModel: PlaceModel) {
         placeModel.meetingIds[meetingId] = true
-        placeRepositoryImpl.insert(placeId, placeModel.toPlaceDTO())
+        placeRepositoryImpl.insertLocal(placeModel.asPlaceEntity(placeId))
+        placeRepositoryImpl.insertRemote(placeId, placeModel.asPlaceDTO())
     }
 
-    private suspend fun updatePlace(placeId: String, meetingId: String, prvPlaceDTO: PlaceDTO) {
-        prvPlaceDTO.meetingIds[meetingId] = true
-        placeRepositoryImpl.update(placeId, prvPlaceDTO)
+    private suspend fun updatePlace(placeId: String, meetingId: String, prvPlaceModel: PlaceModel) {
+        prvPlaceModel.meetingIds[meetingId] = true
+        placeRepositoryImpl.updateLocal(prvPlaceModel.asPlaceEntity(placeId))
+        placeRepositoryImpl.updateRemote(placeId, prvPlaceModel.asPlaceDTO())
     }
 
     companion object {

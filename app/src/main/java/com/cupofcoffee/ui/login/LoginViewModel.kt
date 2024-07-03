@@ -2,24 +2,25 @@ package com.cupofcoffee.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.UserEntry
-import com.cupofcoffee.ui.model.toUserDTO
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.cupofcoffee.ui.model.asUserDTO
+import com.cupofcoffee.ui.model.asUserEntity
 
 class LoginViewModel(private val userRepository: UserRepositoryImpl) : ViewModel() {
 
-    fun insertUser(userEntry: UserEntry) {
-        viewModelScope.launch(Dispatchers.IO) {
-            with(userEntry) {
-                userRepository.insert(id, userModel.toUserDTO())
-            }
+    suspend fun insertUser(userEntry: UserEntry) {
+        with(userEntry) {
+            userRepository.insertLocal(userModel.asUserEntity(id))
+            userRepository.insertRemote(id, userModel.asUserDTO())
         }
+    }
+
+    suspend fun loginUser(userEntry: UserEntry) {
+        userRepository.insertLocal(userEntry.asUserEntity())
     }
 
     companion object {

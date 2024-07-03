@@ -6,11 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import com.cupofcoffee.R
+import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentUserMeetingsBinding
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
-import kotlinx.coroutines.launch
+import com.cupofcoffee.ui.showLoading
+import com.cupofcoffee.ui.showSnackBar
 
 class UserMeetingsFragment : Fragment() {
 
@@ -31,10 +33,7 @@ class UserMeetingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.rvAttendedMeetings.adapter = adapter
-        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
-            adapter.submitList(uiState.meetings)
-        }
+        setUserMeetingsAdapter()
     }
 
     override fun onDestroyView() {
@@ -42,11 +41,30 @@ class UserMeetingsFragment : Fragment() {
         _binding = null
     }
 
+    private fun setUserMeetingsAdapter() {
+        binding.rvAttendedMeetings.adapter = adapter
+        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+            result.handle(
+                onLoading = {
+                    binding.cpiLoading.showLoading(result)
+                },
+                onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
+                    adapter.submitList(uiState.meetings)
+
+                },
+                onError = {
+                    binding.cpiLoading.showLoading(result)
+                    view?.showSnackBar(R.string.data_error_message)
+                }
+            )
+        }
+
+    }
+
     private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
         override fun onClick(meetingEntry: MeetingEntry) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.deleteMeeting(meetingEntry)
-            }
+            viewModel.deleteMeeting(meetingEntry)
         }
     }
 

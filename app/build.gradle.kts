@@ -7,6 +7,7 @@ plugins {
     id("com.google.gms.google-services")
     id("kotlin-parcelize")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -89,4 +90,13 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.0-beta02")
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

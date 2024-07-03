@@ -1,6 +1,7 @@
 package com.cupofcoffee.ui.model
 
-import com.cupofcoffee.data.remote.MeetingDTO
+import com.cupofcoffee.data.local.model.MeetingEntity
+import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.ui.meetinglist.MeetingModelWithPeople
 
 data class MeetingModel(
@@ -8,16 +9,43 @@ data class MeetingModel(
     val lat: Double,
     val lng: Double,
     val managerId: String,
-    val personIds: MutableMap<String,Boolean> = mutableMapOf(),
+    val personIds: MutableMap<String, Boolean> = mutableMapOf(),
     val placeId: String,
     val date: String,
     val time: String,
     val createDate: Long,
-    val content: String
+    val content: String,
+    val isSynced: Boolean = true,
 )
 
-fun MeetingModel.toMeetingDTO() =
+fun MeetingModel.asMeetingDTO() =
     MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 
-fun MeetingModel.toMeetingListModel(people: List<UserEntry>) =
-    MeetingModelWithPeople(caption, lat, lng, managerId, people, placeId, date, time, createDate, content)
+fun MeetingModel.asMeetingEntity(id: String) =
+    MeetingEntity(
+        id,
+        caption,
+        lat,
+        lng,
+        managerId,
+        personIds,
+        placeId,
+        date,
+        time,
+        createDate,
+        content
+    )
+
+fun MeetingModel.asMeetingListModel(people: List<UserEntry>) =
+    MeetingModelWithPeople(
+        caption,
+        lat,
+        lng,
+        managerId,
+        people,
+        placeId,
+        date,
+        time,
+        createDate,
+        content
+    )

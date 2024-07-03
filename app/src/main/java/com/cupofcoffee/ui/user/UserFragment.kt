@@ -8,9 +8,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.cupofcoffee.R
+import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentUserBinding
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.UserModel
+import com.cupofcoffee.ui.showLoading
+import com.cupofcoffee.ui.showSnackBar
 import com.cupofcoffee.ui.user.usermettings.UserMeetingsPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -51,14 +55,24 @@ class UserFragment : Fragment() {
     }
 
     private fun setUserUi() {
-        viewModel.uiState.observe(viewLifecycleOwner) { uiState ->
-            val userModel = uiState.user?.userModel ?: return@observe
-            setUserProfile(userModel)
-            with(binding) {
-                tvNickName.text = userModel.nickname
-                tvAttendedMeetingCount.text = uiState.attendedMeetingsCount.toString()
-                binding.tvMadeMeetingCount.text = uiState.madeMeetingsCount.toString()
-            }
+        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+            result.handle(
+                onLoading = { binding.cpiLoading.showLoading(result) },
+                onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
+                    val userModel = uiState.user?.userModel ?: return@observe
+                    setUserProfile(userModel)
+                    with(binding) {
+                        tvNickName.text = userModel.nickname
+                        tvAttendedMeetingCount.text = uiState.attendedMeetingsCount.toString()
+                        binding.tvMadeMeetingCount.text = uiState.madeMeetingsCount.toString()
+                    }
+                },
+                onError = {
+                    binding.cpiLoading.showLoading(result)
+                    view?.showSnackBar(R.string.data_error_message)
+                }
+            )
         }
     }
 
