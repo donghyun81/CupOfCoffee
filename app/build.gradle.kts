@@ -24,6 +24,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "BASE_URL", getApiKey("BASE_URL"))
+        buildConfigField("String", "BASE_WS_URL", getApiKey("BASE_WS_URL"))
         buildConfigField("String", "NAVER_LOGIN_CLIENT_ID", getApiKey("NAVER_LOGIN_CLIENT_ID"))
         buildConfigField(
             "String",
@@ -99,4 +100,6 @@ dependencies {
 
 
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
 }

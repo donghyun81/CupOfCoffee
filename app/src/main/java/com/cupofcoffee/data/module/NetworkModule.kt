@@ -22,14 +22,14 @@ object NetworkModule {
     private const val BASE_URL = BuildConfig.BASE_URL
     private val contentType = "application/json".toMediaType()
 
-    private val instance: Retrofit by lazy {
+    private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
     }
 
-    fun getMeetingService(): MeetingService = instance.create(MeetingService::class.java)
-    fun getPlaceService(): PlaceService = instance.create(PlaceService::class.java)
-    fun getUserService(): UserService = instance.create(UserService::class.java)
+    fun getMeetingService(): MeetingService = retrofit.create(MeetingService::class.java)
+    fun getPlaceService(): PlaceService = retrofit.create(PlaceService::class.java)
+    fun getUserService(): UserService = retrofit.create(UserService::class.java)
 }
