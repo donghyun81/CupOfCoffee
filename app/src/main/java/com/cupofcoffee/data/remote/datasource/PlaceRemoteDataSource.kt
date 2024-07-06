@@ -16,7 +16,11 @@ class PlaceRemoteDataSource(
     }
 
     suspend fun getPlaceById(id: String) = withContext(ioDispatcher) {
-        placeService.getPlaceById(id)
+        try {
+            placeService.getPlaceById(id)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun update(id: String, placeDTO: PlaceDTO) = withContext(ioDispatcher) {

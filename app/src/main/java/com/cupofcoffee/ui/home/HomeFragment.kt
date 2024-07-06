@@ -43,6 +43,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     override fun onDestroy() {
         super.onDestroy()
+        viewModel.closeWebSocket()
         _binding = null
     }
 

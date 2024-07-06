@@ -19,7 +19,7 @@ interface PlaceService {
     @GET("$PlACE_PATH/{id}.json")
     suspend fun getPlaceById(
         @Path("id") id: String
-    ): PlaceDTO?
+    ): PlaceDTO
 
     @PATCH("$PlACE_PATH/{id}.json")
     suspend fun update(

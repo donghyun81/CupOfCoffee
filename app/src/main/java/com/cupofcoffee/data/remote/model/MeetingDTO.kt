@@ -19,6 +19,9 @@ data class MeetingDTO(
     val content: String
 )
 
+fun MeetingDTO.asMeetingModel() =
+    MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
+
 fun MeetingDTO.asMeetingEntry(id: String) =
     MeetingEntry(
         id, MeetingModel(

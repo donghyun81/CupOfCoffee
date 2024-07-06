@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.home
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,7 +11,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.local.model.PlaceEntity
+import com.cupofcoffee.data.remote.model.asPlaceEntry
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
+import com.cupofcoffee.ui.model.PlaceEntry
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
 import kotlinx.coroutines.launch
@@ -32,20 +35,30 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
     }
 
     private suspend fun initMarkers() {
-        viewModelScope.launch {
-            val placesFlow = placeRepositoryImpl.getLocalPlacesInFlow()
-            placesFlow.collect { places ->
-                try {
-                    _uiState.value = DataResult.Success(HomeUiState(places.map { it.toMarker() }))
-                } catch (e: Exception) {
-                    _uiState.value = DataResult.Error(e)
-                }
+        placeRepositoryImpl.connectWebSocket()
+        val placesFlow = placeRepositoryImpl.placesUpdates
+        placesFlow.collect { places ->
+            Log.d("12345", places.toString())
+            try {
+                _uiState.value =
+                    DataResult.Success(HomeUiState(
+                        places.map { it.value.asPlaceEntry(it.key) }.map { it.toMarker() }
+                    )
+                    )
+                Log.d("12345", places.toString())
+            } catch (e: Exception) {
+                Log.d("12345", "에러")
+                _uiState.value = DataResult.Error(e)
             }
         }
     }
 
-    private fun PlaceEntity.toMarker() = Marker().apply {
-        position = LatLng(lat, lng)
+    fun closeWebSocket() {
+        placeRepositoryImpl.closeWebSocket()
+    }
+
+    private fun PlaceEntry.toMarker() = Marker().apply {
+        position = LatLng(placeModel.lat, placeModel.lng)
         tag = id
     }
 

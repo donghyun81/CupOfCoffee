@@ -4,12 +4,28 @@ import com.cupofcoffee.data.local.datasource.PlaceLocalDataSource
 import com.cupofcoffee.data.local.model.PlaceEntity
 import com.cupofcoffee.data.remote.datasource.PlaceRemoteDataSource
 import com.cupofcoffee.data.remote.model.PlaceDTO
+import com.cupofcoffee.data.remote.websocket.PlaceWebSocketManager
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 class PlaceRepositoryImpl(
     private val placeLocalDataSource: PlaceLocalDataSource,
     private val placeDataSource: PlaceRemoteDataSource
 ) {
+
+    private val placesChannel = Channel<Map<String, PlaceDTO>>()
+    val placesUpdates: Flow<Map<String, PlaceDTO>> = placesChannel.receiveAsFlow()
+
+    private val webSocketManager = PlaceWebSocketManager(placesChannel)
+
+    fun connectWebSocket() {
+        webSocketManager.connect()
+    }
+
+    fun closeWebSocket() {
+        webSocketManager.close()
+    }
 
     suspend fun insertLocal(placeEntity: PlaceEntity) =
         placeLocalDataSource.insert(placeEntity)
