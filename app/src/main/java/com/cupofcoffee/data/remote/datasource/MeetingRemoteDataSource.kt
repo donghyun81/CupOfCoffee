@@ -15,7 +15,13 @@ class MeetingRemoteDataSource(
         meetingService.insert(meetingDTO).name
     }
 
-    suspend fun getMeeting(id: String) = meetingService.getMeeting(id)
+    suspend fun getMeeting(id: String) = withContext(ioDispatcher) {
+        meetingService.getMeeting(id)
+    }
+
+    suspend fun getMeetingsByIds(ids: List<String>) = withContext(ioDispatcher) {
+        ids.associateWith { id -> meetingService.getMeeting(id) }
+    }
 
     suspend fun update(id: String, meetingDTO: MeetingDTO) = withContext(ioDispatcher) {
         meetingService.update(id, meetingDTO)

@@ -14,7 +14,6 @@ import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.loading
 import com.cupofcoffee.data.DataResult.Companion.success
-import com.cupofcoffee.data.local.model.asMeetingEntry
 import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.remote.model.asUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
@@ -27,6 +26,7 @@ import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
 import com.cupofcoffee.ui.model.toMeetingListEntry
+import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -35,7 +35,8 @@ class MeetingListViewModel(
     savedStateHandle: SavedStateHandle,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val placeRepositoryImpl: PlaceRepositoryImpl,
-    private val userRepositoryImpl: UserRepositoryImpl
+    private val userRepositoryImpl: UserRepositoryImpl,
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     private val placeId = MeetingListFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
@@ -45,26 +46,27 @@ class MeetingListViewModel(
     val uiState: LiveData<DataResult<MeetingListUiState>> = _uiState
 
     init {
-        initUiState()
-    }
-
-    private fun initUiState() {
         viewModelScope.launch {
-            try {
-                val placeEntry = placeRepositoryImpl.getLocalPlaceById(placeId).asMeetingEntry()
-                val meetingEntriesWithPeople = getMeetingEntriesWithPeople(placeEntry)
-                _uiState.value = success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
-            } catch (e: Exception) {
-                _uiState.value = error(e)
-            }
+            initUiState()
         }
     }
 
-    private suspend fun getMeetingEntriesWithPeople(placeEntry: PlaceEntry): List<MeetingEntryWithPeople> {
-        val meetingsResult =
-            meetingRepositoryImpl.getLocalMeetingsByIds(placeEntry.placeModel.meetingIds.keys.toList())
-        return meetingsResult.map { meetingEntity ->
-            convertMeetingListEntry(meetingEntity.asMeetingEntry())
+    private suspend fun initUiState() {
+        try {
+            val placeEntry = placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())!!
+            val meetingEntriesWithPeople = convertMeetingEntriesWithPeople(placeEntry)
+            _uiState.value = success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
+        } catch (e: Exception) {
+            _uiState.value = error(e)
+        }
+    }
+
+    private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): List<MeetingEntryWithPeople> {
+        val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
+        val meetings =
+            meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
+        return meetings.map { meetingEntry ->
+            convertMeetingListEntry(meetingEntry)
         }
     }
 
@@ -115,7 +117,8 @@ class MeetingListViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository
+                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }

@@ -13,17 +13,17 @@ import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.success
-import com.cupofcoffee.data.local.model.MeetingEntity
-import com.cupofcoffee.data.local.model.asMeetingEntry
 import com.cupofcoffee.data.local.model.asUserDTO
 import com.cupofcoffee.data.local.model.asUserEntry
-import com.cupofcoffee.data.remote.model.asPlaceEntity
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.asMeetingEntity
+import com.cupofcoffee.ui.model.asPlaceDTO
+import com.cupofcoffee.ui.model.asPlaceEntity
+import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -35,7 +35,8 @@ class UserMeetingsViewModel(
     savedStateHandle: SavedStateHandle,
     private val userRepositoryImpl: UserRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
-    private val placeRepositoryImpl: PlaceRepositoryImpl
+    private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     private val category = savedStateHandle.get<MeetingsCategory>(CATEGORY_TAG)!!
@@ -57,24 +58,26 @@ class UserMeetingsViewModel(
             val userEntry = userEntity?.asUserEntry() ?: return@collect
             when (category) {
                 MeetingsCategory.ATTENDED_MEETINGS -> {
-                    val meetings = getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys)
+                    val meetings =
+                        getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
                     updateMeetings(meetings)
                 }
 
                 MeetingsCategory.MADE_MEETINGS -> {
-                    val meetings = getMeetingEntries(userEntry.userModel.madeMeetingIds.keys)
+                    val meetings =
+                        getMeetingEntries(userEntry.userModel.madeMeetingIds.keys.toList())
                     updateMeetings(meetings)
                 }
             }
         }
     }
 
-    private suspend fun getMeetingEntries(meetingIds: Set<String>) =
-        meetingRepositoryImpl.getLocalMeetingsByIds(meetingIds.toList())
+    private suspend fun getMeetingEntries(meetingIds: List<String>) =
+        meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
 
-    private fun updateMeetings(meetingEntities: List<MeetingEntity>) {
+    private fun updateMeetings(meetingEntries: List<MeetingEntry>) {
         try {
-            val meetingEntries = meetingEntities.map { it.asMeetingEntry() }
+            val meetingEntries = meetingEntries
             _uiState.value = success(UserMeetingsUiState(meetingEntries))
         } catch (e: Exception) {
             _uiState.value = error(e)
@@ -92,14 +95,17 @@ class UserMeetingsViewModel(
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {
-        val placeDTO = placeRepositoryImpl.getRemotePlaceById(placeId) ?: return
-        placeDTO.meetingIds.remove(meetingId)
-        if (placeDTO.meetingIds.isEmpty()) {
-            placeRepositoryImpl.deleteLocal(placeDTO.asPlaceEntity(placeId))
-            placeRepositoryImpl.deleteRemote(placeId)
-        } else {
-            placeRepositoryImpl.updateLocal(placeDTO.asPlaceEntity(placeId))
-            placeRepositoryImpl.updateRemote(placeId, placeDTO)
+        val placeEntry =
+            placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected()) ?: return
+        with(placeEntry) {
+            placeModel.meetingIds.remove(meetingId)
+            if (placeModel.meetingIds.isEmpty()) {
+                placeRepositoryImpl.deleteLocal(placeModel.asPlaceEntity(placeId))
+                placeRepositoryImpl.deleteRemote(placeId)
+            } else {
+                placeRepositoryImpl.updateLocal(placeModel.asPlaceEntity(placeId))
+                placeRepositoryImpl.updateRemote(placeId, placeModel.asPlaceDTO())
+            }
         }
     }
 
@@ -118,7 +124,8 @@ class UserMeetingsViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository
+                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }

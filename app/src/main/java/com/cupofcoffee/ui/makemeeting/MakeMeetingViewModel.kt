@@ -22,6 +22,7 @@ import com.cupofcoffee.ui.model.asPlaceDTO
 import com.cupofcoffee.ui.model.asPlaceEntity
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
+import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -29,10 +30,11 @@ import kotlinx.coroutines.launch
 const val POSITION_COUNT = 10
 
 class MakeMeetingViewModel(
+    savedStateHandle: SavedStateHandle,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val placeRepositoryImpl: PlaceRepositoryImpl,
     private val userRepositoryImpl: UserRepositoryImpl,
-    savedStateHandle: SavedStateHandle
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
@@ -64,7 +66,7 @@ class MakeMeetingViewModel(
 
     private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
         val placeId = convertPlaceId()
-        val prvPlaceEntry = placeRepositoryImpl.getRemotePlaceById(placeId)?.asPlaceEntry(placeId)
+        val prvPlaceEntry = placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())
         if (prvPlaceEntry != null) updatePlace(placeId, meetingId, prvPlaceEntry.placeModel)
         else createPlace(placeId, meetingId, placeModel)
     }
@@ -96,7 +98,8 @@ class MakeMeetingViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository
+                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }

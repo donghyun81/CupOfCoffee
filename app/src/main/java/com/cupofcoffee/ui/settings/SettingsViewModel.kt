@@ -6,21 +6,23 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.local.model.MeetingEntity
-import com.cupofcoffee.data.local.model.asMeetingEntry
 import com.cupofcoffee.data.local.model.asPlaceDTO
 import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
+import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asMeetingDTO
 import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.ui.model.asUserEntity
+import com.cupofcoffee.util.NetworkUtil
 
 class SettingsViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
-    private val placeRepositoryImpl: PlaceRepositoryImpl
+    private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     suspend fun deleteUserData(uid: String) {
@@ -29,23 +31,25 @@ class SettingsViewModel(
             cancelMeeting(uid, meetingId)
         }
         user.userModel.madeMeetingIds.keys.map { meetingId ->
-            val meetingEntity = meetingRepositoryImpl.getLocalMeeting(meetingId)
-            deleteMeeting(meetingEntity)
-            deleteMadeMeetingsInPlace(meetingEntity.placeId, meetingId)
+            val meetingEntry =
+                meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
+            deleteMeeting(meetingEntry)
+            deleteMadeMeetingsInPlace(meetingEntry.id, meetingId)
         }
         deleteUser(user)
     }
 
     private suspend fun cancelMeeting(uid: String, meetingId: String) {
-        val meetingEntry = meetingRepositoryImpl.getLocalMeeting(meetingId).asMeetingEntry()
+        val meetingEntry =
+            meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
         meetingEntry.meetingModel.personIds.remove(uid)
         meetingRepositoryImpl.updateRemote(meetingId, meetingEntry.asMeetingDTO())
         meetingRepositoryImpl.updateLocal(meetingEntry.asMeetingEntity())
     }
 
-    private suspend fun deleteMeeting(meetingEntity: MeetingEntity) {
-        meetingRepositoryImpl.deleteLocal(meetingEntity)
-        meetingRepositoryImpl.deleteRemote(meetingEntity.id)
+    private suspend fun deleteMeeting(meetingEntry: MeetingEntry) {
+        meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
+        meetingRepositoryImpl.deleteRemote(meetingEntry.id)
     }
 
     private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
@@ -71,7 +75,8 @@ class SettingsViewModel(
                 SettingsViewModel(
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository
+                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }

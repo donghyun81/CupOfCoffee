@@ -1,13 +1,10 @@
 package com.cupofcoffee.data.local.datasource
 
-import com.cupofcoffee.data.DataResult
-import com.cupofcoffee.data.DataResult.*
 import com.cupofcoffee.data.local.dao.PlaceDao
 import com.cupofcoffee.data.local.model.PlaceEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class PlaceLocalDataSource(
@@ -35,6 +32,8 @@ class PlaceLocalDataSource(
         placeDao.getAllPlaces()
     }
 
-    fun getAllPlacesInFlow(): Flow<List<PlaceEntity>> = placeDao.getAllPlacesInFlow()
+    suspend fun getAllPlacesInFlow(): Flow<List<PlaceEntity>> = withContext(ioDispatcher) {
+        placeDao.getAllPlacesInFlow()
+    }
 
 }

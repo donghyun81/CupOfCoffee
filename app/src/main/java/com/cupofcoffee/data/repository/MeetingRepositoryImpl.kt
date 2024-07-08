@@ -2,8 +2,10 @@ package com.cupofcoffee.data.repository
 
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
+import com.cupofcoffee.data.local.model.asMeetingEntry
 import com.cupofcoffee.data.remote.datasource.MeetingRemoteDataSource
 import com.cupofcoffee.data.remote.model.MeetingDTO
+import com.cupofcoffee.data.remote.model.asMeetingEntry
 
 class MeetingRepositoryImpl(
     private val meetingLocalDataSource: MeetingLocalDataSource,
@@ -15,12 +17,15 @@ class MeetingRepositoryImpl(
 
     suspend fun insertRemote(meetingDTO: MeetingDTO) = meetingRemoteDataSource.insert(meetingDTO)
 
-    suspend fun getLocalMeeting(id: String) = meetingLocalDataSource.getMeeting(id)
+    suspend fun getMeeting(id: String, isConnected: Boolean) =
+        if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeetingEntry(id)
+        else meetingLocalDataSource.getMeeting(id).asMeetingEntry()
 
-    suspend fun getLocalMeetingsByIds(ids: List<String>) =
-        meetingLocalDataSource.getMeetingsByIds(ids)
+    suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean) =
+        if (isConnected) meetingRemoteDataSource.getMeetingsByIds(ids).convertMeetingEntries()
+        else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries()
 
-    suspend fun getAllMeetings(): List<MeetingEntity> =
+    suspend fun getAllLocalMeetings(): List<MeetingEntity> =
         meetingLocalDataSource.getAllMeetings()
 
     suspend fun updateLocal(meetingEntity: MeetingEntity) =
@@ -33,4 +38,13 @@ class MeetingRepositoryImpl(
         meetingLocalDataSource.delete(meetingEntity)
 
     suspend fun deleteRemote(id: String) = meetingRemoteDataSource.delete(id)
+
+    private fun Map<String, MeetingDTO>.convertMeetingEntries() =
+        map { entry ->
+            val (id, meetingDTO) = entry
+            meetingDTO.asMeetingEntry(id)
+        }
+
+    private fun List<MeetingEntity>.convertMeetingEntries() =
+        map { it.asMeetingEntry() }
 }

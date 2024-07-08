@@ -23,7 +23,7 @@ class SyncRemoteWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val meetings = meetingRepositoryImpl.getAllMeetings()
+            val meetings = meetingRepositoryImpl.getAllLocalMeetings()
             val places = placeRepositoryImpl.getAllLocalPlaces()
             val users = userRepositoryImpl.getAllUsers()
 

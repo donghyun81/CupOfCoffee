@@ -9,13 +9,19 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
-import com.cupofcoffee.data.local.model.PlaceEntity
+import com.cupofcoffee.data.remote.model.PlaceDTO
+import com.cupofcoffee.data.remote.model.asPlaceEntry
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
+import com.cupofcoffee.ui.model.PlaceEntry
+import com.cupofcoffee.util.NetworkUtil
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
 import kotlinx.coroutines.launch
 
-class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : ViewModel() {
+class HomeViewModel(
+    private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val networkUtil: NetworkUtil
+) : ViewModel() {
 
     private val _uiState: MutableLiveData<DataResult<HomeUiState>> =
         MutableLiveData(DataResult.Loading)
@@ -33,10 +39,12 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
 
     private suspend fun initMarkers() {
         viewModelScope.launch {
-            val placesFlow = placeRepositoryImpl.getLocalPlacesInFlow()
+            val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
             placesFlow.collect { places ->
                 try {
-                    _uiState.value = DataResult.Success(HomeUiState(places.map { it.toMarker() }))
+                    _uiState.value = DataResult.Success(
+                        HomeUiState(places.map { it.toMarker() })
+                    )
                 } catch (e: Exception) {
                     _uiState.value = DataResult.Error(e)
                 }
@@ -44,8 +52,8 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
         }
     }
 
-    private fun PlaceEntity.toMarker() = Marker().apply {
-        position = LatLng(lat, lng)
+    private fun PlaceEntry.toMarker() = Marker().apply {
+        position = LatLng(placeModel.lat, placeModel.lng)
         tag = id
     }
 
@@ -53,7 +61,8 @@ class HomeViewModel(private val placeRepositoryImpl: PlaceRepositoryImpl) : View
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 HomeViewModel(
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository
+                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }
