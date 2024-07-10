@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.meetinglist
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -21,11 +22,8 @@ import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.PlaceEntry
-import com.cupofcoffee.ui.model.asMeetingDTO
 import com.cupofcoffee.ui.model.asMeetingEntity
-import com.cupofcoffee.ui.model.asUserDTO
-import com.cupofcoffee.ui.model.asUserEntity
-import com.cupofcoffee.ui.model.toMeetingListEntry
+import com.cupofcoffee.ui.model.asMeetingListEntry
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -63,50 +61,50 @@ class MeetingListViewModel(
 
     private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): List<MeetingEntryWithPeople> {
         val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
-        val meetings =
-            meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
-        return meetings.map { meetingEntry ->
+        Log.d("12345", "a")
+        val meetings = meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
+        Log.d("12345", "b")
+        addLocalMeetings(meetings)
+        return if (networkUtil.isConnected()) meetings.map { meetingEntry ->
             convertMeetingListEntry(meetingEntry)
+        }
+        else meetings.map { meetingEntry ->
+            meetingEntry.asMeetingListEntry(emptyList())
+        }
+    }
+
+    private suspend fun addLocalMeetings(meetings: List<MeetingEntry>) {
+        meetings.forEach { meeting ->
+            meetingRepositoryImpl.insertLocal(meeting.asMeetingEntity())
         }
     }
 
     private suspend fun convertMeetingListEntry(meeting: MeetingEntry): MeetingEntryWithPeople {
         val users =
             userRepositoryImpl.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
-        return meeting.toMeetingListEntry(users.map { it.value.asUserEntry(it.key) })
+        return meeting.asMeetingListEntry(users.map { it.value.asUserEntry(it.key) })
     }
 
     fun applyMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
         viewModelScope.launch {
-            addMeetingUserId(meetingEntryWithPeople)
-            addUserAttendedMeeting(meetingEntryWithPeople.id)
+            addUserToMeeting(meetingEntryWithPeople)
+            addAttendedMeetingToUser(meetingEntryWithPeople.id)
         }
     }
 
-    private suspend fun addMeetingUserId(meetingEntryWithPeople: MeetingEntryWithPeople) {
-        with(meetingEntryWithPeople) {
-            meetingRepositoryImpl.updateRemote(
-                id,
-                meetingListModel.asMeetingModel()
-                    .apply { personIds[Firebase.auth.uid!!] = true }
-                    .asMeetingDTO()
-            )
-            meetingRepositoryImpl.updateLocal(
-                meetingListModel.asMeetingModel()
-                    .apply { personIds[Firebase.auth.uid!!] = true }
-                    .asMeetingEntity(id)
-            )
-        }
+    private suspend fun addUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
+        val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
+        meetingEntry.meetingModel.personIds[Firebase.auth.uid!!] = true
+        meetingRepositoryImpl.update(meetingEntry, networkUtil.isConnected())
     }
 
-    private suspend fun addUserAttendedMeeting(meetingId: String) {
+    private suspend fun addAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
         user.collect { userEntity ->
             val userEntry = userEntity?.asUserEntry() ?: return@collect
             userEntry.userModel.attendedMeetingIds[meetingId] = true
-            userRepositoryImpl.updateLocal(userEntry.asUserEntity())
-            userRepositoryImpl.updateRemote(uid, userEntry.asUserDTO())
+            userRepositoryImpl.update(userEntry, networkUtil.isConnected())
         }
     }
 

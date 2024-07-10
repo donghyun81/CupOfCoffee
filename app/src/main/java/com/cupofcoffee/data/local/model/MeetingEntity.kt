@@ -23,7 +23,7 @@ data class MeetingEntity(
     val isSynced: Boolean = true,
 )
 
-fun MeetingEntity.asMeetingEntry() = MeetingEntry(
+fun MeetingEntity.asPlaceEntry() = MeetingEntry(
     id,
     MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 )

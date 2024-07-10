@@ -9,7 +9,7 @@ data class UserModel(
     val profileImageWebUrl: String? = null,
     val madeMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
     val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
-    val isSynced: Boolean = false
+    var isSynced: Boolean = false
     )
 
 fun UserModel.asUserEntity(id: String) =

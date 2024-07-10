@@ -17,6 +17,6 @@ data class PlaceEntity(
     val isSynced: Boolean = true,
 )
 
-fun PlaceEntity.asMeetingEntry() = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
+fun PlaceEntity.asPlaceEntry() = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
 
 fun PlaceEntity.asPlaceDTO() = PlaceDTO(caption, lat, lng, meetingIds)

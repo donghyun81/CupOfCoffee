@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
 import com.cupofcoffee.databinding.FragmentSettingsBinding
+import com.cupofcoffee.ui.showSnackBar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -49,14 +50,16 @@ class SettingsFragment : Fragment() {
 
     private fun setCancelMembership() {
         binding.cancelMembership.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(getString(R.string.cancel_membership))
-                .setMessage(getString(R.string.cancel_membership_message))
-                .setNegativeButton(getString(R.string.cancel)) { dialog, _ -> dialog.cancel() }
-                .setPositiveButton(getString(R.string.cancel_membership)) { _, _ ->
-                    cancelMembership()
-                }
-                .show()
+            if (viewModel.isConnected())
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(getString(R.string.cancel_membership))
+                    .setMessage(getString(R.string.cancel_membership_message))
+                    .setNegativeButton(getString(R.string.cancel)) { dialog, _ -> dialog.cancel() }
+                    .setPositiveButton(getString(R.string.cancel_membership)) { _, _ ->
+                        cancelMembership()
+                    }
+                    .show()
+            else requireView().showSnackBar(R.string.cancel_membership_internet)
         }
     }
 

@@ -7,7 +7,7 @@ data class MeetingEntry(
     val meetingModel: MeetingModel
 )
 
-fun MeetingEntry.toMeetingListEntry(peopleList: List<UserEntry>) =
+fun MeetingEntry.asMeetingListEntry(peopleList: List<UserEntry>) =
     MeetingEntryWithPeople(
         id, meetingModel.asMeetingListModel(peopleList)
     )
