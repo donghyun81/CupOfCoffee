@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.remote.model
 
+import com.cupofcoffee.data.local.model.UserEntity
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.UserModel
 import kotlinx.serialization.Serializable
@@ -17,6 +18,12 @@ fun UserDTO.asUserEntry(id: String): UserEntry {
     return UserEntry(
         id,
         UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
+    )
+}
+
+fun UserDTO.asUserEntity(id: String): UserEntity {
+    return UserEntity(
+        id, name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds
     )
 }
 

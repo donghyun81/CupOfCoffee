@@ -9,6 +9,7 @@ import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMeetingListBinding
+import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -32,8 +33,7 @@ class MeetingListFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initAdapter()
-        initTitle()
+        initUi()
         setCancelButton()
     }
 
@@ -42,42 +42,36 @@ class MeetingListFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    private fun initTitle() {
+    private fun initUi() {
+        binding.rvMeetings.adapter = adapter
         viewModel.uiState.observe(viewLifecycleOwner) { result ->
             result.handle(
-                onLoading = {
-                    binding.cpiLoading.showLoading(result)
-                },
+                onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->
-                    binding.cpiLoading.showLoading(result)
-                    val placeEntry = uiState.placeEntry ?: return@observe
-                    binding.tvTitle.text = placeEntry.placeModel.caption
+                    setTitle(uiState.placeEntry)
+                    setAdapter(uiState.meetingEntriesWithPeople)
                 },
                 onError = {
-                    binding.cpiLoading.showLoading(result)
                     view?.showSnackBar(R.string.data_error_message)
                 }
             )
         }
     }
 
-    private fun initAdapter() {
+    private fun setTitle(placeEntry: PlaceEntry) {
+        binding.tvTitle.text = placeEntry.placeModel.caption
+    }
+
+    private fun setAdapter(meetingEntriesWithPeople: List<MeetingEntryWithPeople>) {
         binding.rvMeetings.adapter = adapter
-        viewModel.uiState.observe(viewLifecycleOwner) { result ->
-            result.handle(
-                onLoading = {},
-                onSuccess = { uiState ->
-                    adapter.submitList(uiState.meetingEntriesWithPeople)
-                },
-                onError = {}
-            )
-        }
+        adapter.submitList(meetingEntriesWithPeople)
     }
 
     private fun applyOnclick() = object : MeetingClickListener {
 
         override fun onClick(meetingEntryWithPeople: MeetingEntryWithPeople) {
-            viewModel.applyMeeting(meetingEntryWithPeople)
+            if (viewModel.isNetworkConnected()) viewModel.applyMeeting(meetingEntryWithPeople)
+            else view?.showSnackBar(R.string.attended_network_message)
         }
     }
 

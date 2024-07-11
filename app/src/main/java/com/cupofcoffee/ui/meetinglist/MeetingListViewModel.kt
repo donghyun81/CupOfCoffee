@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.meetinglist
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -15,7 +14,6 @@ import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.loading
 import com.cupofcoffee.data.DataResult.Companion.success
-import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.remote.model.asUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
@@ -49,6 +47,8 @@ class MeetingListViewModel(
         }
     }
 
+    fun isNetworkConnected() = networkUtil.isConnected()
+
     private suspend fun initUiState() {
         try {
             val placeEntry = placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())!!
@@ -61,9 +61,7 @@ class MeetingListViewModel(
 
     private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): List<MeetingEntryWithPeople> {
         val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
-        Log.d("12345", "a")
         val meetings = meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
-        Log.d("12345", "b")
         addLocalMeetings(meetings)
         return if (networkUtil.isConnected()) meetings.map { meetingEntry ->
             convertMeetingListEntry(meetingEntry)
@@ -95,17 +93,14 @@ class MeetingListViewModel(
     private suspend fun addUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
         val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
         meetingEntry.meetingModel.personIds[Firebase.auth.uid!!] = true
-        meetingRepositoryImpl.update(meetingEntry, networkUtil.isConnected())
+        meetingRepositoryImpl.update(meetingEntry)
     }
 
     private suspend fun addAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
-        user.collect { userEntity ->
-            val userEntry = userEntity?.asUserEntry() ?: return@collect
-            userEntry.userModel.attendedMeetingIds[meetingId] = true
-            userRepositoryImpl.update(userEntry, networkUtil.isConnected())
-        }
+        val userEntry = userRepositoryImpl.getLocalUserById(uid)
+        userEntry.userModel.attendedMeetingIds[meetingId] = true
+        userRepositoryImpl.update(userEntry)
     }
 
     companion object {

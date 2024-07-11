@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
@@ -33,7 +34,7 @@ class SettingsViewModel(
             val meetingEntry =
                 meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
             deleteMeeting(meetingEntry)
-            deleteMadeMeetingsInPlace(meetingEntry.id, meetingId)
+            deleteMadeMeetingsInPlace(meetingEntry.meetingModel.placeId, meetingId)
         }
         deleteUser(user)
     }
@@ -50,6 +51,7 @@ class SettingsViewModel(
     }
 
     private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
+        Log.d("12345", placeId)
         val placeEntry = placeRepositoryImpl.getPlaceById(placeId, isConnected())!!
         placeEntry.placeModel.meetingIds.remove(meetingId)
         if (placeEntry.placeModel.meetingIds.isEmpty()) {

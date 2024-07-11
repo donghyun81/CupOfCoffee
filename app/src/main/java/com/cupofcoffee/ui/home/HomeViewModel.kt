@@ -1,5 +1,8 @@
 package com.cupofcoffee.ui.home
 
+import android.net.ConnectivityManager
+import android.net.Network
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,6 +19,8 @@ import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.util.NetworkUtil
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -27,26 +32,40 @@ class HomeViewModel(
         MutableLiveData(DataResult.Loading)
     val uiState: LiveData<DataResult<HomeUiState>> = _uiState
 
-    init {
-        initMeetings()
-    }
+    private var currentJob: Job? = null
 
-    private fun initMeetings() {
-        viewModelScope.launch {
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            initMarkers()
+        }
+
+        override fun onLost(network: Network) {
             initMarkers()
         }
     }
 
-    private suspend fun initMarkers() {
-        viewModelScope.launch {
+    init {
+        networkUtil.registerNetworkCallback(networkCallback)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentJob?.cancel()
+    }
+
+    fun initMarkers() {
+        currentJob?.cancel()
+        currentJob = viewModelScope.launch {
             val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
             placesFlow.collect { places ->
                 try {
-                    _uiState.value = DataResult.Success(
-                        HomeUiState(places.map { it.toMarker() })
+                    _uiState.postValue(
+                        DataResult.Success(
+                            HomeUiState(places.map { it.toMarker() })
+                        )
                     )
                 } catch (e: Exception) {
-                    _uiState.value = DataResult.Error(e)
+                    _uiState.postValue(DataResult.Error(e))
                 }
             }
         }

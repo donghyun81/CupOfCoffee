@@ -15,4 +15,12 @@ class NetworkUtil(private val context: Context) {
         val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
         return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
+
+    fun registerNetworkCallback(callback: ConnectivityManager.NetworkCallback) {
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        connectivityManager.registerNetworkCallback(networkRequest, callback)
+    }
 }

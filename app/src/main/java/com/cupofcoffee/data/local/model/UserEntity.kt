@@ -14,8 +14,7 @@ data class UserEntity(
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
     val madeMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
-    val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf(),
-    val isSynced: Boolean = true,
+    val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
 fun UserEntity.asUserEntry() =

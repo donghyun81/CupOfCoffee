@@ -20,7 +20,9 @@
     <string name="date_picker_title">모임 날짜 선택</string>
     <string name="meeting_date_picker_tag">meeting_date</string>
     <string name="cancel_membership_message">기존에 사용한 기록이 전부 제거 됩니다. 그래도 탈퇴 하시겠습니까?</string>
-    <string name="data_error_message">데이터를 불러오지 못했습니다. 인터넷 연결을 확인해주세요!</string>
+    <string name="data_error_message">데이터를 불러오지 못했습니다.</string>
     <string name="cancel_membership_internet">회원탈퇴를 위해서 인터넷 연결이 필요합니다!</string>
     <string name="disconnect_network_message">모임 추가시 네트워크 연결이 필요합니다!</string>
+    <string name="attended_network_message">모임 참가시 네트워크 연결이 필요합니다!</string>
+    <string name="delete_meeting_network_message">모임을 삭제하기 위해서는 네트워크 연결이 필요합니다!</string>
 </resources>

@@ -119,7 +119,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch {
-                            viewModel.loginUser(naverUser.asUserEntry(uid))
+                            viewModel.loginUser(uid)
                             moveToHome()
                         }
                     } else {

@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.data.local.model.asPlaceEntry
@@ -24,28 +25,17 @@ class MeetingRepositoryImpl(
         if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeetingEntry(id)
         else meetingLocalDataSource.getMeeting(id).asPlaceEntry()
 
-    suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean) =
+    suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean = true) =
         if (isConnected) meetingRemoteDataSource.getMeetingsByIds(ids).convertMeetingEntries()
         else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries()
 
     suspend fun getAllLocalMeetings(): List<MeetingEntity> =
         meetingLocalDataSource.getAllMeetings()
 
-    suspend fun updateLocal(meetingEntity: MeetingEntity) =
-        meetingLocalDataSource.update(meetingEntity)
-
-    suspend fun updateRemote(id: String, meetingDTO: MeetingDTO) =
-        meetingRemoteDataSource.update(id, meetingDTO)
-
-    suspend fun update(meetingEntry: MeetingEntry, isConnected: Boolean = true) {
+    suspend fun update(meetingEntry: MeetingEntry) {
         meetingEntry.apply {
-            if (isConnected) {
-                updateLocal(asMeetingEntity())
-                updateRemote(id, asMeetingDTO())
-            } else {
-                meetingModel.isSynced = false
-                updateLocal(asMeetingEntity())
-            }
+            meetingLocalDataSource.update(asMeetingEntity())
+            meetingRemoteDataSource.update(id, asMeetingDTO())
         }
     }
 

@@ -19,7 +19,8 @@ class LoginViewModel(private val userRepository: UserRepositoryImpl) : ViewModel
         }
     }
 
-    suspend fun loginUser(userEntry: UserEntry) {
+    suspend fun loginUser(id: String) {
+        val userEntry = userRepository.getRemoteUserById(id)!!
         userRepository.insertLocal(userEntry.asUserEntity())
     }
 

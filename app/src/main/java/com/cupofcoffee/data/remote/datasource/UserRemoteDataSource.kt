@@ -17,7 +17,7 @@ class UserRemoteDataSource(
     }
 
     suspend fun getUserById(id: String) = withContext(ioDispatcher) {
-        DataResult.Success(userService.getUserById(id))
+        userService.getUserById(id)
     }
 
     suspend fun getUsersByIds(ids: List<String>) = withContext(ioDispatcher) {

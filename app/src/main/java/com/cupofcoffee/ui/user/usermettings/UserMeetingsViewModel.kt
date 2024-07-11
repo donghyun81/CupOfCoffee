@@ -51,6 +51,8 @@ class UserMeetingsViewModel(
         }
     }
 
+    fun isNetworkConnected() = networkUtil.isConnected()
+
     private suspend fun setMeetings() {
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
@@ -102,7 +104,7 @@ class UserMeetingsViewModel(
             if (placeModel.meetingIds.isEmpty()) {
                 placeRepositoryImpl.delete(this)
             } else {
-                placeRepositoryImpl.update(placeEntry, networkUtil.isConnected())
+                placeRepositoryImpl.update(placeEntry)
             }
         }
     }
@@ -111,7 +113,7 @@ class UserMeetingsViewModel(
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserById(uid)
         user.userModel.madeMeetingIds.remove(meetingId)
-        userRepositoryImpl.update(user, networkUtil.isConnected())
+        userRepositoryImpl.update(user)
     }
 
     companion object {

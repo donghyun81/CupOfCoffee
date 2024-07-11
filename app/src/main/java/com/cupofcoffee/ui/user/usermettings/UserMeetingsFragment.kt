@@ -64,7 +64,8 @@ class UserMeetingsFragment : Fragment() {
 
     private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
         override fun onClick(meetingEntry: MeetingEntry) {
-            viewModel.deleteMeeting(meetingEntry)
+            if (viewModel.isNetworkConnected()) viewModel.deleteMeeting(meetingEntry)
+            else view?.showSnackBar(R.string.delete_meeting_network_message)
         }
     }
 

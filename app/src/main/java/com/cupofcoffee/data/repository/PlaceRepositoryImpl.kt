@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.PlaceLocalDataSource
 import com.cupofcoffee.data.local.model.PlaceEntity
 import com.cupofcoffee.data.local.model.asPlaceEntry
@@ -24,35 +25,22 @@ class PlaceRepositoryImpl(
         placeRemoteDataSource.insert(id, placeDTO)
 
     suspend fun insert(placeEntry: PlaceEntry) {
-
+        placeEntry.apply {
+            placeLocalDataSource.insert(placeModel.asPlaceEntity(id))
+            placeRemoteDataSource.insert(id, placeModel.asPlaceDTO())
+        }
     }
-
-    suspend fun getLocalPlaceById(id: String) = placeLocalDataSource.getPlaceById(id)
 
     suspend fun getPlaceById(id: String, isNetworkConnected: Boolean = true) =
         if (isNetworkConnected) placeRemoteDataSource.getPlaceById(id)?.asPlaceEntry(id)
         else placeLocalDataSource.getPlaceById(id).asPlaceEntry()
 
-    suspend fun updateLocal(placeEntity: PlaceEntity) = placeLocalDataSource.update(placeEntity)
-
-    suspend fun updateRemote(id: String, placeDTO: PlaceDTO) =
-        placeRemoteDataSource.update(id, placeDTO)
-
-    suspend fun update(placeEntry: PlaceEntry, isNetworkConnected: Boolean = true) {
+    suspend fun update(placeEntry: PlaceEntry) {
         placeEntry.apply {
-            if (isNetworkConnected) {
-                placeRemoteDataSource.update(id, placeModel.asPlaceDTO())
-                placeLocalDataSource.update(placeModel.asPlaceEntity(id))
-            } else {
-                placeModel.isSynced = false
-                placeLocalDataSource.update(placeModel.asPlaceEntity(id))
-            }
+            placeRemoteDataSource.update(id, placeModel.asPlaceDTO())
+            placeLocalDataSource.update(placeModel.asPlaceEntity(id))
         }
     }
-
-    suspend fun deleteLocal(placeEntity: PlaceEntity) = placeLocalDataSource.delete(placeEntity)
-
-    suspend fun deleteRemote(id: String) = placeRemoteDataSource.delete(id)
 
     suspend fun delete(placeEntry: PlaceEntry) {
         placeEntry.apply {
@@ -61,12 +49,21 @@ class PlaceRepositoryImpl(
         }
     }
 
-    suspend fun getAllLocalPlaces() = placeLocalDataSource.getAllPlaces()
+    suspend fun getAllLocalPlacesInFlow() =
+        placeLocalDataSource.getAllPlacesInFlow().map { places ->
+            places.convertPlaceEntries()
+        }
+
+    suspend fun getAllRemotePlacesInFlow() =
+        placeRemoteDataSource.getAllPlacesInFlow().map { places ->
+            places.convertPlaceEntries()
+        }
+
 
     suspend fun getAllRemotePlaces() = placeRemoteDataSource.getAllPlaces()
 
-    suspend fun getAllPlacesInFlow(networkConnected: Boolean): Flow<List<PlaceEntry>> {
-        return if (networkConnected) {
+    suspend fun getAllPlacesInFlow(isNetworkConnected: Boolean): Flow<List<PlaceEntry>> {
+        return if (isNetworkConnected) {
             placeRemoteDataSource.getAllPlacesInFlow().map { places ->
                 places.convertPlaceEntries()
             }

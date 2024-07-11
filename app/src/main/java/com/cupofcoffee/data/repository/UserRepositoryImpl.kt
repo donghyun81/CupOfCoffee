@@ -1,10 +1,12 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.UserLocalDataSource
 import com.cupofcoffee.data.local.model.UserEntity
 import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.remote.datasource.UserRemoteDataSource
 import com.cupofcoffee.data.remote.model.UserDTO
+import com.cupofcoffee.data.remote.model.asUserEntry
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
@@ -24,6 +26,9 @@ class UserRepositoryImpl(
 
     suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id).asUserEntry()
 
+    suspend fun getRemoteUserById(id: String) =
+        userRemoteDataSource.getUserById(id)?.asUserEntry(id)
+
     suspend fun getRemoteUsersByIds(ids: List<String>) = userRemoteDataSource.getUsersByIds(ids)
 
     suspend fun updateLocal(userEntity: UserEntity) =
@@ -32,15 +37,10 @@ class UserRepositoryImpl(
     suspend fun updateRemote(id: String, userDTO: UserDTO) =
         userRemoteDataSource.update(id, userDTO)
 
-    suspend fun update(userEntry: UserEntry, isConnected: Boolean = true) {
+    suspend fun update(userEntry: UserEntry) {
         userEntry.apply {
-            if (isConnected) {
-                userRemoteDataSource.update(id, asUserDTO())
-                userLocalDataSource.update(asUserEntity())
-            } else {
-                userModel.isSynced = false
-                userLocalDataSource.update(asUserEntity())
-            }
+            userRemoteDataSource.update(id, asUserDTO())
+            userLocalDataSource.update(asUserEntity())
         }
     }
 

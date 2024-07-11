@@ -20,7 +20,6 @@ data class MeetingEntity(
     val time: String,
     val createDate: Long,
     val content: String,
-    val isSynced: Boolean = true,
 )
 
 fun MeetingEntity.asPlaceEntry() = MeetingEntry(
