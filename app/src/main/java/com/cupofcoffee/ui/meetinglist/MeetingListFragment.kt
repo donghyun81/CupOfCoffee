@@ -69,9 +69,17 @@ class MeetingListFragment : BottomSheetDialogFragment() {
 
     private fun applyOnclick() = object : MeetingClickListener {
 
-        override fun onClick(meetingEntryWithPeople: MeetingEntryWithPeople) {
+        override fun onApplyClick(meetingEntryWithPeople: MeetingEntryWithPeople) {
             if (viewModel.isNetworkConnected()) viewModel.applyMeeting(meetingEntryWithPeople)
             else view?.showSnackBar(R.string.attended_network_message)
+        }
+
+        override fun onDetailClick(meetingId: String) {
+            val action =
+                MeetingListFragmentDirections.actionMeetingListFragmentToMeetingDetailFragment(
+                    meetingId
+                )
+            findNavController().navigate(action)
         }
     }
 

@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentUserMeetingsBinding
@@ -63,9 +64,17 @@ class UserMeetingsFragment : Fragment() {
     }
 
     private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
-        override fun onClick(meetingEntry: MeetingEntry) {
+        override fun onDeleteClick(meetingEntry: MeetingEntry) {
             if (viewModel.isNetworkConnected()) viewModel.deleteMeeting(meetingEntry)
             else view?.showSnackBar(R.string.delete_meeting_network_message)
+        }
+
+        override fun onDetailClick(meetingId: String) {
+            val action =
+                UserMeetingsFragmentDirections.actionUserMeetingsFragmentToMeetingDetailFragment(
+                    meetingId
+                )
+            findNavController().navigate(action)
         }
     }
 

@@ -45,6 +45,9 @@
         <argument
             android:name="placeId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_meetingListFragment_to_meetingDetailFragment"
+            app:destination="@id/meetingDetailFragment" />
     </dialog>
     <fragment
         android:id="@+id/loginFragment"
@@ -62,6 +65,23 @@
         <action
             android:id="@+id/action_settingsFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/meetingDetailFragment"
+        android:name="com.cupofcoffee.ui.meetingdetail.MeetingDetailFragment"
+        android:label="MeetingDetailFragment" >
+        <argument
+            android:name="meetingId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/userMeetingsFragment"
+        android:name="com.cupofcoffee.ui.user.usermettings.UserMeetingsFragment"
+        android:label="UserMeetingsFragment" >
+        <action
+            android:id="@+id/action_userMeetingsFragment_to_meetingDetailFragment"
+            app:destination="@id/meetingDetailFragment" />
     </fragment>
 
 </navigation>
