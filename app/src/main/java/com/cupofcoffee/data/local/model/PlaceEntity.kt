@@ -13,10 +13,9 @@ data class PlaceEntity(
     val caption: String,
     val lat: Double,
     val lng: Double,
-    val meetingIds: MutableMap<String, Boolean> = mutableMapOf(),
-    val isSynced: Boolean = true,
+    val meetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun PlaceEntity.asMeetingEntry() = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
+fun PlaceEntity.asPlaceEntry() = PlaceEntry(id, PlaceModel(caption, lat, lng, meetingIds))
 
 fun PlaceEntity.asPlaceDTO() = PlaceDTO(caption, lat, lng, meetingIds)

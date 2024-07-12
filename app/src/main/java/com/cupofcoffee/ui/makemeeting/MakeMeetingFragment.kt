@@ -121,7 +121,8 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
                     lat = viewModel.args.placePosition.latitude,
                     lng = viewModel.args.placePosition.longitude,
                 )
-                viewModel.saveMeeting(meeting, placeModel)
+                if (viewModel.isNetworkConnected()) viewModel.saveMeeting(meeting, placeModel)
+                else view?.showSnackBar(R.string.disconnect_network_message)
             }
         }
     }

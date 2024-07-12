@@ -10,7 +10,7 @@ import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.data.worker.SyncLocalWorker
-import com.cupofcoffee.data.worker.SyncRemoteWorker
+import com.cupofcoffee.util.NetworkUtil
 
 
 class CupOfCoffeeApplication : Application() {
@@ -20,12 +20,10 @@ class CupOfCoffeeApplication : Application() {
         super.onCreate()
         RepositoryModule.initDatabase(applicationContext)
 
+        networkUtil = NetworkUtil(applicationContext)
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val remoteWorker = OneTimeWorkRequestBuilder<SyncRemoteWorker>()
-            .setConstraints(constraints)
             .build()
 
         val localWorker = OneTimeWorkRequestBuilder<SyncLocalWorker>()
@@ -33,8 +31,7 @@ class CupOfCoffeeApplication : Application() {
             .build()
 
         WorkManager.getInstance(applicationContext)
-            .beginWith(remoteWorker)
-            .then(localWorker)
+            .beginWith(localWorker)
             .enqueue()
     }
 
@@ -51,5 +48,7 @@ class CupOfCoffeeApplication : Application() {
         val userRepository: UserRepositoryImpl by lazy {
             RepositoryModule.getUserRepository()
         }
+
+        lateinit var networkUtil: NetworkUtil
     }
 }

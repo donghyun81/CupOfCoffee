@@ -5,12 +5,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.cupofcoffee.R
 import com.cupofcoffee.databinding.MeetingListItemBinding
+import com.cupofcoffee.ui.showSnackBar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 class MeetingListAdapter(
-    private val meetingClickListener: MeetingClickListener
+    private val meetingClickListener: MeetingClickListener,
 ) : ListAdapter<MeetingEntryWithPeople, MeetingListAdapter.ViewHolder>(diffUtil) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -21,12 +23,14 @@ class MeetingListAdapter(
         holder.bind(currentList[position], meetingClickListener)
     }
 
-    class ViewHolder(private val binding: MeetingListItemBinding) :
+    class ViewHolder(
+        private val binding: MeetingListItemBinding
+    ) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(
             meetingEntryWithPeople: MeetingEntryWithPeople,
-            meetingClickListener: MeetingClickListener
+            meetingClickListener: MeetingClickListener,
         ) {
             val uid = Firebase.auth.uid
             val adapter = PeopleListAdapter()
@@ -44,8 +48,8 @@ class MeetingListAdapter(
                         btnApply.isEnabled = false
                     }
                 }
-                adapter.submitList(meetingModel.people)
             }
+            adapter.submitList(meetingModel.people)
         }
 
         companion object {

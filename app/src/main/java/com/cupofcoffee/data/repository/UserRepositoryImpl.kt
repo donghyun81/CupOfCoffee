@@ -1,9 +1,15 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.UserLocalDataSource
 import com.cupofcoffee.data.local.model.UserEntity
+import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.remote.datasource.UserRemoteDataSource
 import com.cupofcoffee.data.remote.model.UserDTO
+import com.cupofcoffee.data.remote.model.asUserEntry
+import com.cupofcoffee.ui.model.UserEntry
+import com.cupofcoffee.ui.model.asUserDTO
+import com.cupofcoffee.ui.model.asUserEntity
 
 class UserRepositoryImpl(
     private val userLocalDataSource: UserLocalDataSource,
@@ -18,7 +24,10 @@ class UserRepositoryImpl(
     fun getLocalUserByIdInFlow(id: String) =
         userLocalDataSource.getUserByIdInFlow(id)
 
-    suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id)
+    suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id).asUserEntry()
+
+    suspend fun getRemoteUserById(id: String) =
+        userRemoteDataSource.getUserById(id)?.asUserEntry(id)
 
     suspend fun getRemoteUsersByIds(ids: List<String>) = userRemoteDataSource.getUsersByIds(ids)
 
@@ -28,9 +37,19 @@ class UserRepositoryImpl(
     suspend fun updateRemote(id: String, userDTO: UserDTO) =
         userRemoteDataSource.update(id, userDTO)
 
-    suspend fun deleteLocal(userEntity: UserEntity) = userLocalDataSource.delete(userEntity)
+    suspend fun update(userEntry: UserEntry) {
+        userEntry.apply {
+            userRemoteDataSource.update(id, asUserDTO())
+            userLocalDataSource.update(asUserEntity())
+        }
+    }
 
-    suspend fun deleteRemote(id: String) = userRemoteDataSource.delete(id)
+    suspend fun delete(userEntry: UserEntry) {
+        userEntry.apply {
+            userRemoteDataSource.delete(id)
+            userLocalDataSource.delete(userModel.asUserEntity(id))
+        }
+    }
 
     suspend fun getAllUsers(): List<UserEntity> = userLocalDataSource.getAllUsers()
 }

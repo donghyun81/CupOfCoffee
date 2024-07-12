@@ -7,8 +7,7 @@ data class PlaceModel(
     val caption: String,
     val lat: Double,
     val lng: Double,
-    val meetingIds: MutableMap<String, Boolean> = mutableMapOf(),
-    val isSynced: Boolean = true
+    val meetingIds: MutableMap<String, Boolean> = mutableMapOf()
     )
 
 fun PlaceModel.asPlaceEntity(id: String) = PlaceEntity(id, caption, lat, lng, meetingIds)

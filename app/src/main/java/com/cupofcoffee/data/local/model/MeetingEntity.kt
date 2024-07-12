@@ -20,10 +20,9 @@ data class MeetingEntity(
     val time: String,
     val createDate: Long,
     val content: String,
-    val isSynced: Boolean = true,
 )
 
-fun MeetingEntity.asMeetingEntry() = MeetingEntry(
+fun MeetingEntity.asPlaceEntry() = MeetingEntry(
     id,
     MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 )

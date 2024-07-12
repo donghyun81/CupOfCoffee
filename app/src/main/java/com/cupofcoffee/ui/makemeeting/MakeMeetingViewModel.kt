@@ -14,6 +14,7 @@ import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingModel
+import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.PlaceModel
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asMeetingDTO
@@ -22,6 +23,7 @@ import com.cupofcoffee.ui.model.asPlaceDTO
 import com.cupofcoffee.ui.model.asPlaceEntity
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
+import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -29,13 +31,16 @@ import kotlinx.coroutines.launch
 const val POSITION_COUNT = 10
 
 class MakeMeetingViewModel(
+    savedStateHandle: SavedStateHandle,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val placeRepositoryImpl: PlaceRepositoryImpl,
     private val userRepositoryImpl: UserRepositoryImpl,
-    savedStateHandle: SavedStateHandle
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
+
+    fun isNetworkConnected() = networkUtil.isConnected()
 
     fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
         viewModelScope.launch {
@@ -57,16 +62,14 @@ class MakeMeetingViewModel(
 
     private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
         userEntry.userModel.madeMeetingIds[meetingId] = true
-        val uid = userEntry.id
-        userRepositoryImpl.updateLocal(userEntry.userModel.asUserEntity(uid))
-        userRepositoryImpl.updateRemote(uid, userDTO = userEntry.userModel.asUserDTO())
+        userRepositoryImpl.update(userEntry)
     }
 
     private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
         val placeId = convertPlaceId()
-        val prvPlaceEntry = placeRepositoryImpl.getRemotePlaceById(placeId)?.asPlaceEntry(placeId)
-        if (prvPlaceEntry != null) updatePlace(placeId, meetingId, prvPlaceEntry.placeModel)
-        else createPlace(placeId, meetingId, placeModel)
+        val prvPlaceEntry = placeRepositoryImpl.getPlaceById(placeId)
+        if (prvPlaceEntry != null) updatePlace(meetingId, prvPlaceEntry)
+        else createPlace(meetingId, PlaceEntry(placeId, placeModel))
     }
 
     fun convertPlaceId(): String {
@@ -77,16 +80,14 @@ class MakeMeetingViewModel(
     }
 
 
-    private suspend fun createPlace(placeId: String, meetingId: String, placeModel: PlaceModel) {
-        placeModel.meetingIds[meetingId] = true
-        placeRepositoryImpl.insertLocal(placeModel.asPlaceEntity(placeId))
-        placeRepositoryImpl.insertRemote(placeId, placeModel.asPlaceDTO())
+    private suspend fun createPlace(meetingId: String, placeEntry: PlaceEntry) {
+        placeEntry.placeModel.meetingIds[meetingId] = true
+        placeRepositoryImpl.insert(placeEntry)
     }
 
-    private suspend fun updatePlace(placeId: String, meetingId: String, prvPlaceModel: PlaceModel) {
-        prvPlaceModel.meetingIds[meetingId] = true
-        placeRepositoryImpl.updateLocal(prvPlaceModel.asPlaceEntity(placeId))
-        placeRepositoryImpl.updateRemote(placeId, prvPlaceModel.asPlaceDTO())
+    private suspend fun updatePlace(meetingId: String, prvPlaceEntry: PlaceEntry) {
+        prvPlaceEntry.placeModel.meetingIds[meetingId] = true
+        placeRepositoryImpl.update(prvPlaceEntry)
     }
 
     companion object {
@@ -96,7 +97,8 @@ class MakeMeetingViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository
+                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }
