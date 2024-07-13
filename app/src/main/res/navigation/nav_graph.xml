@@ -36,6 +36,9 @@
         <action
             android:id="@+id/action_userFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_userFragment_to_meetingDetailFragment"
+            app:destination="@id/meetingDetailFragment" />
     </fragment>
 
     <dialog
@@ -74,14 +77,6 @@
         <argument
             android:name="meetingId"
             app:argType="string" />
-    </fragment>
-    <fragment
-        android:id="@+id/userMeetingsFragment"
-        android:name="com.cupofcoffee.ui.user.usermettings.UserMeetingsFragment"
-        android:label="UserMeetingsFragment" >
-        <action
-            android:id="@+id/action_userMeetingsFragment_to_meetingDetailFragment"
-            app:destination="@id/meetingDetailFragment" />
     </fragment>
 
 </navigation>

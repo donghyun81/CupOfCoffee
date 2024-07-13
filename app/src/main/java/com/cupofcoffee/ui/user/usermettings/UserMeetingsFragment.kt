@@ -14,6 +14,7 @@ import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
+import com.cupofcoffee.ui.user.UserFragmentDirections
 
 class UserMeetingsFragment : Fragment() {
 
@@ -71,7 +72,7 @@ class UserMeetingsFragment : Fragment() {
 
         override fun onDetailClick(meetingId: String) {
             val action =
-                UserMeetingsFragmentDirections.actionUserMeetingsFragmentToMeetingDetailFragment(
+                UserFragmentDirections.actionUserFragmentToMeetingDetailFragment(
                     meetingId
                 )
             findNavController().navigate(action)
