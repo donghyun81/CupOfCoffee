@@ -2,9 +2,11 @@ package com.cupofcoffee.data.module
 
 import android.content.Context
 import com.cupofcoffee.data.local.CupOfCoffeeDatabase
+import com.cupofcoffee.data.remote.datasource.CommentRemoteDataSource
 import com.cupofcoffee.data.remote.datasource.MeetingRemoteDataSource
 import com.cupofcoffee.data.remote.datasource.PlaceRemoteDataSource
 import com.cupofcoffee.data.remote.datasource.UserRemoteDataSource
+import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
@@ -14,6 +16,7 @@ object RepositoryModule {
     private val meetingRemoteDataSource = MeetingRemoteDataSource(NetworkModule.getMeetingService())
     private val placeDataSource = PlaceRemoteDataSource(NetworkModule.getPlaceService())
     private val userRemoteDataSource = UserRemoteDataSource(NetworkModule.getUserService())
+    private val commentRemoteDataSource = CommentRemoteDataSource(NetworkModule.getCommentService())
 
     private lateinit var database: CupOfCoffeeDatabase
 
@@ -30,4 +33,6 @@ object RepositoryModule {
 
     fun getPlaceRepository() = PlaceRepositoryImpl(placeLocalDataSource, placeDataSource)
     fun getUserRepository() = UserRepositoryImpl(userLocalDataSource, userRemoteDataSource)
+
+    fun getCommentRepository() = CommentRepositoryImpl(commentRemoteDataSource)
 }

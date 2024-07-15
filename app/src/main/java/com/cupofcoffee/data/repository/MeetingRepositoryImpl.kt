@@ -1,6 +1,5 @@
 package com.cupofcoffee.data.repository
 
-import android.util.Log
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.data.local.model.asPlaceEntry
@@ -21,7 +20,7 @@ class MeetingRepositoryImpl(
 
     suspend fun insertRemote(meetingDTO: MeetingDTO) = meetingRemoteDataSource.insert(meetingDTO)
 
-    suspend fun getMeeting(id: String, isConnected: Boolean) =
+    suspend fun getMeeting(id: String, isConnected: Boolean = true) =
         if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeetingEntry(id)
         else meetingLocalDataSource.getMeeting(id).asPlaceEntry()
 

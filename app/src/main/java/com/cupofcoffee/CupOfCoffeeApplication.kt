@@ -6,12 +6,12 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.cupofcoffee.data.module.RepositoryModule
+import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.data.worker.SyncLocalWorker
 import com.cupofcoffee.util.NetworkUtil
-
 
 class CupOfCoffeeApplication : Application() {
 
@@ -47,6 +47,10 @@ class CupOfCoffeeApplication : Application() {
 
         val userRepository: UserRepositoryImpl by lazy {
             RepositoryModule.getUserRepository()
+        }
+
+        val commentRepository: CommentRepositoryImpl by lazy {
+            RepositoryModule.getCommentRepository()
         }
 
         lateinit var networkUtil: NetworkUtil

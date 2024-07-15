@@ -5,9 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.cupofcoffee.R
 import com.cupofcoffee.databinding.MeetingListItemBinding
-import com.cupofcoffee.ui.showSnackBar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -40,11 +38,12 @@ class MeetingListAdapter(
                 tvDate.text = meetingModel.date
                 tvTime.text = meetingModel.time
                 rvPeople.adapter = adapter
+                root.setOnClickListener { meetingClickListener.onDetailClick(meetingEntryWithPeople.id) }
                 val hasUserId = meetingModel.people.none { it.id == uid }
                 btnApply.isEnabled = hasUserId
                 if (hasUserId) {
                     btnApply.setOnClickListener {
-                        meetingClickListener.onClick(meetingEntryWithPeople)
+                        meetingClickListener.onApplyClick(meetingEntryWithPeople)
                         btnApply.isEnabled = false
                     }
                 }

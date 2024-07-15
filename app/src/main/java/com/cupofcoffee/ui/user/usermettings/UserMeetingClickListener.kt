@@ -4,5 +4,7 @@ import com.cupofcoffee.ui.model.MeetingEntry
 
 interface UserMeetingClickListener {
 
-    fun onClick(meetingEntry: MeetingEntry)
+    fun onDeleteClick(meetingEntry: MeetingEntry)
+
+    fun onDetailClick(meetingId: String)
 }

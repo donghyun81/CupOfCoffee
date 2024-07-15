@@ -32,10 +32,13 @@
     <fragment
         android:id="@+id/userFragment"
         android:name="com.cupofcoffee.ui.user.UserFragment"
-        android:label="user_fragment" >
+        android:label="user_fragment">
         <action
             android:id="@+id/action_userFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_userFragment_to_meetingDetailFragment"
+            app:destination="@id/meetingDetailFragment" />
     </fragment>
 
     <dialog
@@ -45,6 +48,9 @@
         <argument
             android:name="placeId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_meetingListFragment_to_meetingDetailFragment"
+            app:destination="@id/meetingDetailFragment" />
     </dialog>
     <fragment
         android:id="@+id/loginFragment"
@@ -58,10 +64,34 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.cupofcoffee.ui.settings.SettingsFragment"
-        android:label="SettingsFragment" >
+        android:label="SettingsFragment">
         <action
             android:id="@+id/action_settingsFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/meetingDetailFragment"
+        android:name="com.cupofcoffee.ui.meetingdetail.MeetingDetailFragment"
+        android:label="MeetingDetailFragment">
+        <argument
+            android:name="meetingId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_meetingDetailFragment_to_commentEditFragment"
+            app:destination="@id/commentEditFragment" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/commentEditFragment"
+        android:name="com.cupofcoffee.ui.commentdetail.CommentEditFragment"
+        android:label="CommentEditFragment">
+        <argument
+            android:name="commentId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument android:name="meetingId"
+            app:argType="string" />
+    </dialog>
 
 </navigation>

@@ -16,7 +16,8 @@ data class MeetingDTO(
     val date: String,
     val time: String,
     val createDate: Long,
-    val content: String
+    val content: String,
+    val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
 fun MeetingDTO.asMeetingEntry(id: String) =
@@ -31,7 +32,8 @@ fun MeetingDTO.asMeetingEntry(id: String) =
             date,
             time,
             createDate,
-            content
+            content,
+            commentIds
         )
     )
 
@@ -46,5 +48,6 @@ fun MeetingDTO.asMeetingEntity(id: String) = MeetingEntity(
     date,
     time,
     createDate,
-    content
+    content,
+    commentIds
 )
