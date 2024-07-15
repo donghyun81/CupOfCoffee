@@ -20,6 +20,7 @@ data class MeetingEntity(
     val time: String,
     val createDate: Long,
     val content: String,
+    val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
 fun MeetingEntity.asPlaceEntry() = MeetingEntry(

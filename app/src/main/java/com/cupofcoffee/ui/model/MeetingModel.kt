@@ -14,11 +14,24 @@ data class MeetingModel(
     val date: String,
     val time: String,
     val createDate: Long,
-    val content: String
+    val content: String,
+    val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
 fun MeetingModel.asMeetingDTO() =
-    MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
+    MeetingDTO(
+        caption,
+        lat,
+        lng,
+        managerId,
+        personIds,
+        placeId,
+        date,
+        time,
+        createDate,
+        content,
+        commentIds
+    )
 
 fun MeetingModel.asMeetingEntity(id: String) =
     MeetingEntity(
@@ -32,7 +45,8 @@ fun MeetingModel.asMeetingEntity(id: String) =
         date,
         time,
         createDate,
-        content
+        content,
+        commentIds
     )
 
 fun MeetingModel.asMeetingListModel(people: List<UserEntry>) =

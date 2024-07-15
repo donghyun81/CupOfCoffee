@@ -1,15 +1,16 @@
 package com.cupofcoffee.ui.meetingdetail
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMeetingDetailBinding
+import com.cupofcoffee.ui.model.CommentEntry
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
@@ -20,6 +21,8 @@ class MeetingDetailFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MeetingDetailViewModel by viewModels { MeetingDetailViewModel.Factory }
+
+    private val adapter: MeetingDetailAdapter = MeetingDetailAdapter(getCommentClickListener())
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,6 +36,7 @@ class MeetingDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initUi()
+        setCommentClick()
     }
 
     override fun onDestroyView() {
@@ -47,6 +51,7 @@ class MeetingDetailFragment : Fragment() {
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
                     setMeeting(uiState.meeting)
+                    setCommentAdapter(uiState.comments)
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
@@ -63,5 +68,38 @@ class MeetingDetailFragment : Fragment() {
             tvPlace.text = meetingEntry.meetingModel.caption
             tvTime.text = meetingEntry.meetingModel.time
         }
+    }
+
+    private fun setCommentClick() {
+        binding.tvAddComment.setOnClickListener {
+            val action =
+                MeetingDetailFragmentDirections.actionMeetingDetailFragmentToCommentEditFragment(
+                    null,
+                    viewModel.meetingId
+                )
+            findNavController().navigate(action)
+        }
+    }
+
+    private fun setCommentAdapter(comments: List<CommentEntry>) {
+        binding.rvComments.adapter = adapter
+        adapter.submitList(comments)
+    }
+
+    private fun getCommentClickListener() = object : CommentClickListener {
+
+        override fun onUpdateClick(commentEntry: CommentEntry) {
+            val action =
+                MeetingDetailFragmentDirections.actionMeetingDetailFragmentToCommentEditFragment(
+                    commentEntry.id,
+                    viewModel.meetingId
+                )
+            findNavController().navigate(action)
+        }
+
+        override fun onDetailClick(commentId: String) {
+            viewModel.deleteComment(commentId)
+        }
+
     }
 }

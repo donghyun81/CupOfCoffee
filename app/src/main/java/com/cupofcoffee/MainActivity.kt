@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.loginFragment -> View.GONE
                 R.id.meetingDetailFragment -> View.GONE
                 R.id.settingsFragment -> View.GONE
+                R.id.commentEditFragment -> View.GONE
                 else -> View.VISIBLE
             }
         }

@@ -83,9 +83,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:paddingTop="8dp"
         android:text="댓글"
         android:textSize="26dp"
-        android:paddingTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -96,29 +96,31 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@id/et_comment"
+        app:layout_constraintBottom_toTopOf="@id/tv_add_comment"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_comment_title" />
 
-    <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/et_comment"
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_user_profile"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tv_add_comment"
+        app:layout_constraintStart_toStartOf="parent"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_add_comment"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btn_add_comment"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/rv_comments" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_add_comment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="작성"
+        android:text="댓글 작성"
+        android:textSize="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/et_comment"
+        app:layout_constraintStart_toEndOf="@id/iv_user_profile"
         app:layout_constraintTop_toBottomOf="@id/rv_comments" />
+
 
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/cpi_loading"

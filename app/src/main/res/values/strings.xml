@@ -25,4 +25,5 @@
     <string name="disconnect_network_message">모임 추가시 네트워크 연결이 필요합니다!</string>
     <string name="attended_network_message">모임 참가시 네트워크 연결이 필요합니다!</string>
     <string name="delete_meeting_network_message">모임을 삭제하기 위해서는 네트워크 연결이 필요합니다!</string>
+    <string name="edit_comment_netwokr_message">댓글을 추가하거나 수정하기 위해서는 네트워크 연결이 필요합니다!</string>
 </resources>
