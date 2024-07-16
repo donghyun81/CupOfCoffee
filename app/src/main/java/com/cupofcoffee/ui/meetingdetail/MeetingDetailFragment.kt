@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -50,6 +51,7 @@ class MeetingDetailFragment : Fragment() {
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
+                    setEdit(uiState.isMyMeeting, uiState.meeting)
                     setMeeting(uiState.meeting)
                     setCommentAdapter(uiState.comments)
                 },
@@ -67,6 +69,20 @@ class MeetingDetailFragment : Fragment() {
             tvDate.text = meetingEntry.meetingModel.date
             tvPlace.text = meetingEntry.meetingModel.caption
             tvTime.text = meetingEntry.meetingModel.time
+            tvAddComment.visibility
+        }
+    }
+
+    private fun setEdit(isMyMeeting: Boolean, meetingEntry: MeetingEntry) {
+        binding.ivEdit.isVisible = isMyMeeting
+        binding.ivEdit.setOnClickListener {
+            val action =
+                MeetingDetailFragmentDirections.actionMeetingDetailFragmentToMakeMeetingFragment(
+                    null,
+                    null,
+                    meetingEntry.id
+                )
+            findNavController().navigate(action)
         }
     }
 

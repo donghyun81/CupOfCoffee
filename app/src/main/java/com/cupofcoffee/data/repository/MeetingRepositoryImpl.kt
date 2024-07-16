@@ -1,14 +1,16 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
-import com.cupofcoffee.data.local.model.asPlaceEntry
+import com.cupofcoffee.data.local.model.asMeetingEntry
 import com.cupofcoffee.data.remote.datasource.MeetingRemoteDataSource
 import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.data.remote.model.asMeetingEntry
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.asMeetingDTO
 import com.cupofcoffee.ui.model.asMeetingEntity
+import kotlinx.coroutines.flow.map
 
 class MeetingRepositoryImpl(
     private val meetingLocalDataSource: MeetingLocalDataSource,
@@ -22,11 +24,23 @@ class MeetingRepositoryImpl(
 
     suspend fun getMeeting(id: String, isConnected: Boolean = true) =
         if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeetingEntry(id)
-        else meetingLocalDataSource.getMeeting(id).asPlaceEntry()
+        else meetingLocalDataSource.getMeeting(id).asMeetingEntry()
+
+    suspend fun getMeetingInFlow(id: String, isConnected: Boolean = true) =
+        if (isConnected) meetingRemoteDataSource.getMeetingInFlow(id).map {
+            it?.asMeetingEntry(id)
+        }
+        else meetingLocalDataSource.getMeetingInFlow(id).map { it.asMeetingEntry() }
 
     suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean = true) =
         if (isConnected) meetingRemoteDataSource.getMeetingsByIds(ids).convertMeetingEntries()
         else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries()
+
+    suspend fun getMeetingsByIdsInFlow(ids: List<String>, isConnected: Boolean = true) =
+        if (isConnected) meetingRemoteDataSource.getCommentsByIdsInFlow(ids).map {
+            it.convertMeetingEntries()
+        }
+        else meetingLocalDataSource.getMeetingsByIdsInFlow(ids).map { it.convertMeetingEntries() }
 
     suspend fun getAllLocalMeetings(): List<MeetingEntity> =
         meetingLocalDataSource.getAllMeetings()
@@ -55,5 +69,5 @@ class MeetingRepositoryImpl(
         }
 
     private fun List<MeetingEntity>.convertMeetingEntries() =
-        map { it.asPlaceEntry() }
+        map { it.asMeetingEntry() }
 }

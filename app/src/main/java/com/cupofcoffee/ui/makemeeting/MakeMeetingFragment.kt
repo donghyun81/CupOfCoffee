@@ -6,11 +6,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
+import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMakeMeetingBinding
 import com.cupofcoffee.ui.isCurrentDateOver
 import com.cupofcoffee.ui.model.MeetingModel
 import com.cupofcoffee.ui.model.PlaceModel
+import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
 import com.cupofcoffee.ui.toCurrentDate
 import com.cupofcoffee.ui.toCurrentTime
@@ -19,6 +23,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 
@@ -40,9 +45,8 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setPlace()
+        setUi()
         setMeetingTime()
-        setSaveButton()
         setMeetingDate()
     }
 
@@ -51,7 +55,25 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    private fun setPlace() {
+    private fun setUi() {
+        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+            result.handle(
+                onLoading = { binding.cpiLoading.showLoading(result) },
+                onSuccess = { uiState ->
+                    if (uiState.meetingEntry != null) {
+                        binding.tvPlace.text = uiState.placeName
+                        binding.tvTime.text = uiState.meetingEntry.meetingModel.time
+                        binding.tvDate.text = uiState.meetingEntry.meetingModel.date
+                        binding.tvContent.setText(uiState.meetingEntry.meetingModel.content)
+                    } else binding.tvPlace.text = uiState.placeName
+                    setSaveButton(uiState.placeName, uiState.lat, uiState.lng)
+                },
+                onError = {
+                    view?.showSnackBar(R.string.data_error_message)
+                }
+            )
+
+        }
         binding.tvPlace.text = viewModel.args.placeName
     }
 
@@ -100,29 +122,33 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
     }
 
 
-    private fun setSaveButton() {
+    private fun setSaveButton(placeName: String, lat: Double, lng: Double) {
         binding.btnSave.setOnClickListener {
             val uid = Firebase.auth.uid!!
             with(binding) {
                 val meeting = MeetingModel(
-                    caption = viewModel.args.placeName,
-                    lat = viewModel.args.placePosition.latitude,
-                    lng = viewModel.args.placePosition.longitude,
+                    caption = placeName,
+                    lat = lat,
+                    lng = lng,
                     managerId = uid,
                     personIds = mutableMapOf(uid to true),
-                    placeId = viewModel.convertPlaceId(),
+                    placeId = viewModel.convertPlaceId(lat, lng),
                     date = tvDate.text.toString(),
                     time = tvTime.text.toString(),
                     createDate = Date().time,
                     content = tvContent.text.toString()
                 )
                 val placeModel = PlaceModel(
-                    caption = viewModel.args.placeName,
-                    lat = viewModel.args.placePosition.latitude,
-                    lng = viewModel.args.placePosition.longitude,
+                    caption = placeName,
+                    lat = lat,
+                    lng = lng,
                 )
-                if (viewModel.isNetworkConnected()) viewModel.saveMeeting(meeting, placeModel)
-                else view?.showSnackBar(R.string.disconnect_network_message)
+                if (viewModel.isNetworkConnected()) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        viewModel.saveMeeting(meeting, placeModel)
+                        findNavController().navigateUp()
+                    }
+                } else view?.showSnackBar(R.string.disconnect_network_message)
             }
         }
     }

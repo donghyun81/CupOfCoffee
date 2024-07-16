@@ -114,7 +114,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val action =
             HomeFragmentDirections.actionHomeFragmentToSaveMeetingFragment(
                 placeName,
-                position
+                position,
+                null
             )
         findNavController().navigate(action)
     }

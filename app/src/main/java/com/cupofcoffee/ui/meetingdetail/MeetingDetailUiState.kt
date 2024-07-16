@@ -7,5 +7,6 @@ import com.cupofcoffee.ui.model.UserEntry
 data class MeetingDetailUiState(
     val userEntry: UserEntry,
     val meeting: MeetingEntry,
-    val comments: List<CommentEntry>
+    val comments: List<CommentEntry>,
+    val isMyMeeting: Boolean
 )

@@ -77,6 +77,16 @@ class UserMeetingsFragment : Fragment() {
                 )
             findNavController().navigate(action)
         }
+
+        override fun onUpdateClick(meetingId: String) {
+            val action =
+                UserFragmentDirections.actionUserFragmentToMakeMeetingFragment(
+                    null,
+                    null,
+                    meetingId
+                )
+            findNavController().navigate(action)
+        }
     }
 
     companion object {

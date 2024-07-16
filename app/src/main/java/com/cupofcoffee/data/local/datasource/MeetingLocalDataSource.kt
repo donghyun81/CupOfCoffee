@@ -4,6 +4,7 @@ import com.cupofcoffee.data.local.dao.MeetingDao
 import com.cupofcoffee.data.local.model.MeetingEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class MeetingLocalDataSource(
@@ -18,8 +19,18 @@ class MeetingLocalDataSource(
         meetingDao.getMeeting(id)
     }
 
-    suspend fun getMeetingsByIds(ids: List<String>): List<MeetingEntity> = withContext(ioDispatcher) {
+    suspend fun getMeetingInFlow(id: String): Flow<MeetingEntity> = withContext(ioDispatcher) {
+        meetingDao.getMeetingInFlow(id)
+    }
+
+    suspend fun getMeetingsByIds(ids: List<String>): List<MeetingEntity> =
+        withContext(ioDispatcher) {
             meetingDao.getMeetingsByIds(ids)
+        }
+
+    suspend fun getMeetingsByIdsInFlow(ids: List<String>): Flow<List<MeetingEntity>> =
+        withContext(ioDispatcher) {
+            meetingDao.getMeetingsByIdsInFlow(ids)
         }
 
 

@@ -7,4 +7,6 @@ interface UserMeetingClickListener {
     fun onDeleteClick(meetingEntry: MeetingEntry)
 
     fun onDetailClick(meetingId: String)
+
+    fun onUpdateClick(meetingId: String)
 }

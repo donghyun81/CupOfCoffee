@@ -35,6 +35,11 @@ class UserMeetingsAdapter(
                 tvTime.text = meetingModel.time
                 tvContent.text = meetingModel.content
                 if (meetingEntry.meetingModel.managerId != uid) ivDelete.visibility = View.GONE
+
+                ivEdit.setOnClickListener {
+                    userMeetingClickListener.onUpdateClick(meetingEntry.id)
+                }
+
                 ivDelete.setOnClickListener {
                     userMeetingClickListener.onDeleteClick(meetingEntry)
                 }

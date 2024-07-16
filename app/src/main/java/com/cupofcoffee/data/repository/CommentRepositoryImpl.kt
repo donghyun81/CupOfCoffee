@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.remote.RemoteIdWrapper
 import com.cupofcoffee.data.remote.datasource.CommentRemoteDataSource
 import com.cupofcoffee.data.remote.model.CommentDTO

@@ -1,9 +1,8 @@
 package com.cupofcoffee.data.repository
 
-import android.util.Log
 import com.cupofcoffee.data.local.datasource.PlaceLocalDataSource
 import com.cupofcoffee.data.local.model.PlaceEntity
-import com.cupofcoffee.data.local.model.asPlaceEntry
+import com.cupofcoffee.data.local.model.asMeetingEntry
 import com.cupofcoffee.data.remote.datasource.PlaceRemoteDataSource
 import com.cupofcoffee.data.remote.model.PlaceDTO
 import com.cupofcoffee.data.remote.model.asPlaceEntry
@@ -33,7 +32,7 @@ class PlaceRepositoryImpl(
 
     suspend fun getPlaceById(id: String, isNetworkConnected: Boolean = true) =
         if (isNetworkConnected) placeRemoteDataSource.getPlaceById(id)?.asPlaceEntry(id)
-        else placeLocalDataSource.getPlaceById(id).asPlaceEntry()
+        else placeLocalDataSource.getPlaceById(id).asMeetingEntry()
 
     suspend fun update(placeEntry: PlaceEntry) {
         placeEntry.apply {
@@ -81,5 +80,5 @@ class PlaceRepositoryImpl(
         }
 
     private fun List<PlaceEntity>.convertPlaceEntries() =
-        map { it.asPlaceEntry() }
+        map { it.asMeetingEntry() }
 }

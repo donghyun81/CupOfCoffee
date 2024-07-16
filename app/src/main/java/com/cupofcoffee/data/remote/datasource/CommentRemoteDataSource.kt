@@ -39,7 +39,6 @@ class CommentRemoteDataSource(
 
     private suspend fun tryGetComments(ids: List<String>): Map<String, CommentDTO> {
         return try {
-            Log.d("12345",ids.toString())
             ids.associateWith { id ->
                 commentService.getComment(id)
             }

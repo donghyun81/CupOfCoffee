@@ -23,10 +23,15 @@
         android:label="MakeMeetingFragment">
         <argument
             android:name="placeName"
-            app:argType="string" />
+            app:argType="string"
+            app:nullable="true" />
         <argument
             android:name="placePosition"
-            app:argType="com.naver.maps.geometry.LatLng" />
+            app:argType="com.naver.maps.geometry.LatLng"
+            app:nullable="true" />
+        <argument android:name="meetingId"
+            app:argType="string"
+            app:nullable="true" />
     </dialog>
 
     <fragment
@@ -39,6 +44,9 @@
         <action
             android:id="@+id/action_userFragment_to_meetingDetailFragment"
             app:destination="@id/meetingDetailFragment" />
+        <action
+            android:id="@+id/action_userFragment_to_makeMeetingFragment"
+            app:destination="@id/makeMeetingFragment" />
     </fragment>
 
     <dialog
@@ -80,6 +88,9 @@
         <action
             android:id="@+id/action_meetingDetailFragment_to_commentEditFragment"
             app:destination="@id/commentEditFragment" />
+        <action
+            android:id="@+id/action_meetingDetailFragment_to_makeMeetingFragment"
+            app:destination="@id/makeMeetingFragment" />
     </fragment>
 
     <dialog

@@ -13,7 +13,6 @@ import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.success
-import com.cupofcoffee.data.local.model.asUserDTO
 import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
@@ -21,11 +20,10 @@ import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.asMeetingEntity
-import com.cupofcoffee.ui.model.asPlaceDTO
-import com.cupofcoffee.ui.model.asPlaceEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 
@@ -75,12 +73,13 @@ class UserMeetingsViewModel(
     }
 
     private suspend fun getMeetingEntries(meetingIds: List<String>) =
-        meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
+        meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
 
-    private fun updateMeetings(meetingEntries: List<MeetingEntry>) {
+    private suspend fun updateMeetings(meetingEntriesInFlow: Flow<List<MeetingEntry>>) {
         try {
-            val meetingEntries = meetingEntries
-            _uiState.value = success(UserMeetingsUiState(meetingEntries))
+            meetingEntriesInFlow.collect { meetingEntries ->
+                _uiState.value = success(UserMeetingsUiState(meetingEntries))
+            }
         } catch (e: Exception) {
             _uiState.value = error(e)
         }

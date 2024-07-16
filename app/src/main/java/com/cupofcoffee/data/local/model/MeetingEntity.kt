@@ -23,7 +23,7 @@ data class MeetingEntity(
     val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun MeetingEntity.asPlaceEntry() = MeetingEntry(
+fun MeetingEntity.asMeetingEntry() = MeetingEntry(
     id,
     MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
 )

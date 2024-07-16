@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.cupofcoffee.data.local.model.MeetingEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MeetingDao {
@@ -17,8 +18,14 @@ interface MeetingDao {
     @Query("SELECT * From meetings Where id = :id")
     suspend fun getMeeting(id: String): MeetingEntity
 
+    @Query("SELECT * From meetings Where id = :id")
+    fun getMeetingInFlow(id: String): Flow<MeetingEntity>
+
     @Query("SELECT * From meetings Where id In (:ids)")
     suspend fun getMeetingsByIds(ids: List<String>): List<MeetingEntity>
+
+    @Query("SELECT * From meetings Where id In (:ids)")
+    fun getMeetingsByIdsInFlow(ids: List<String>): Flow<List<MeetingEntity>>
 
     @Query("SELECT * From meetings")
     fun getAllMeetings(): List<MeetingEntity>

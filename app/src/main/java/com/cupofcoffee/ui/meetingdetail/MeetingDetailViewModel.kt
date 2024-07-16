@@ -20,6 +20,8 @@ import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MeetingDetailViewModel(
@@ -46,25 +48,27 @@ class MeetingDetailViewModel(
 
     private fun initUiState() {
         viewModelScope.launch {
-            val meetingEntry =
-                meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
-            val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)
-            val commentsInFlow =
-                getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList())
-            commentsInFlow.collect { commentEntries ->
-                try {
-                    _meetingDetailUiState.postValue(
-                        success(
+            try {
+                val meetingEntryInFlow =
+                    meetingRepositoryImpl.getMeetingInFlow(meetingId, networkUtil.isConnected())
+                val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)
+                meetingEntryInFlow
+                    .flatMapLatest { meetingEntry ->
+                        meetingEntry!!
+                        getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList()).map { commentEntries ->
                             MeetingDetailUiState(
                                 userEntry,
                                 meetingEntry,
-                                commentEntries
+                                commentEntries,
+                                meetingEntry.meetingModel.managerId == userEntry.id
                             )
-                        )
-                    )
-                } catch (e: Exception) {
-                    _meetingDetailUiState.postValue(error(e))
-                }
+                        }
+                    }
+                    .collect { meetingDetailUiState ->
+                        _meetingDetailUiState.postValue(success(meetingDetailUiState))
+                    }
+            } catch (e: Exception) {
+                _meetingDetailUiState.postValue(error(e))
             }
         }
     }
@@ -74,7 +78,8 @@ class MeetingDetailViewModel(
 
     fun deleteComment(commentId: String) {
         viewModelScope.launch {
-            val meetingEntry = meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
+            val meetingEntry =
+                meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
             meetingEntry.meetingModel.commentIds.remove(commentId)
             meetingRepositoryImpl.update(meetingEntry)
             commentRepositoryImpl.delete(commentId)
