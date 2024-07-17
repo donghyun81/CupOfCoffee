@@ -1,6 +1,10 @@
 package com.cupofcoffee.ui
 
+import android.content.Context
 import android.view.View
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.cupofcoffee.data.DataResult
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
@@ -42,3 +46,5 @@ fun <T> View.showLoading(result: DataResult<T>) {
         is DataResult.Success -> View.GONE
     }
 }
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")

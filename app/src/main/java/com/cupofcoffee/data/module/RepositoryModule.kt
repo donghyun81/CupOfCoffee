@@ -9,6 +9,7 @@ import com.cupofcoffee.data.remote.datasource.UserRemoteDataSource
 import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
+import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 
 object RepositoryModule {
@@ -35,4 +36,6 @@ object RepositoryModule {
     fun getUserRepository() = UserRepositoryImpl(userLocalDataSource, userRemoteDataSource)
 
     fun getCommentRepository() = CommentRepositoryImpl(commentRemoteDataSource)
+
+    fun getPreferencesRepository(context: Context) = PreferencesRepositoryImpl(context)
 }

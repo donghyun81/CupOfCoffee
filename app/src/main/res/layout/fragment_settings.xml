@@ -4,15 +4,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/s_auto_login"
+        style="@style/Settings"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="자동 로그인 설정 "
+        app:layout_constraintBottom_toTopOf="@+id/tv_logout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <TextView
         android:id="@+id/tv_logout"
         style="@style/Settings"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/logout"
+        app:layout_constraintBottom_toTopOf="@id/cancel_membership"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/cancel_membership"
@@ -20,8 +30,17 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/cancel_membership"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/cpi_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_logout" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

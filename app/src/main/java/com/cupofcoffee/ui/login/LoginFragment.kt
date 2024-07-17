@@ -53,7 +53,7 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setNaverLogin()
+        setLogin()
     }
 
     override fun onDestroyView() {
@@ -68,6 +68,14 @@ class LoginFragment : Fragment() {
             APP_NAME
         )
         auth = Firebase.auth
+    }
+
+    private fun setLogin() {
+        viewModel.isAutoLoginFlow.observe(viewLifecycleOwner) { isAutoLogin ->
+            val hasUser = Firebase.auth.uid != null
+            if (isAutoLogin && hasUser) moveToHome()
+            else setNaverLogin()
+        }
     }
 
     private fun setNaverLogin() {
