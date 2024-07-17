@@ -4,18 +4,26 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee.R
+import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentSettingsBinding
+import com.cupofcoffee.ui.dataStore
+import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -38,6 +46,26 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setLogoutButton()
         setCancelMembership()
+        setAutoLogin()
+    }
+
+    private fun setAutoLogin() {
+        viewModel.uiState.observe(viewLifecycleOwner){ result ->
+            result.handle(
+                onLoading = { binding.cpiLoading.showLoading(result) },
+                onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
+                    binding.sAutoLogin.isChecked =  uiState.isAutoLogin
+                    binding.sAutoLogin.setOnCheckedChangeListener{ _,_ ->
+                        viewModel.convertIsAutoLogin()
+                    }
+                },
+                onError = {
+                    binding.cpiLoading.showLoading(result)
+                    view?.showSnackBar(R.string.data_error_message)
+                }
+            )
+        }
     }
 
     private fun setLogoutButton() {

@@ -9,6 +9,7 @@ import com.cupofcoffee.data.module.RepositoryModule
 import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
+import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.data.worker.SyncLocalWorker
 import com.cupofcoffee.util.NetworkUtil
@@ -21,6 +22,8 @@ class CupOfCoffeeApplication : Application() {
         RepositoryModule.initDatabase(applicationContext)
 
         networkUtil = NetworkUtil(applicationContext)
+
+        preferencesRepositoryImpl = RepositoryModule.getPreferencesRepository(applicationContext)
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -52,6 +55,8 @@ class CupOfCoffeeApplication : Application() {
         val commentRepository: CommentRepositoryImpl by lazy {
             RepositoryModule.getCommentRepository()
         }
+
+        lateinit var preferencesRepositoryImpl: PreferencesRepositoryImpl
 
         lateinit var networkUtil: NetworkUtil
     }
