@@ -8,19 +8,31 @@
         android:id="@+id/iv_profile_image"
         android:layout_width="80dp"
         android:layout_height="80dp"
+        app:layout_constraintEnd_toStartOf="@+id/tv_nickName"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
+        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Medium" />
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/tv_nickName"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:hint="수정할 별명 이름을 작성해주세요"
+        android:hint="이름을 작성해주세요"
         app:layout_constraintBottom_toBottomOf="@id/iv_profile_image"
+        app:layout_constraintEnd_toStartOf="@id/btn_save"
         app:layout_constraintStart_toEndOf="@id/iv_profile_image"
         app:layout_constraintTop_toTopOf="@id/iv_profile_image" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/save"
+        app:layout_constraintBottom_toBottomOf="@id/iv_profile_image"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tv_nickName"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
     <com.google.android.material.progressindicator.CircularProgressIndicator

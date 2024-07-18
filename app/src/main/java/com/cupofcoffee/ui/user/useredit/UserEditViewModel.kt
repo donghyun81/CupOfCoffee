@@ -1,5 +1,7 @@
 package com.cupofcoffee.ui.user.useredit
 
+import android.content.Intent
+import android.provider.MediaStore
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,10 +11,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
-import com.cupofcoffee.data.local.model.asUserEntry
+import com.cupofcoffee.data.DataResult.Companion.success
 import com.cupofcoffee.data.repository.UserRepositoryImpl
-import com.cupofcoffee.ui.user.UserUiState
-import com.cupofcoffee.ui.user.UserViewModel
+import com.cupofcoffee.ui.model.UserEntry
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -26,25 +27,51 @@ class UserEditViewModel(
     val uiState: LiveData<DataResult<UserEditUiState>> = _uiState
 
     init {
+        initUiState()
+    }
+
+    private fun initUiState() {
         viewModelScope.launch {
-            initUser()
+            val uid = Firebase.auth.uid!!
+            try {
+                val user = userRepositoryImpl.getLocalUserById(uid)
+                _uiState.value = success(
+                    UserEditUiState(
+                        userEntry = user,
+                        contentUri = user.userModel.profileImageWebUrl
+                    )
+                )
+            } catch (e: Exception) {
+                DataResult.error(e)
+            }
         }
     }
 
-    private suspend fun initUser() {
+    suspend fun updateUiState(contentUri: String?) {
         val uid = Firebase.auth.uid!!
         try {
             val user = userRepositoryImpl.getLocalUserById(uid)
-            _uiState.value = DataResult.success(UserEditUiState(userEntry = user))
+            _uiState.value = success(
+                UserEditUiState(
+                    userEntry = user,
+                    contentUri = contentUri
+                )
+            )
         } catch (e: Exception) {
             DataResult.error(e)
         }
     }
 
+    suspend fun updateUser(userEntry: UserEntry) {
+        userRepositoryImpl.update(userEntry)
+    }
+
+    fun getImagePick() = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                UserViewModel(
+                UserEditViewModel(
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository
                 )
             }
