@@ -15,57 +15,79 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/iv_profile"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginStart="70dp"
-        android:layout_marginTop="40dp"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cv_user_profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/tv_nickName"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:layout_margin="5dp"
-        app:layout_constraintStart_toEndOf="@id/iv_profile"
-        app:layout_constraintTop_toTopOf="@id/iv_profile" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tv_attended_meeting_label"
-        android:layout_width="wrap_content"
-        android:layout_height="20dp"
-        android:layout_margin="5dp"
-        android:text="@string/attended_meeting_count"
-        app:layout_constraintStart_toEndOf="@id/iv_profile"
-        app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_profile_image"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.ExtraLarge" />
 
-    <TextView
-        android:id="@+id/tv_attended_meeting_count"
-        android:layout_width="wrap_content"
-        android:layout_height="20dp"
-        android:layout_margin="5dp"
-        app:layout_constraintStart_toEndOf="@id/tv_attended_meeting_label"
-        app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+            <TextView
+                android:id="@+id/tv_nickName"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_margin="5dp"
+                app:layout_constraintStart_toEndOf="@id/iv_profile_image"
+                app:layout_constraintTop_toTopOf="@id/iv_profile_image" />
 
-    <TextView
-        android:id="@+id/tv_made_meeting_label"
-        android:layout_width="wrap_content"
-        android:layout_height="20dp"
-        android:layout_margin="5dp"
-        android:text="@string/made_meeting_count"
-        app:layout_constraintStart_toEndOf="@id/iv_profile"
-        app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_label" />
+            <ImageView
+                android:id="@+id/iv_user_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_edit_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_made_meeting_count"
-        android:layout_width="wrap_content"
-        android:layout_height="20dp"
-        android:layout_margin="5dp"
-        app:layout_constraintStart_toEndOf="@id/tv_made_meeting_label"
-        app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_count" />
+            <TextView
+                android:id="@+id/tv_attended_meeting_label"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_margin="5dp"
+                android:text="@string/attended_meeting_count"
+                app:layout_constraintStart_toEndOf="@id/iv_profile_image"
+                app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+
+            <TextView
+                android:id="@+id/tv_attended_meeting_count"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_margin="5dp"
+                app:layout_constraintStart_toEndOf="@id/tv_attended_meeting_label"
+                app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+
+            <TextView
+                android:id="@+id/tv_made_meeting_label"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_margin="5dp"
+                android:text="@string/made_meeting_count"
+                app:layout_constraintStart_toEndOf="@id/iv_profile_image"
+                app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_label" />
+
+            <TextView
+                android:id="@+id/tv_made_meeting_count"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_margin="5dp"
+                app:layout_constraintStart_toEndOf="@id/tv_made_meeting_label"
+                app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_count" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tl_category"
@@ -74,7 +96,7 @@
         android:layout_marginTop="50dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/iv_profile"
+        app:layout_constraintTop_toBottomOf="@id/cv_user_profile"
         app:tabMode="scrollable" />
 
     <com.google.android.material.progressindicator.CircularProgressIndicator
