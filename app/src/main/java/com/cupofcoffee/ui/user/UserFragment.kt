@@ -40,6 +40,7 @@ class UserFragment : Fragment() {
         setUserUi()
         setMeetingsAdapter()
         setSettings()
+        setUserEditOnClick()
     }
 
     override fun onDestroy() {
@@ -81,7 +82,14 @@ class UserFragment : Fragment() {
         Glide.with(binding.root.context)
             .load(profileUrl)
             .centerCrop()
-            .into(binding.ivProfile)
+            .into(binding.ivProfileImage)
+    }
+
+    private fun setUserEditOnClick() {
+        binding.ivUserEdit.setOnClickListener {
+            val action = UserFragmentDirections.actionUserFragmentToUserEditFragment()
+            findNavController().navigate(action)
+        }
     }
 
     private fun setMeetingsAdapter() {

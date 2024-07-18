@@ -47,6 +47,9 @@
         <action
             android:id="@+id/action_userFragment_to_makeMeetingFragment"
             app:destination="@id/makeMeetingFragment" />
+        <action
+            android:id="@+id/action_userFragment_to_userEditFragment"
+            app:destination="@id/userEditFragment" />
     </fragment>
 
     <dialog
@@ -104,5 +107,9 @@
         <argument android:name="meetingId"
             app:argType="string" />
     </dialog>
+    <dialog
+        android:id="@+id/userEditFragment"
+        android:name="com.cupofcoffee.ui.user.useredit.UserEditFragment"
+        android:label="UserEditFragment" />
 
 </navigation>
