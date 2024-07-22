@@ -18,6 +18,7 @@ import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class CommentEditFragment : BottomSheetDialogFragment() {
 
@@ -36,7 +37,6 @@ class CommentEditFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("12345", "시작")
         initUi()
     }
 
@@ -45,18 +45,16 @@ class CommentEditFragment : BottomSheetDialogFragment() {
             result.handle(
                 onLoading = {
                     binding.cpiLoading.showLoading(result)
-                    Log.d("12345", "로딩")
-
                 },
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
                     setAddButtonClick(uiState.userEntry)
-                    val commentModel = uiState.commentModel ?: return@handle
-                    setComment(commentModel)
+                    setUserProfile(uiState.userEntry.userModel.profileImageWebUrl)
+                    val content = uiState.commentModel?.content ?: return@handle
+                    setComment(content)
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
-                    Log.d("12345", "실패")
                     view?.showSnackBar(R.string.data_error_message)
                 }
             )
@@ -77,7 +75,8 @@ class CommentEditFragment : BottomSheetDialogFragment() {
                         meetingId = viewModel.args.meetingId,
                         nickname = userEntry.userModel.nickname,
                         profileImageWebUrl = userEntry.userModel.profileImageWebUrl,
-                        content = etComment.text.toString()
+                        content = etComment.text.toString(),
+                        createdDate = Date().time
                     )
                     if (viewModel.args.commentId == null) viewModel.insertComment(comment)
                     else viewModel.updateComment(comment)
@@ -87,15 +86,15 @@ class CommentEditFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun setComment(commentModel: CommentModel) {
-        commentModel.apply {
-            val profileUrl = profileImageWebUrl
-            Glide.with(binding.root.context)
-                .load(profileUrl)
-                .centerCrop()
-                .into(binding.ivUserProfile)
-            binding.etComment.setText(content)
-        }
+    private fun setUserProfile(profileImageWebUrl: String?) {
+        Glide.with(binding.root.context)
+            .load(profileImageWebUrl)
+            .centerCrop()
+            .into(binding.ivUserProfile)
+    }
+
+    private fun setComment(context: String) {
+        binding.etComment.setText(context)
     }
 
     override fun onDestroyView() {

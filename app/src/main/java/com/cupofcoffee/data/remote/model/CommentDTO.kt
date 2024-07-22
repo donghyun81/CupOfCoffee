@@ -10,8 +10,9 @@ data class CommentDTO(
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
     val meetingId: String,
-    val content: String
+    val content: String,
+    val createdDate: Long
 )
 
 fun CommentDTO.asCommentEntry(id: String) =
-    CommentEntry(id, CommentModel(userId, nickname, profileImageWebUrl, meetingId, content))
+    CommentEntry(id, CommentModel(userId, nickname, profileImageWebUrl, meetingId, content,createdDate))

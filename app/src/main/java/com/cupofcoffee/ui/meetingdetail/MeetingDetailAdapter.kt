@@ -5,8 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.cupofcoffee.databinding.MeetingDetailItemBinding
 import com.cupofcoffee.ui.model.CommentEntry
+import com.cupofcoffee.ui.toDateFormat
 
 class MeetingDetailAdapter(
     private val commentClickListener: CommentClickListener
@@ -28,6 +30,7 @@ class MeetingDetailAdapter(
         ) {
             with(binding) {
                 tvUserNickname.text = commentEntry.commentModel.nickname
+                tvCreatedDate.text = commentEntry.commentModel.createdDate.toDateFormat()
                 tvContent.text = commentEntry.commentModel.content
                 ivUpdate.setOnClickListener {
                     commentClickListener.onUpdateClick(commentEntry)
@@ -35,6 +38,10 @@ class MeetingDetailAdapter(
                 ivDelete.setOnClickListener {
                     commentClickListener.onDetailClick(commentEntry.id)
                 }
+                Glide.with(binding.root.context)
+                    .load(commentEntry.commentModel.profileImageWebUrl)
+                    .centerCrop()
+                    .into(ivUserProfile)
             }
         }
 

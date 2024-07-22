@@ -8,7 +8,7 @@
 
     <ImageView
         android:id="@+id/app_logo"
-        android:src="@mipmap/cup_of_coffee"
+        android:src="@drawable/cup_of_coffee"
         android:layout_width="300dp"
         android:layout_height="300dp"
         app:layout_constraintEnd_toEndOf="parent"

@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMeetingDetailBinding
@@ -54,6 +55,7 @@ class MeetingDetailFragment : Fragment() {
                     setEdit(uiState.isMyMeeting, uiState.meeting)
                     setMeeting(uiState.meeting)
                     setCommentAdapter(uiState.comments)
+                    setUserProfile(uiState.userEntry.userModel.profileImageWebUrl)
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
@@ -100,6 +102,13 @@ class MeetingDetailFragment : Fragment() {
     private fun setCommentAdapter(comments: List<CommentEntry>) {
         binding.rvComments.adapter = adapter
         adapter.submitList(comments)
+    }
+
+    private fun setUserProfile(profileImageWebUrl: String?) {
+        Glide.with(binding.root.context)
+            .load(profileImageWebUrl)
+            .centerCrop()
+            .into(binding.ivUserProfile)
     }
 
     private fun getCommentClickListener() = object : CommentClickListener {

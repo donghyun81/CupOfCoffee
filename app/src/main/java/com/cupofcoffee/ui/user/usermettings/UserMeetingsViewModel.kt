@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.user.usermettings
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -13,17 +14,23 @@ import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.success
+import com.cupofcoffee.data.local.model.UserEntity
 import com.cupofcoffee.data.local.model.asUserEntry
+import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
+import com.cupofcoffee.ui.meetingdetail.MeetingDetailUiState
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
+import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 
@@ -34,6 +41,7 @@ class UserMeetingsViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val commentRepositoryImpl: CommentRepositoryImpl,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -54,21 +62,24 @@ class UserMeetingsViewModel(
     private suspend fun setMeetings() {
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
-        user.collect { userEntity ->
-            val userEntry = userEntity?.asUserEntry() ?: return@collect
+        user.flatMapLatest { userEntry: UserEntry? ->
+            userEntry!!
             when (category) {
                 MeetingsCategory.ATTENDED_MEETINGS -> {
-                    val meetings =
-                        getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
-                    updateMeetings(meetings)
+                    getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
+                        .map { value: List<MeetingEntry> ->
+                            UserMeetingsUiState(value)
+                        }
                 }
 
-                MeetingsCategory.MADE_MEETINGS -> {
-                    val meetings =
-                        getMeetingEntries(userEntry.userModel.madeMeetingIds.keys.toList())
-                    updateMeetings(meetings)
-                }
+                MeetingsCategory.MADE_MEETINGS ->
+                    getMeetingEntries(userEntry.userModel.madeMeetingIds.keys.toList())
+                        .map { value: List<MeetingEntry> ->
+                            UserMeetingsUiState(value)
+                        }
             }
+        }.collect {
+            _uiState.postValue(success(it))
         }
     }
 
@@ -90,6 +101,7 @@ class UserMeetingsViewModel(
             val placeId = meetingEntry.meetingModel.placeId
             updatePlace(placeId, meetingEntry.id)
             updateUser(meetingEntry.id)
+            deleteComments(meetingEntry.meetingModel.commentIds.keys.toList())
             meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
             meetingRepositoryImpl.deleteRemote(meetingEntry.id)
         }
@@ -115,6 +127,12 @@ class UserMeetingsViewModel(
         userRepositoryImpl.update(user)
     }
 
+    private suspend fun deleteComments(commentIds: List<String>) {
+        commentIds.forEach { id ->
+            commentRepositoryImpl.delete(id = id)
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -123,6 +141,7 @@ class UserMeetingsViewModel(
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
+                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
                     networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }

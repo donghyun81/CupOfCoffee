@@ -1,6 +1,5 @@
 package com.cupofcoffee.data.repository
 
-import android.util.Log
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.data.local.model.asMeetingEntry

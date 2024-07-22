@@ -12,7 +12,6 @@ import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.loading
 import com.cupofcoffee.data.DataResult.Companion.success
-import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -34,9 +33,9 @@ class UserViewModel(
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
         viewModelScope.launch {
-            user.collect { userEntity ->
+            user.collect { userEntry ->
                 try {
-                    val userEntry = userEntity?.asUserEntry() ?: return@collect
+                    userEntry ?: return@collect
                     _uiState.value = success(
                         UserUiState(
                             user = userEntry,
