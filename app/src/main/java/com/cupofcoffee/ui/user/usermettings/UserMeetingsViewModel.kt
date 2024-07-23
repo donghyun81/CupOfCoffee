@@ -10,17 +10,17 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
-import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.success
-import com.cupofcoffee.data.local.model.UserEntity
-import com.cupofcoffee.data.local.model.asUserEntry
 import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
-import com.cupofcoffee.ui.meetingdetail.MeetingDetailUiState
+import com.cupofcoffee.data.worker.DeleteMeetingWorker
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.UserEntry
@@ -28,10 +28,14 @@ import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 
 private const val CATEGORY_TAG = "category"
@@ -51,10 +55,18 @@ class UserMeetingsViewModel(
         MutableLiveData()
     val uiState: LiveData<DataResult<UserMeetingsUiState>> = _uiState
 
+    private var currentJob: Job? = null
+
     init {
-        viewModelScope.launch {
+        currentJob?.cancel()
+        currentJob = viewModelScope.launch {
             setMeetings()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentJob?.cancel()
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()
@@ -63,7 +75,7 @@ class UserMeetingsViewModel(
         val uid = Firebase.auth.uid ?: return
         val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
         user.flatMapLatest { userEntry: UserEntry? ->
-            userEntry!!
+            userEntry ?: return@flatMapLatest emptyFlow()
             when (category) {
                 MeetingsCategory.ATTENDED_MEETINGS -> {
                     getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
@@ -86,16 +98,6 @@ class UserMeetingsViewModel(
     private suspend fun getMeetingEntries(meetingIds: List<String>) =
         meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
 
-    private suspend fun updateMeetings(meetingEntriesInFlow: Flow<List<MeetingEntry>>) {
-        try {
-            meetingEntriesInFlow.collect { meetingEntries ->
-                _uiState.value = success(UserMeetingsUiState(meetingEntries))
-            }
-        } catch (e: Exception) {
-            _uiState.value = error(e)
-        }
-    }
-
     fun deleteMeeting(meetingEntry: MeetingEntry) {
         viewModelScope.launch {
             val placeId = meetingEntry.meetingModel.placeId
@@ -105,6 +107,17 @@ class UserMeetingsViewModel(
             meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
             meetingRepositoryImpl.deleteRemote(meetingEntry.id)
         }
+    }
+
+    fun getDeleteMeetingWorker(meetingEntry: MeetingEntry): OneTimeWorkRequest {
+        val jsonMeetingEntry = Json.encodeToString(meetingEntry)
+        val inputData = Data.Builder()
+            .putString("meetingEntry", jsonMeetingEntry)
+            .build()
+
+        return OneTimeWorkRequest.Builder(DeleteMeetingWorker::class.java)
+            .setInputData(inputData)
+            .build()
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {

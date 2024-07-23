@@ -1,7 +1,5 @@
 package com.cupofcoffee.data.remote.datasource
 
-import android.util.Log
-import com.cupofcoffee.data.remote.model.CommentDTO
 import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.data.remote.service.MeetingService
 import kotlinx.coroutines.CoroutineDispatcher

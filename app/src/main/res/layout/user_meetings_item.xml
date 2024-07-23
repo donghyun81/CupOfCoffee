@@ -38,28 +38,19 @@
         android:layout_height="0dp"
         android:maxLines="2"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/iv_edit"
+        app:layout_constraintEnd_toStartOf="@id/iv_more_menu"
         app:layout_constraintStart_toEndOf="@+id/tv_place"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/iv_edit"
+        android:id="@+id/iv_more_menu"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:src="@drawable/baseline_edit_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/iv_delete"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
-    <ImageView
-        android:id="@+id/iv_delete"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:src="@drawable/baseline_delete_24"
+        android:src="@drawable/baseline_more_vert_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="0dp"

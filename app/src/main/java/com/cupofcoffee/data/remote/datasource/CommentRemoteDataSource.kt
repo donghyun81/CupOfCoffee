@@ -1,9 +1,7 @@
 package com.cupofcoffee.data.remote.datasource
 
-import android.util.Log
 import com.cupofcoffee.data.remote.RemoteIdWrapper
 import com.cupofcoffee.data.remote.model.CommentDTO
-import com.cupofcoffee.data.remote.model.PlaceDTO
 import com.cupofcoffee.data.remote.service.CommentService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +9,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import okhttp3.Dispatcher
 
 class CommentRemoteDataSource(
     private val commentService: CommentService,

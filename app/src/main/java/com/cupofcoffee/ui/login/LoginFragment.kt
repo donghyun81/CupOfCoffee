@@ -35,7 +35,7 @@ class LoginFragment : Fragment() {
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
     private val viewModel: LoginViewModel by viewModels { LoginViewModel.Factory }
-    private lateinit var auth: FirebaseAuth
+    private val auth: FirebaseAuth = Firebase.auth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +53,7 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setLogin()
+        setNaverLogin()
     }
 
     override fun onDestroyView() {
@@ -67,15 +67,6 @@ class LoginFragment : Fragment() {
             NAVER_LOGIN_CLIENT_SECRET,
             APP_NAME
         )
-        auth = Firebase.auth
-    }
-
-    private fun setLogin() {
-        viewModel.isAutoLoginFlow.observe(viewLifecycleOwner) { isAutoLogin ->
-            val hasUser = Firebase.auth.uid != null
-            if (isAutoLogin && hasUser) moveToHome()
-            else setNaverLogin()
-        }
     }
 
     private fun setNaverLogin() {

@@ -1,6 +1,5 @@
 package com.cupofcoffee.data.remote.datasource
 
-import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.remote.model.UserDTO
 import com.cupofcoffee.data.remote.service.UserService
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,7 +25,8 @@ class UserRemoteDataSource(
     }
 
     suspend fun update(id: String, userDTO: UserDTO) = withContext(ioDispatcher) {
-        userService.update(id, userDTO)
+        if (userDTO.madeMeetingIds.isEmpty()) userService.insert(id, userDTO)
+        else userService.update(id, userDTO)
     }
 
     suspend fun delete(id: String) = withContext(ioDispatcher) {

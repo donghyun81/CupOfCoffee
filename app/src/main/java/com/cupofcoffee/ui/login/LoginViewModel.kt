@@ -11,15 +11,10 @@ import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 class LoginViewModel(
     private val userRepository: UserRepositoryImpl,
-    private val preferencesRepositoryImpl: PreferencesRepositoryImpl
 ) : ViewModel() {
-
-    val isAutoLoginFlow = preferencesRepositoryImpl.isAutoLoginFlow.asLiveData()
 
     suspend fun insertUser(userEntry: UserEntry) {
         with(userEntry) {
@@ -38,7 +33,6 @@ class LoginViewModel(
             initializer {
                 LoginViewModel(
                     userRepository = CupOfCoffeeApplication.userRepository,
-                    preferencesRepositoryImpl = CupOfCoffeeApplication.preferencesRepositoryImpl
                 )
             }
         }

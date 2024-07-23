@@ -1,9 +1,7 @@
 package com.cupofcoffee.data.remote.datasource
 
 import com.cupofcoffee.data.remote.model.PlaceDTO
-import com.cupofcoffee.data.remote.model.asPlaceEntry
 import com.cupofcoffee.data.remote.service.PlaceService
-import com.cupofcoffee.ui.model.PlaceEntry
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

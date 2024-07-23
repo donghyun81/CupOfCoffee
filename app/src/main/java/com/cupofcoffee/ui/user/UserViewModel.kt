@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.user
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,6 +16,7 @@ import com.cupofcoffee.data.DataResult.Companion.success
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class UserViewModel(
@@ -24,15 +26,22 @@ class UserViewModel(
     private val _uiState: MutableLiveData<DataResult<UserUiState>> = MutableLiveData(loading())
     val uiState: LiveData<DataResult<UserUiState>> = _uiState
 
+    private var currentJob: Job? = null
+
     init {
         initUser()
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        currentJob?.cancel()
+    }
 
     private fun initUser() {
         val uid = Firebase.auth.uid!!
         val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
-        viewModelScope.launch {
+        currentJob?.cancel()
+        currentJob = viewModelScope.launch {
             user.collect { userEntry ->
                 try {
                     userEntry ?: return@collect

@@ -6,10 +6,10 @@
     android:padding="8dp">
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/iv_edit"
+        android:id="@+id/iv_more_menu"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/baseline_edit_24"
+        android:src="@drawable/baseline_more_vert_24"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -22,7 +22,7 @@
         android:gravity="top"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/iv_edit" />
+        app:layout_constraintTop_toBottomOf="@id/iv_more_menu" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tv_place_label"
@@ -113,8 +113,8 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/iv_user_profile"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/tv_add_comment"
         app:layout_constraintStart_toStartOf="parent"
