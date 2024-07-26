@@ -1,5 +1,7 @@
 package com.cupofcoffee.ui.meetingdetail
 
+import android.net.ConnectivityManager
+import android.net.Network
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -55,36 +57,44 @@ class MeetingDetailViewModel(
 
     private var currentJob: Job? = null
 
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            currentJob?.cancel()
+            currentJob = initUiState()
+        }
 
-    init {
-        initUiState()
+        override fun onLost(network: Network) {
+            currentJob?.cancel()
+            currentJob = initUiState()
+        }
     }
 
-    private fun initUiState() {
-        currentJob?.cancel()
-        currentJob = viewModelScope.launch {
-            try {
-                val meetingEntryInFlow =
-                    meetingRepositoryImpl.getMeetingInFlow(meetingId, networkUtil.isConnected())
-                val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)
-                meetingEntryInFlow
-                    .flatMapLatest { meetingEntry ->
-                        meetingEntry!!
-                        getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList()).map { commentEntries ->
-                            MeetingDetailUiState(
-                                userEntry,
-                                meetingEntry,
-                                commentEntries,
-                                meetingEntry.meetingModel.managerId == userEntry.id
-                            )
-                        }
+    init {
+        networkUtil.registerNetworkCallback(networkCallback)
+    }
+
+    private fun initUiState() = viewModelScope.launch {
+        try {
+            val meetingEntryInFlow =
+                meetingRepositoryImpl.getMeetingInFlow(meetingId, networkUtil.isConnected())
+            val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)
+            meetingEntryInFlow
+                .flatMapLatest { meetingEntry ->
+                    meetingEntry!!
+                    getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList()).map { commentEntries ->
+                        MeetingDetailUiState(
+                            userEntry,
+                            meetingEntry,
+                            commentEntries,
+                            meetingEntry.meetingModel.managerId == userEntry.id
+                        )
                     }
-                    .collect { meetingDetailUiState ->
-                        _meetingDetailUiState.postValue(success(meetingDetailUiState))
-                    }
-            } catch (e: Exception) {
-                _meetingDetailUiState.postValue(error(e))
-            }
+                }
+                .collect { meetingDetailUiState ->
+                    _meetingDetailUiState.postValue(success(meetingDetailUiState))
+                }
+        } catch (e: Exception) {
+            _meetingDetailUiState.postValue(error(e))
         }
     }
 

@@ -14,12 +14,14 @@ import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.success
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.UserEntry
+import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class UserEditViewModel(
-    private val userRepositoryImpl: UserRepositoryImpl
+    private val userRepositoryImpl: UserRepositoryImpl,
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     private val _uiState: MutableLiveData<DataResult<UserEditUiState>> =
@@ -47,6 +49,8 @@ class UserEditViewModel(
         }
     }
 
+    fun isNetworkConnected() = networkUtil.isConnected()
+
     suspend fun updateUiState(contentUri: String?) {
         val uid = Firebase.auth.uid!!
         try {
@@ -72,7 +76,8 @@ class UserEditViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 UserEditViewModel(
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository
+                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
+                    networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }
         }

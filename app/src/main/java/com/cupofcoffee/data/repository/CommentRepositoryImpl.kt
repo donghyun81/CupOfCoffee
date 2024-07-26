@@ -15,6 +15,9 @@ class CommentRepositoryImpl(
 
     suspend fun getComment(id: String) = commentRemoteDataSource.getComment(id).asCommentEntry(id)
 
+    suspend fun getCommentsByUserId() =
+        commentRemoteDataSource.getComments()
+
     suspend fun getCommentsByIdsInFlow(ids: List<String>) =
         commentRemoteDataSource.getCommentsByIdsInFlow(ids).map { commentsMap ->
             commentsMap.map { comment ->

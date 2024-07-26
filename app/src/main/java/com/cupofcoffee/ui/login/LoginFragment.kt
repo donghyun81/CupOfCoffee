@@ -21,11 +21,9 @@ import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
-private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
-private const val APP_NAME = "CupOfCoffee"
 private const val EMPTY_NAME = "익명"
 private const val NAVER_ID_TO_EMAIL_COUNT = 7
 private const val CREATE_USER_ERROR_MESSAGE = "회원 가입 오류"
@@ -36,11 +34,6 @@ class LoginFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: LoginViewModel by viewModels { LoginViewModel.Factory }
     private val auth: FirebaseAuth = Firebase.auth
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        initNaverLogin()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,14 +52,6 @@ class LoginFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun initNaverLogin() {
-        NaverIdLoginSDK.initialize(
-            requireContext(), NAVER_LOGIN_CLIENT_ID,
-            NAVER_LOGIN_CLIENT_SECRET,
-            APP_NAME
-        )
     }
 
     private fun setNaverLogin() {
@@ -118,6 +103,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch {
+                            delay(2000L)
                             viewModel.loginUser(uid)
                             moveToHome()
                         }
@@ -135,6 +121,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch {
+                            delay(2000L)
                             viewModel.insertUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }

@@ -65,22 +65,23 @@ class CommentEditFragment : BottomSheetDialogFragment() {
     private fun setAddButtonClick(userEntry: UserEntry) {
         with(binding) {
             btnAddComment.setOnClickListener {
-                if (!viewModel.isNetworkConnected()) {
+                if (viewModel.isNetworkConnected()) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val comment = CommentModel(
+                            userId = userEntry.id,
+                            meetingId = viewModel.args.meetingId,
+                            nickname = userEntry.userModel.nickname,
+                            profileImageWebUrl = userEntry.userModel.profileImageWebUrl,
+                            content = etComment.text.toString(),
+                            createdDate = Date().time
+                        )
+                        if (viewModel.args.commentId == null) viewModel.insertComment(comment)
+                        else viewModel.updateComment(comment)
+                        findNavController().navigateUp()
+                    }
+                } else {
                     view?.showSnackBar(R.string.edit_comment_netwokr_message)
                     return@setOnClickListener
-                }
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val comment = CommentModel(
-                        userId = userEntry.id,
-                        meetingId = viewModel.args.meetingId,
-                        nickname = userEntry.userModel.nickname,
-                        profileImageWebUrl = userEntry.userModel.profileImageWebUrl,
-                        content = etComment.text.toString(),
-                        createdDate = Date().time
-                    )
-                    if (viewModel.args.commentId == null) viewModel.insertComment(comment)
-                    else viewModel.updateComment(comment)
-                    findNavController().navigateUp()
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.PlaceLocalDataSource
 import com.cupofcoffee.data.local.model.PlaceEntity
 import com.cupofcoffee.data.local.model.asMeetingEntry
@@ -48,25 +49,16 @@ class PlaceRepositoryImpl(
         }
     }
 
-    suspend fun getAllLocalPlacesInFlow() =
-        placeLocalDataSource.getAllPlacesInFlow().map { places ->
-            places.convertPlaceEntries()
-        }
-
-    suspend fun getAllRemotePlacesInFlow() =
-        placeRemoteDataSource.getAllPlacesInFlow().map { places ->
-            places.convertPlaceEntries()
-        }
-
-
     suspend fun getAllRemotePlaces() = placeRemoteDataSource.getAllPlaces()
 
     suspend fun getAllPlacesInFlow(isNetworkConnected: Boolean): Flow<List<PlaceEntry>> {
         return if (isNetworkConnected) {
+            Log.d("123456","원갹요청")
             placeRemoteDataSource.getAllPlacesInFlow().map { places ->
                 places.convertPlaceEntries()
             }
         } else {
+            Log.d("123456","로컬 요청")
             placeLocalDataSource.getAllPlacesInFlow().map { places ->
                 places.convertPlaceEntries()
             }

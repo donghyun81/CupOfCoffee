@@ -1,5 +1,8 @@
 package com.cupofcoffee.ui.meetinglist
 
+import android.net.ConnectivityManager
+import android.net.Network
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -41,21 +44,33 @@ class MeetingListViewModel(
         MutableLiveData(loading())
     val uiState: LiveData<DataResult<MeetingListUiState>> = _uiState
 
-    init {
-        viewModelScope.launch {
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            initUiState()
+        }
+
+        override fun onLost(network: Network) {
             initUiState()
         }
     }
 
+    init {
+        initUiState()
+        networkUtil.registerNetworkCallback(networkCallback)
+    }
+
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    private suspend fun initUiState() {
-        try {
-            val placeEntry = placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())!!
-            val meetingEntriesWithPeople = convertMeetingEntriesWithPeople(placeEntry)
-            _uiState.value = success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
-        } catch (e: Exception) {
-            _uiState.value = error(e)
+    private fun initUiState() {
+        viewModelScope.launch {
+            try {
+                val placeEntry =
+                    placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())!!
+                val meetingEntriesWithPeople = convertMeetingEntriesWithPeople(placeEntry)
+                _uiState.value = success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
+            } catch (e: Exception) {
+                _uiState.value = error(e)
+            }
         }
     }
 

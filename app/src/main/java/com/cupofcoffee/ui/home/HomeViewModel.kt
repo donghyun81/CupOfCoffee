@@ -14,6 +14,7 @@ import com.cupofcoffee.R
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.PlaceEntry
+import com.cupofcoffee.ui.model.asPlaceEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
@@ -34,15 +35,18 @@ class HomeViewModel(
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            initMarkers()
+            currentJob?.cancel()
+            currentJob = initMarkers()
         }
 
         override fun onLost(network: Network) {
-            initMarkers()
+            currentJob?.cancel()
+            currentJob = initMarkers()
         }
     }
 
     init {
+        initMarkers()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -51,20 +55,24 @@ class HomeViewModel(
         currentJob?.cancel()
     }
 
-    fun initMarkers() {
-        currentJob?.cancel()
-        currentJob = viewModelScope.launch {
-            val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
-            placesFlow.collect { places ->
-                try {
-                    _uiState.postValue(
-                        DataResult.Success(
-                            HomeUiState(places.map { it.toMarker() })
+    fun initMarkers() = viewModelScope.launch {
+        val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
+        placesFlow.collect { places ->
+            try {
+                places.forEach { place ->
+                    placeRepositoryImpl.insertLocal(
+                        place.placeModel.asPlaceEntity(
+                            place.id
                         )
                     )
-                } catch (e: Exception) {
-                    _uiState.postValue(DataResult.Error(e))
                 }
+                _uiState.postValue(
+                    DataResult.Success(
+                        HomeUiState(places.map { it.toMarker() })
+                    )
+                )
+            } catch (e: Exception) {
+                _uiState.postValue(DataResult.Error(e))
             }
         }
     }

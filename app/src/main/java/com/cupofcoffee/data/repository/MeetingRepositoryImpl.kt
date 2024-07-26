@@ -1,5 +1,6 @@
 package com.cupofcoffee.data.repository
 
+import android.util.Log
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.data.local.model.asMeetingEntry
@@ -38,9 +39,11 @@ class MeetingRepositoryImpl(
 
     suspend fun getMeetingsByIdsInFlow(ids: List<String>, isConnected: Boolean = true) =
         if (isConnected) meetingRemoteDataSource.getCommentsByIdsInFlow(ids).map { meetingEntries ->
+            Log.d("123456","원격 미팅 조회")
             meetingEntries.convertMeetingEntries().sortedByDate()
         }
         else meetingLocalDataSource.getMeetingsByIdsInFlow(ids).map {
+            Log.d("123456","로컬 미팅 조회")
             it.convertMeetingEntries().sortedByDate()
         }
 

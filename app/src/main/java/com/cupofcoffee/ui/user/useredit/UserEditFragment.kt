@@ -93,10 +93,11 @@ class UserEditFragment : DialogFragment() {
                     profileImageWebUrl = contentUri
                 )
             )
-            viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.isNetworkConnected()) viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.updateUser(currentUserEntry)
                 findNavController().navigateUp()
             }
+            else view?.showSnackBar(R.string.network_profile)
         }
     }
 

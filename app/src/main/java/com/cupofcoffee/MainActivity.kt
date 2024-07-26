@@ -12,6 +12,7 @@ import com.cupofcoffee.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var onBackPressedCallback: OnBackPressedCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setNavigationVisibility(navController: NavController) {
+        onBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        }
+
         navController.addOnDestinationChangedListener { _, destination, _ ->
             binding.bnvHome.visibility = when (destination.id) {
                 R.id.splashFragment -> View.GONE
@@ -39,13 +46,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.commentEditFragment -> View.GONE
                 else -> View.VISIBLE
             }
-            if (destination.id == R.id.homeFragment || destination.id == R.id.userFragment) {
-                onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-                    override fun handleOnBackPressed() {
-                        finish()
-                    }
-                })
-            }
+            if (destination.id == R.id.homeFragment || destination.id == R.id.userFragment)
+                onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+            else onBackPressedCallback.remove()
         }
     }
 }

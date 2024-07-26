@@ -1,5 +1,7 @@
 package com.cupofcoffee.ui.user.usermettings
 
+import android.net.ConnectivityManager
+import android.net.Network
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -57,11 +59,23 @@ class UserMeetingsViewModel(
 
     private var currentJob: Job? = null
 
-    init {
-        currentJob?.cancel()
-        currentJob = viewModelScope.launch {
-            setMeetings()
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            Log.d("123456", "유저 정보 조회 오류")
+            currentJob?.cancel()
+            currentJob = initUiState()
         }
+
+        override fun onLost(network: Network) {
+            Log.d("123456", "유저 정보 조회 오류")
+            currentJob?.cancel()
+            currentJob = initUiState()
+        }
+    }
+
+    init {
+        initUiState()
+        networkUtil.registerNetworkCallback(networkCallback)
     }
 
     override fun onCleared() {
@@ -71,43 +85,33 @@ class UserMeetingsViewModel(
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    private suspend fun setMeetings() {
-        val uid = Firebase.auth.uid ?: return
-        val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
-        user.flatMapLatest { userEntry: UserEntry? ->
-            userEntry ?: return@flatMapLatest emptyFlow()
-            when (category) {
-                MeetingsCategory.ATTENDED_MEETINGS -> {
-                    getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
-                        .map { value: List<MeetingEntry> ->
-                            UserMeetingsUiState(value)
-                        }
-                }
+    private fun initUiState() =
+        viewModelScope.launch {
+            val uid = Firebase.auth.uid ?: return@launch
+            val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
+            user.flatMapLatest { userEntry: UserEntry? ->
+                userEntry ?: return@flatMapLatest emptyFlow()
+                when (category) {
+                    MeetingsCategory.ATTENDED_MEETINGS -> {
+                        getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
+                            .map { value: List<MeetingEntry> ->
+                                UserMeetingsUiState(value)
+                            }
+                    }
 
-                MeetingsCategory.MADE_MEETINGS ->
-                    getMeetingEntries(userEntry.userModel.madeMeetingIds.keys.toList())
-                        .map { value: List<MeetingEntry> ->
-                            UserMeetingsUiState(value)
-                        }
+                    MeetingsCategory.MADE_MEETINGS ->
+                        getMeetingEntries(userEntry.userModel.madeMeetingIds.keys.toList())
+                            .map { value: List<MeetingEntry> ->
+                                UserMeetingsUiState(value)
+                            }
+                }
+            }.collect {
+                _uiState.postValue(success(it))
             }
-        }.collect {
-            _uiState.postValue(success(it))
         }
-    }
 
     private suspend fun getMeetingEntries(meetingIds: List<String>) =
         meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
-
-    fun deleteMeeting(meetingEntry: MeetingEntry) {
-        viewModelScope.launch {
-            val placeId = meetingEntry.meetingModel.placeId
-            updatePlace(placeId, meetingEntry.id)
-            updateUser(meetingEntry.id)
-            deleteComments(meetingEntry.meetingModel.commentIds.keys.toList())
-            meetingRepositoryImpl.deleteLocal(meetingEntry.asMeetingEntity())
-            meetingRepositoryImpl.deleteRemote(meetingEntry.id)
-        }
-    }
 
     fun getDeleteMeetingWorker(meetingEntry: MeetingEntry): OneTimeWorkRequest {
         val jsonMeetingEntry = Json.encodeToString(meetingEntry)

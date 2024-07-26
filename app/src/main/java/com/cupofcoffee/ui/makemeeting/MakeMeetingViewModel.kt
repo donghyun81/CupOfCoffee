@@ -1,5 +1,7 @@
 package com.cupofcoffee.ui.makemeeting
 
+import android.net.ConnectivityManager
+import android.net.Network
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -27,6 +29,7 @@ import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 const val POSITION_COUNT = 10
@@ -45,41 +48,52 @@ class MakeMeetingViewModel(
         MutableLiveData(loading())
     val uiState: LiveData<DataResult<MakeMeetingUiState>> = _uiState
 
-    init {
-        viewModelScope.launch {
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            initUiState()
+        }
+
+        override fun onLost(network: Network) {
             initUiState()
         }
     }
 
-    private suspend fun initUiState() {
-        try {
-            val isNewMeeting = args.meetingId == null
-            if (isNewMeeting) _uiState.postValue(
-                success(
-                    MakeMeetingUiState(
-                        args.placeName!!,
-                        args.placePosition!!.latitude,
-                        args.placePosition!!.longitude,
-                        meetingEntry = null
-                    )
-                )
-            )
-            else {
-                val meeting = meetingRepositoryImpl.getMeeting(args.meetingId!!)
-                _uiState.postValue(
+    init {
+        networkUtil.registerNetworkCallback(networkCallback)
+    }
+
+    private fun initUiState() {
+        viewModelScope.launch {
+            try {
+                val isNewMeeting = args.meetingId == null
+                if (isNewMeeting) _uiState.postValue(
                     success(
                         MakeMeetingUiState(
-                            placeName = meeting.meetingModel.caption,
-                            lat = meeting.meetingModel.lat,
-                            lng = meeting.meetingModel.lng,
-                            meetingEntry = meeting
+                            args.placeName!!,
+                            args.placePosition!!.latitude,
+                            args.placePosition!!.longitude,
+                            meetingEntry = null
                         )
                     )
                 )
+                else {
+                    val meeting = meetingRepositoryImpl.getMeeting(args.meetingId!!)
+                    _uiState.postValue(
+                        success(
+                            MakeMeetingUiState(
+                                placeName = meeting.meetingModel.caption,
+                                lat = meeting.meetingModel.lat,
+                                lng = meeting.meetingModel.lng,
+                                meetingEntry = meeting
+                            )
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.postValue(error(e))
             }
-        } catch (e: Exception) {
-            _uiState.postValue(error(e))
         }
+
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()
