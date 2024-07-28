@@ -21,11 +21,9 @@ import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
-private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
-private const val APP_NAME = "CupOfCoffee"
 private const val EMPTY_NAME = "익명"
 private const val NAVER_ID_TO_EMAIL_COUNT = 7
 private const val CREATE_USER_ERROR_MESSAGE = "회원 가입 오류"
@@ -35,12 +33,7 @@ class LoginFragment : Fragment() {
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
     private val viewModel: LoginViewModel by viewModels { LoginViewModel.Factory }
-    private lateinit var auth: FirebaseAuth
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        initNaverLogin()
-    }
+    private val auth: FirebaseAuth = Firebase.auth
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,7 +46,8 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setLogin()
+        setButtonEnable()
+        setNaverLogin()
     }
 
     override fun onDestroyView() {
@@ -61,25 +55,15 @@ class LoginFragment : Fragment() {
         _binding = null
     }
 
-    private fun initNaverLogin() {
-        NaverIdLoginSDK.initialize(
-            requireContext(), NAVER_LOGIN_CLIENT_ID,
-            NAVER_LOGIN_CLIENT_SECRET,
-            APP_NAME
-        )
-        auth = Firebase.auth
-    }
-
-    private fun setLogin() {
-        viewModel.isAutoLoginFlow.observe(viewLifecycleOwner) { isAutoLogin ->
-            val hasUser = Firebase.auth.uid != null
-            if (isAutoLogin && hasUser) moveToHome()
-            else setNaverLogin()
+    private fun setButtonEnable() {
+        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
+            binding.btnNaverLogin.isEnabled = !isButtonClicked
         }
     }
 
     private fun setNaverLogin() {
         binding.btnNaverLogin.setOnClickListener {
+            viewModel.onButtonClicked()
             NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
             NaverIdLoginSDK.authenticate(requireContext(), object : OAuthLoginCallback {
                 override fun onSuccess() {
@@ -127,6 +111,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch {
+                            delay(2000L)
                             viewModel.loginUser(uid)
                             moveToHome()
                         }
@@ -144,6 +129,7 @@ class LoginFragment : Fragment() {
                     if (task.isSuccessful) {
                         val uid = Firebase.auth.uid!!
                         viewLifecycleOwner.lifecycleScope.launch {
+                            delay(2000L)
                             viewModel.insertUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }

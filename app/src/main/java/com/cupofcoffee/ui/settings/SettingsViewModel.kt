@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.settings
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,6 +12,7 @@ import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.error
 import com.cupofcoffee.data.DataResult.Companion.loading
 import com.cupofcoffee.data.DataResult.Companion.success
+import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
@@ -26,17 +26,26 @@ class SettingsViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val commentRepositoryImpl: CommentRepositoryImpl,
     private val preferencesRepositoryImpl: PreferencesRepositoryImpl,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     private val _uiState: MutableLiveData<DataResult<SettingsUiState>> = MutableLiveData(loading())
-    val uiState: LiveData<DataResult<SettingsUiState>> = _uiState
+    val uiState: LiveData<DataResult<SettingsUiState>> get() = _uiState
+
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
 
     init {
         viewModelScope.launch {
             initUiState()
         }
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     private suspend fun initUiState() {
@@ -49,7 +58,7 @@ class SettingsViewModel(
         }
     }
 
-    fun convertIsAutoLogin(){
+    fun convertIsAutoLogin() {
         viewModelScope.launch {
             preferencesRepositoryImpl.toggleAutoLogin()
         }
@@ -68,6 +77,7 @@ class SettingsViewModel(
             deleteMeeting(meetingEntry)
             deleteMadeMeetingsInPlace(meetingEntry.meetingModel.placeId, meetingId)
         }
+        deleteComments(uid)
         deleteUser(user)
     }
 
@@ -85,10 +95,15 @@ class SettingsViewModel(
     private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
         val placeEntry = placeRepositoryImpl.getPlaceById(placeId, isConnected())!!
         placeEntry.placeModel.meetingIds.remove(meetingId)
-        if (placeEntry.placeModel.meetingIds.isEmpty()) {
-            placeRepositoryImpl.delete(placeEntry)
-        } else {
-            placeRepositoryImpl.update(placeEntry)
+        if (placeEntry.placeModel.meetingIds.isEmpty()) placeRepositoryImpl.delete(placeEntry)
+        else placeRepositoryImpl.update(placeEntry)
+    }
+
+    private suspend fun deleteComments(userId: String) {
+        val commentIdsByUserId =
+            commentRepositoryImpl.getCommentsByUserId().filterValues { it.userId == userId }.keys
+        commentIdsByUserId.forEach { id ->
+            commentRepositoryImpl.delete(id)
         }
     }
 
@@ -103,6 +118,7 @@ class SettingsViewModel(
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
+                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
                     preferencesRepositoryImpl = CupOfCoffeeApplication.preferencesRepositoryImpl,
                     networkUtil = CupOfCoffeeApplication.networkUtil
                 )

@@ -37,5 +37,5 @@
         <item name="android:textSize">28sp</item>
         <item name="android:gravity">center</item>
     </style>
-    
+
 </resources>

@@ -36,11 +36,19 @@ class CommentEditViewModel(
 
     private val _commentEditUiState: MutableLiveData<DataResult<CommentEditUiState>> =
         MutableLiveData(loading())
-    val commentEditUiState: LiveData<DataResult<CommentEditUiState>> = _commentEditUiState
+    val commentEditUiState: LiveData<DataResult<CommentEditUiState>> get() = _commentEditUiState
+
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
     fun isNetworkConnected() = networkUtil.isConnected()
 
     init {
         initUiState()
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     private fun initUiState() {

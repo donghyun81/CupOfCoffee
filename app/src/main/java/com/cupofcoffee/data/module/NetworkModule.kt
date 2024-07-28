@@ -23,6 +23,7 @@ object NetworkModule {
     private const val BASE_URL = BuildConfig.BASE_URL
     private val contentType = "application/json".toMediaType()
 
+
     private val instance: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)

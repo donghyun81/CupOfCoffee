@@ -2,12 +2,16 @@ package com.cupofcoffee.ui.meetingdetail
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.work.WorkManager
+import com.bumptech.glide.Glide
 import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentMeetingDetailBinding
@@ -54,6 +58,7 @@ class MeetingDetailFragment : Fragment() {
                     setEdit(uiState.isMyMeeting, uiState.meeting)
                     setMeeting(uiState.meeting)
                     setCommentAdapter(uiState.comments)
+                    setUserProfile(uiState.userEntry.userModel.profileImageWebUrl)
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
@@ -74,16 +79,40 @@ class MeetingDetailFragment : Fragment() {
     }
 
     private fun setEdit(isMyMeeting: Boolean, meetingEntry: MeetingEntry) {
-        binding.ivEdit.isVisible = isMyMeeting
-        binding.ivEdit.setOnClickListener {
-            val action =
-                MeetingDetailFragmentDirections.actionMeetingDetailFragmentToMakeMeetingFragment(
-                    null,
-                    null,
-                    meetingEntry.id
-                )
-            findNavController().navigate(action)
+        binding.ivMoreMenu.isVisible = isMyMeeting
+        binding.ivMoreMenu.setOnClickListener {
+            showPopupMenu(meetingEntry)
         }
+    }
+
+    private fun showPopupMenu(meetingEntry: MeetingEntry) {
+        val popupMenu = PopupMenu(requireContext(), binding.ivMoreMenu)
+        popupMenu.menuInflater.inflate(R.menu.edit_menu, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.edit -> {
+                    val action =
+                        MeetingDetailFragmentDirections.actionMeetingDetailFragmentToMakeMeetingFragment(
+                            null,
+                            null,
+                            meetingEntry.id
+                        )
+                    findNavController().navigate(action)
+                    true
+                }
+
+                R.id.delete -> {
+                    val deleteMeetingWorker = viewModel.getDeleteMeetingWorker(meetingEntry)
+                    WorkManager.getInstance(requireContext()).enqueue(deleteMeetingWorker)
+                    findNavController().navigateUp()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
     }
 
     private fun setCommentClick() {
@@ -102,6 +131,13 @@ class MeetingDetailFragment : Fragment() {
         adapter.submitList(comments)
     }
 
+    private fun setUserProfile(profileImageWebUrl: String?) {
+        Glide.with(binding.root.context)
+            .load(profileImageWebUrl)
+            .centerCrop()
+            .into(binding.ivUserProfile)
+    }
+
     private fun getCommentClickListener() = object : CommentClickListener {
 
         override fun onUpdateClick(commentEntry: CommentEntry) {
@@ -113,7 +149,7 @@ class MeetingDetailFragment : Fragment() {
             findNavController().navigate(action)
         }
 
-        override fun onDetailClick(commentId: String) {
+        override fun onDeleteClick(commentId: String) {
             viewModel.deleteComment(commentId)
         }
 

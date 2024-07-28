@@ -11,16 +11,17 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
+import com.cupofcoffee.R
 import com.cupofcoffee.data.DataResult
-import com.cupofcoffee.data.remote.model.PlaceDTO
-import com.cupofcoffee.data.remote.model.asPlaceEntry
+import com.cupofcoffee.data.DataResult.Companion.success
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.PlaceEntry
+import com.cupofcoffee.ui.model.asPlaceEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.OverlayImage
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -30,21 +31,24 @@ class HomeViewModel(
 
     private val _uiState: MutableLiveData<DataResult<HomeUiState>> =
         MutableLiveData(DataResult.Loading)
-    val uiState: LiveData<DataResult<HomeUiState>> = _uiState
+    val uiState: LiveData<DataResult<HomeUiState>> get() = _uiState
 
     private var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            initMarkers()
+            currentJob?.cancel()
+            currentJob = initMarkers()
         }
 
         override fun onLost(network: Network) {
-            initMarkers()
+            currentJob?.cancel()
+            currentJob = initMarkers()
         }
     }
 
     init {
+        initMarkers()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -53,27 +57,40 @@ class HomeViewModel(
         currentJob?.cancel()
     }
 
-    fun initMarkers() {
-        currentJob?.cancel()
-        currentJob = viewModelScope.launch {
-            val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
-            placesFlow.collect { places ->
-                try {
-                    _uiState.postValue(
-                        DataResult.Success(
-                            HomeUiState(places.map { it.toMarker() })
+    fun initMarkers() = viewModelScope.launch {
+        val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
+        placesFlow.collect { places ->
+            try {
+                places.forEach { place ->
+                    placeRepositoryImpl.insertLocal(
+                        place.placeModel.asPlaceEntity(
+                            place.id
                         )
                     )
-                } catch (e: Exception) {
-                    _uiState.postValue(DataResult.Error(e))
                 }
+                _uiState.postValue(
+                    DataResult.Success(
+                        HomeUiState(places.map { it.toMarker() })
+                    )
+                )
+            } catch (e: Exception) {
+                _uiState.postValue(DataResult.Error(e))
             }
+        }
+    }
+
+    fun updateShowedMarkers(markers: List<Marker>) {
+        val currentUiState = _uiState.value
+        if (currentUiState is DataResult.Success) {
+            _uiState.postValue(success(currentUiState.data.copy(showedMakers = markers)))
         }
     }
 
     private fun PlaceEntry.toMarker() = Marker().apply {
         position = LatLng(placeModel.lat, placeModel.lng)
         tag = id
+        icon = OverlayImage
+            .fromResource(R.drawable.cup_of_coffee_mini)
     }
 
     companion object {

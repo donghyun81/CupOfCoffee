@@ -34,13 +34,18 @@ class MeetingRepositoryImpl(
 
     suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean = true) =
         if (isConnected) meetingRemoteDataSource.getMeetingsByIds(ids).convertMeetingEntries()
-        else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries()
+            .sortedByDate()
+        else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries().sortedByDate()
 
     suspend fun getMeetingsByIdsInFlow(ids: List<String>, isConnected: Boolean = true) =
-        if (isConnected) meetingRemoteDataSource.getCommentsByIdsInFlow(ids).map {
-            it.convertMeetingEntries()
+        if (isConnected) meetingRemoteDataSource.getCommentsByIdsInFlow(ids).map { meetingEntries ->
+            Log.d("123456","원격 미팅 조회")
+            meetingEntries.convertMeetingEntries().sortedByDate()
         }
-        else meetingLocalDataSource.getMeetingsByIdsInFlow(ids).map { it.convertMeetingEntries() }
+        else meetingLocalDataSource.getMeetingsByIdsInFlow(ids).map {
+            Log.d("123456","로컬 미팅 조회")
+            it.convertMeetingEntries().sortedByDate()
+        }
 
     suspend fun getAllLocalMeetings(): List<MeetingEntity> =
         meetingLocalDataSource.getAllMeetings()
@@ -61,6 +66,10 @@ class MeetingRepositoryImpl(
         meetingLocalDataSource.delete(meetingEntry.asMeetingEntity())
         meetingRemoteDataSource.delete(meetingEntry.id)
     }
+
+    private fun List<MeetingEntry>.sortedByDate() =
+        sortedWith(compareBy<MeetingEntry> { it.meetingModel.date }.thenBy { it.meetingModel.time })
+
 
     private fun Map<String, MeetingDTO>.convertMeetingEntries() =
         map { entry ->

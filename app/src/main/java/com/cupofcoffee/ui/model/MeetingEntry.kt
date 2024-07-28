@@ -1,7 +1,9 @@
 package com.cupofcoffee.ui.model
 
 import com.cupofcoffee.ui.meetinglist.MeetingEntryWithPeople
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MeetingEntry(
     val id: String,
     val meetingModel: MeetingModel

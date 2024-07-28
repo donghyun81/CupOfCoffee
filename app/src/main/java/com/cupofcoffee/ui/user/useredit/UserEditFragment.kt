@@ -47,9 +47,16 @@ class UserEditFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setButtonEnable()
         setUserUi()
         setEditUserProfileOnclick()
         setEditProfileImage()
+    }
+
+    private fun setButtonEnable() {
+        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
+            binding.btnSave.isEnabled = !isButtonClicked
+        }
     }
 
     private fun setEditUserProfileOnclick() {
@@ -87,16 +94,18 @@ class UserEditFragment : DialogFragment() {
 
     private fun setSaveOnclick(userEntry: UserEntry, contentUri: String?) {
         binding.btnSave.setOnClickListener {
+            viewModel.onButtonClicked()
             val currentUserEntry = userEntry.copy(
                 userModel = userEntry.userModel.copy(
                     nickname = binding.tvNickName.text.toString(),
                     profileImageWebUrl = contentUri
                 )
             )
-            viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.isNetworkConnected()) viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.updateUser(currentUserEntry)
                 findNavController().navigateUp()
             }
+            else view?.showSnackBar(R.string.network_profile)
         }
     }
 

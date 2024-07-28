@@ -28,10 +28,6 @@ class PlaceLocalDataSource(
         placeDao.delete(placeEntity)
     }
 
-    suspend fun getAllPlaces(): List<PlaceEntity> = withContext(ioDispatcher) {
-        placeDao.getAllPlaces()
-    }
-
     suspend fun getAllPlacesInFlow(): Flow<List<PlaceEntity>> = withContext(ioDispatcher) {
         placeDao.getAllPlacesInFlow()
     }

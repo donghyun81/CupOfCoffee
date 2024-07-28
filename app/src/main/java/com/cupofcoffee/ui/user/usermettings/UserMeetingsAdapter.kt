@@ -1,11 +1,14 @@
 package com.cupofcoffee.ui.user.usermettings
 
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.cupofcoffee.R
 import com.cupofcoffee.databinding.UserMeetingsItemBinding
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.google.firebase.auth.ktx.auth
@@ -34,19 +37,39 @@ class UserMeetingsAdapter(
                 tvDate.text = meetingModel.date
                 tvTime.text = meetingModel.time
                 tvContent.text = meetingModel.content
-                if (meetingEntry.meetingModel.managerId != uid) ivDelete.visibility = View.GONE
-
-                ivEdit.setOnClickListener {
-                    userMeetingClickListener.onUpdateClick(meetingEntry.id)
-                }
-
-                ivDelete.setOnClickListener {
-                    userMeetingClickListener.onDeleteClick(meetingEntry)
+                if (meetingEntry.meetingModel.managerId != uid) ivMoreMenu.visibility = View.GONE
+                ivMoreMenu.setOnClickListener {
+                    showPopupMenu(meetingEntry, userMeetingClickListener)
                 }
                 root.setOnClickListener {
                     userMeetingClickListener.onDetailClick(meetingEntry.id)
                 }
             }
+        }
+
+        private fun showPopupMenu(
+            meetingEntry: MeetingEntry,
+            userMeetingClickListener: UserMeetingClickListener
+        ) {
+            val popupMenu = PopupMenu(binding.root.context, binding.ivMoreMenu)
+            popupMenu.menuInflater.inflate(R.menu.edit_menu, popupMenu.menu)
+
+            popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+                when (menuItem.itemId) {
+                    R.id.edit -> {
+                        userMeetingClickListener.onUpdateClick(meetingEntry.id)
+                        true
+                    }
+
+                    R.id.delete -> {
+                        userMeetingClickListener.onDeleteClick(meetingEntry)
+                        true
+                    }
+
+                    else -> false
+                }
+            }
+            popupMenu.show()
         }
 
         companion object {

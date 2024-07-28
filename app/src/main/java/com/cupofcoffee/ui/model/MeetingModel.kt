@@ -3,7 +3,9 @@ package com.cupofcoffee.ui.model
 import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.ui.meetinglist.MeetingModelWithPeople
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MeetingModel(
     val caption: String,
     val lat: Double,

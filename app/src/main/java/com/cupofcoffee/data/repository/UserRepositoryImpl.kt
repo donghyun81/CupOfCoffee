@@ -10,6 +10,7 @@ import com.cupofcoffee.data.remote.model.asUserEntry
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
+import kotlinx.coroutines.flow.map
 
 class UserRepositoryImpl(
     private val userLocalDataSource: UserLocalDataSource,
@@ -22,7 +23,7 @@ class UserRepositoryImpl(
         userRemoteDataSource.insert(id, userDTO)
 
     fun getLocalUserByIdInFlow(id: String) =
-        userLocalDataSource.getUserByIdInFlow(id)
+        userLocalDataSource.getUserByIdInFlow(id).map { it?.asUserEntry() }
 
     suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id).asUserEntry()
 
@@ -30,12 +31,6 @@ class UserRepositoryImpl(
         userRemoteDataSource.getUserById(id)?.asUserEntry(id)
 
     suspend fun getRemoteUsersByIds(ids: List<String>) = userRemoteDataSource.getUsersByIds(ids)
-
-    suspend fun updateLocal(userEntity: UserEntity) =
-        userLocalDataSource.update(userEntity)
-
-    suspend fun updateRemote(id: String, userDTO: UserDTO) =
-        userRemoteDataSource.update(id, userDTO)
 
     suspend fun update(userEntry: UserEntry) {
         userEntry.apply {

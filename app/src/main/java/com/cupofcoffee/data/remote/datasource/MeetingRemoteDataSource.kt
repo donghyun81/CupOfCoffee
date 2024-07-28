@@ -1,7 +1,6 @@
 package com.cupofcoffee.data.remote.datasource
 
-import android.util.Log
-import com.cupofcoffee.data.remote.model.CommentDTO
+import com.cupofcoffee.data.module.AuthTokenManager.getAuthToken
 import com.cupofcoffee.data.remote.model.MeetingDTO
 import com.cupofcoffee.data.remote.service.MeetingService
 import kotlinx.coroutines.CoroutineDispatcher
@@ -18,18 +17,26 @@ class MeetingRemoteDataSource(
 ) {
 
     suspend fun insert(meetingDTO: MeetingDTO) = withContext(ioDispatcher) {
-        meetingService.insert(meetingDTO).name
+        meetingService.insert(getAuthToken()!!, meetingDTO).name
     }
 
     suspend fun getMeeting(id: String) = withContext(ioDispatcher) {
-        meetingService.getMeeting(id)
+        meetingService.getMeeting(
+            id = id,
+            authToken = getAuthToken()!!
+        )
     }
 
     suspend fun getMeetingInFlow(id: String) = withContext(ioDispatcher) {
         flow {
             try {
                 while (true) {
-                    emit(meetingService.getMeeting(id))
+                    emit(
+                        meetingService.getMeeting(
+                            id = id,
+                            authToken = getAuthToken()!!
+                        )
+                    )
                     delay(refreshIntervalMs)
                 }
             } catch (e: Exception) {
@@ -39,7 +46,12 @@ class MeetingRemoteDataSource(
     }
 
     suspend fun getMeetingsByIds(ids: List<String>) = withContext(ioDispatcher) {
-        ids.associateWith { id -> meetingService.getMeeting(id) }
+        ids.associateWith { id ->
+            meetingService.getMeeting(
+                id = id,
+                authToken = getAuthToken()!!
+            )
+        }
     }
 
     suspend fun getCommentsByIdsInFlow(ids: List<String>): Flow<Map<String, MeetingDTO>> =
@@ -55,7 +67,10 @@ class MeetingRemoteDataSource(
     private suspend fun tryGetComments(ids: List<String>): Map<String, MeetingDTO> {
         return try {
             ids.associateWith { id ->
-                meetingService.getMeeting(id)
+                meetingService.getMeeting(
+                    id = id,
+                    authToken = getAuthToken()!!
+                )
             }
         } catch (e: Exception) {
             emptyMap()
@@ -63,10 +78,17 @@ class MeetingRemoteDataSource(
     }
 
     suspend fun update(id: String, meetingDTO: MeetingDTO) = withContext(ioDispatcher) {
-        meetingService.update(id, meetingDTO)
+        meetingService.update(
+            id = id,
+            authToken = getAuthToken()!!,
+            meetingDTO = meetingDTO
+        )
     }
 
     suspend fun delete(id: String) = withContext(ioDispatcher) {
-        meetingService.delete(id)
+        meetingService.delete(
+            id = id,
+            authToken = getAuthToken()!!
+        )
     }
 }

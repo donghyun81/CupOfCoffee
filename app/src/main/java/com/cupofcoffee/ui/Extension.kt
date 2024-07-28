@@ -13,13 +13,10 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private const val MEETING_DATE_FORMAT = "yyyy-MM-dd"
-private const val MEETING_TIME_FORMAT = "HH:mm"
-
-fun Calendar.toCurrentTime(): String =
-    SimpleDateFormat(MEETING_TIME_FORMAT).format(this.time)
-
-fun Calendar.toCurrentDate(): String = SimpleDateFormat(MEETING_DATE_FORMAT).format(this.time)
+val MEETING_TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+val MEETING_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+fun Calendar.toCurrentTime(): String = MEETING_TIME_FORMAT.format(this.time)
+fun Calendar.toCurrentDate(): String = MEETING_DATE_FORMAT.format(this.time)
 
 fun Long.isCurrentDateOver(): Boolean =
     this >= MaterialDatePicker.todayInUtcMilliseconds()
@@ -27,7 +24,7 @@ fun Long.isCurrentDateOver(): Boolean =
 
 fun Long.toDateFormat(): String {
     val date = Date(this)
-    val format = SimpleDateFormat(MEETING_DATE_FORMAT, Locale.getDefault())
+    val format = MEETING_DATE_FORMAT
     return format.format(date)
 }
 

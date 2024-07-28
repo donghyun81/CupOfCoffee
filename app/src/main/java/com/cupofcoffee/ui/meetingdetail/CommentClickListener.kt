@@ -6,5 +6,5 @@ interface CommentClickListener {
 
     fun onUpdateClick(commentEntry: CommentEntry)
 
-    fun onDetailClick(commentId: String)
+    fun onDeleteClick(commentId: String)
 }

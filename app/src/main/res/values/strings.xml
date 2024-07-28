@@ -10,9 +10,9 @@
     <string name="naver_login">네이버로 시작하기</string>
     <string name="save">저장</string>
     <string name="apply_button">참가 신청</string>
-    <string name="attended_meeting_count">참여 모임 개수:</string>
-    <string name="made_meeting_count">만든 모임 개수:</string>
-    <string name="attended_meetings">참석한 모임</string>
+    <string name="attended_meeting_count">참여 모임:</string>
+    <string name="made_meeting_count">만든 모임:</string>
+    <string name="attended_meetings">참여 모임</string>
     <string name="made_meetings">만든 모임</string>
     <string name="logout">로그아웃</string>
     <string name="cancel_membership">회원 탈퇴</string>
@@ -26,4 +26,7 @@
     <string name="attended_network_message">모임 참가시 네트워크 연결이 필요합니다!</string>
     <string name="delete_meeting_network_message">모임을 삭제하기 위해서는 네트워크 연결이 필요합니다!</string>
     <string name="edit_comment_netwokr_message">댓글을 추가하거나 수정하기 위해서는 네트워크 연결이 필요합니다!</string>
+    <string name="edit">수정</string>
+    <string name="delete">삭제</string>
+    <string name="network_profile">프로필 수정을 위해서 네트워크 연결이 필요합니다!</string>
 </resources>

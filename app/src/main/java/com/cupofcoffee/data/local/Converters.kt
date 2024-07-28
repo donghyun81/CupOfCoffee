@@ -7,12 +7,6 @@ import kotlinx.serialization.json.Json
 class Converters {
 
     @TypeConverter
-    fun fromStringToList(value: String): MutableList<String> = Json.decodeFromString(value)
-
-    @TypeConverter
-    fun listToString(value: MutableList<String>): String = Json.encodeToString(value)
-
-    @TypeConverter
     fun fromStringToMap(value: String): MutableMap<String, Boolean> = Json.decodeFromString(value)
 
     @TypeConverter
