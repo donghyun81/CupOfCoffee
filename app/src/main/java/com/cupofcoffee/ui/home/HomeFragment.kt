@@ -79,17 +79,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
                     uiState.markers.map { marker ->
-                        marker.map = naverMap
-                        val placeId = marker.tag.toString()
-                        marker.setOnClickListener {
-                            val action =
-                                HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(
-                                    placeId
-                                )
-                            findNavController().navigate(action)
-                            true
+                        if (uiState.showedMakers.contains(marker).not()) {
+                            marker.map = naverMap
+                            val placeId = marker.tag.toString()
+                            marker.setOnClickListener {
+                                val action =
+                                    HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(
+                                        placeId
+                                    )
+                                findNavController().navigate(action)
+                                true
+                            }
                         }
                     }
+                    viewModel.updateShowedMarkers(uiState.markers)
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)

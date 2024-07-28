@@ -8,7 +8,7 @@ data class PlaceModel(
     val lat: Double,
     val lng: Double,
     val meetingIds: MutableMap<String, Boolean> = mutableMapOf()
-    )
+)
 
 fun PlaceModel.asPlaceEntity(id: String) = PlaceEntity(id, caption, lat, lng, meetingIds)
 fun PlaceModel.asPlaceDTO() = PlaceDTO(caption, lat, lng, meetingIds)

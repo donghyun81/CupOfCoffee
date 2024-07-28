@@ -1,23 +1,19 @@
 package com.cupofcoffee.ui.login
 
-import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.ui.model.asUserDTO
 import com.cupofcoffee.ui.model.asUserEntity
 import com.cupofcoffee.util.NetworkUtil
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.delay
 
 class LoginViewModel(
     private val userRepository: UserRepositoryImpl,
@@ -25,7 +21,14 @@ class LoginViewModel(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
     fun isNetworkConnected() = networkUtil.isConnected()
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
+    }
 
     suspend fun insertUser(userEntry: UserEntry) {
         with(userEntry) {

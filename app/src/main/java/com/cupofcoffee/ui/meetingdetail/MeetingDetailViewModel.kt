@@ -53,7 +53,7 @@ class MeetingDetailViewModel(
             loading()
         )
 
-    val meetingDetailUiState: LiveData<DataResult<MeetingDetailUiState>> = _meetingDetailUiState
+    val meetingDetailUiState: LiveData<DataResult<MeetingDetailUiState>> get() = _meetingDetailUiState
 
     private var currentJob: Job? = null
 
@@ -72,6 +72,7 @@ class MeetingDetailViewModel(
     init {
         networkUtil.registerNetworkCallback(networkCallback)
     }
+
 
     private fun initUiState() = viewModelScope.launch {
         try {

@@ -2,7 +2,6 @@ package com.cupofcoffee.ui.meetinglist
 
 import android.net.ConnectivityManager
 import android.net.Network
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -42,7 +41,11 @@ class MeetingListViewModel(
 
     private val _uiState: MutableLiveData<DataResult<MeetingListUiState>> =
         MutableLiveData(loading())
-    val uiState: LiveData<DataResult<MeetingListUiState>> = _uiState
+    val uiState: LiveData<DataResult<MeetingListUiState>> get() = _uiState
+
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -57,6 +60,10 @@ class MeetingListViewModel(
     init {
         initUiState()
         networkUtil.registerNetworkCallback(networkCallback)
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()

@@ -26,10 +26,18 @@ class UserEditViewModel(
 
     private val _uiState: MutableLiveData<DataResult<UserEditUiState>> =
         MutableLiveData(DataResult.loading())
-    val uiState: LiveData<DataResult<UserEditUiState>> = _uiState
+    val uiState: LiveData<DataResult<UserEditUiState>> get() = _uiState
+
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
 
     init {
         initUiState()
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     private fun initUiState() {

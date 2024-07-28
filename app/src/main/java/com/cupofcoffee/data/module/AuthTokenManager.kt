@@ -10,7 +10,6 @@ object AuthTokenManager {
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         val user = firebaseAuth.currentUser
         if (user != null) {
-            // 사용자 로그인 시 토큰 업데이트
             user.getIdToken(true).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     uid = task.result?.token
@@ -31,7 +30,6 @@ object AuthTokenManager {
     }
 
     fun getAuthToken(): String? {
-        Log.d("auth", uid.toString())
         return uid
     }
 }

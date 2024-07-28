@@ -70,8 +70,7 @@ class UserMeetingsFragment : Fragment() {
             if (viewModel.isNetworkConnected()) {
                 val deleteWorker = viewModel.getDeleteMeetingWorker(meetingEntry)
                 WorkManager.getInstance(requireContext()).enqueue(deleteWorker)
-            }
-            else view?.showSnackBar(R.string.delete_meeting_network_message)
+            } else view?.showSnackBar(R.string.delete_meeting_network_message)
         }
 
         override fun onDetailClick(meetingId: String) {

@@ -2,6 +2,7 @@ package com.cupofcoffee.ui.home
 
 import android.net.ConnectivityManager
 import android.net.Network
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,6 +13,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.R
 import com.cupofcoffee.data.DataResult
+import com.cupofcoffee.data.DataResult.Companion.success
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.ui.model.PlaceEntry
 import com.cupofcoffee.ui.model.asPlaceEntity
@@ -29,7 +31,7 @@ class HomeViewModel(
 
     private val _uiState: MutableLiveData<DataResult<HomeUiState>> =
         MutableLiveData(DataResult.Loading)
-    val uiState: LiveData<DataResult<HomeUiState>> = _uiState
+    val uiState: LiveData<DataResult<HomeUiState>> get() = _uiState
 
     private var currentJob: Job? = null
 
@@ -74,6 +76,13 @@ class HomeViewModel(
             } catch (e: Exception) {
                 _uiState.postValue(DataResult.Error(e))
             }
+        }
+    }
+
+    fun updateShowedMarkers(markers: List<Marker>) {
+        val currentUiState = _uiState.value
+        if (currentUiState is DataResult.Success) {
+            _uiState.postValue(success(currentUiState.data.copy(showedMakers = markers)))
         }
     }
 

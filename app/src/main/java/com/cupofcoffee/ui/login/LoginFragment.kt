@@ -46,6 +46,7 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setButtonEnable()
         setNaverLogin()
     }
 
@@ -54,8 +55,15 @@ class LoginFragment : Fragment() {
         _binding = null
     }
 
+    private fun setButtonEnable() {
+        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
+            binding.btnNaverLogin.isEnabled = !isButtonClicked
+        }
+    }
+
     private fun setNaverLogin() {
         binding.btnNaverLogin.setOnClickListener {
+            viewModel.onButtonClicked()
             NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
             NaverIdLoginSDK.authenticate(requireContext(), object : OAuthLoginCallback {
                 override fun onSuccess() {

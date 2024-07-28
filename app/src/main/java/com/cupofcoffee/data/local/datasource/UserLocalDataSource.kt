@@ -1,14 +1,10 @@
 package com.cupofcoffee.data.local.datasource
 
-import com.cupofcoffee.data.DataResult
-import com.cupofcoffee.data.DataResult.Error
-import com.cupofcoffee.data.DataResult.Success
 import com.cupofcoffee.data.local.dao.UserDao
 import com.cupofcoffee.data.local.model.UserEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class UserLocalDataSource(
@@ -33,10 +29,6 @@ class UserLocalDataSource(
 
     suspend fun delete(userEntity: UserEntity) = withContext(ioDispatcher) {
         dao.delete(userEntity)
-    }
-
-    suspend fun getUsersByIds(ids: List<String>) = withContext(ioDispatcher) {
-        dao.getUsersByIds(ids)
     }
 
     suspend fun getAllUsers() = withContext(ioDispatcher) {

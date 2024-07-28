@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.settings
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -33,12 +32,20 @@ class SettingsViewModel(
 ) : ViewModel() {
 
     private val _uiState: MutableLiveData<DataResult<SettingsUiState>> = MutableLiveData(loading())
-    val uiState: LiveData<DataResult<SettingsUiState>> = _uiState
+    val uiState: LiveData<DataResult<SettingsUiState>> get() = _uiState
+
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
 
     init {
         viewModelScope.launch {
             initUiState()
         }
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     private suspend fun initUiState() {

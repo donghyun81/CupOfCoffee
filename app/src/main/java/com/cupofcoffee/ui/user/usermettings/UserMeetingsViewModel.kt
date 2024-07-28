@@ -2,7 +2,6 @@ package com.cupofcoffee.ui.user.usermettings
 
 import android.net.ConnectivityManager
 import android.net.Network
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -14,7 +13,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.success
@@ -26,14 +24,12 @@ import com.cupofcoffee.data.worker.DeleteMeetingWorker
 import com.cupofcoffee.ui.model.MeetingEntry
 import com.cupofcoffee.ui.model.MeetingsCategory
 import com.cupofcoffee.ui.model.UserEntry
-import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -55,19 +51,17 @@ class UserMeetingsViewModel(
 
     private val _uiState: MutableLiveData<DataResult<UserMeetingsUiState>> =
         MutableLiveData()
-    val uiState: LiveData<DataResult<UserMeetingsUiState>> = _uiState
+    val uiState: LiveData<DataResult<UserMeetingsUiState>> get() = _uiState
 
     private var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            Log.d("123456", "유저 정보 조회 오류")
             currentJob?.cancel()
             currentJob = initUiState()
         }
 
         override fun onLost(network: Network) {
-            Log.d("123456", "유저 정보 조회 오류")
             currentJob?.cancel()
             currentJob = initUiState()
         }
@@ -134,19 +128,6 @@ class UserMeetingsViewModel(
             } else {
                 placeRepositoryImpl.update(placeEntry)
             }
-        }
-    }
-
-    private suspend fun updateUser(meetingId: String) {
-        val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getLocalUserById(uid)
-        user.userModel.madeMeetingIds.remove(meetingId)
-        userRepositoryImpl.update(user)
-    }
-
-    private suspend fun deleteComments(commentIds: List<String>) {
-        commentIds.forEach { id ->
-            commentRepositoryImpl.delete(id = id)
         }
     }
 

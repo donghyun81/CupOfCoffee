@@ -15,7 +15,7 @@ data class MeetingModelWithPeople(
     val createDate: Long,
     val content: String,
     val isSynced: Boolean = false
-    )
+)
 
 fun MeetingModelWithPeople.asMeetingModel() =
     MeetingModel(

@@ -38,6 +38,13 @@ class CommentEditFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initUi()
+        setButtonEnable()
+    }
+
+    private fun setButtonEnable() {
+        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
+            binding.btnAddComment.isEnabled = !isButtonClicked
+        }
     }
 
     private fun initUi() {
@@ -65,6 +72,7 @@ class CommentEditFragment : BottomSheetDialogFragment() {
     private fun setAddButtonClick(userEntry: UserEntry) {
         with(binding) {
             btnAddComment.setOnClickListener {
+                viewModel.onButtonClicked()
                 if (viewModel.isNetworkConnected()) {
                     viewLifecycleOwner.lifecycleScope.launch {
                         val comment = CommentModel(

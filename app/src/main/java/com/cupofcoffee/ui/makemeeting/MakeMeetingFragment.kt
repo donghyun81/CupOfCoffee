@@ -45,6 +45,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setButtonEnable()
         setUi()
         setMeetingTime()
         setMeetingDate()
@@ -53,6 +54,12 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    private fun setButtonEnable() {
+        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
+            binding.btnSave.isEnabled = !isButtonClicked
+        }
     }
 
     private fun setUi() {
@@ -121,9 +128,9 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
         ).show()
     }
 
-
     private fun setSaveButton(placeName: String, lat: Double, lng: Double) {
         binding.btnSave.setOnClickListener {
+            viewModel.onButtonClicked()
             val uid = Firebase.auth.uid!!
             with(binding) {
                 val meeting = MeetingModel(

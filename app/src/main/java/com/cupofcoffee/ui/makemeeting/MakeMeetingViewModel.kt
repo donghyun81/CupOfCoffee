@@ -46,7 +46,11 @@ class MakeMeetingViewModel(
 
     private val _uiState: MutableLiveData<DataResult<MakeMeetingUiState>> =
         MutableLiveData(loading())
-    val uiState: LiveData<DataResult<MakeMeetingUiState>> = _uiState
+    val uiState: LiveData<DataResult<MakeMeetingUiState>> get() = _uiState
+
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -60,6 +64,10 @@ class MakeMeetingViewModel(
 
     init {
         networkUtil.registerNetworkCallback(networkCallback)
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     private fun initUiState() {

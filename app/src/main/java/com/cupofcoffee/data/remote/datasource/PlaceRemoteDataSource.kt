@@ -1,7 +1,5 @@
 package com.cupofcoffee.data.remote.datasource
 
-import android.util.Log
-import com.cupofcoffee.data.module.AuthTokenManager
 import com.cupofcoffee.data.module.AuthTokenManager.getAuthToken
 import com.cupofcoffee.data.remote.model.PlaceDTO
 import com.cupofcoffee.data.remote.service.PlaceService

@@ -1,6 +1,5 @@
 package com.cupofcoffee.ui.user
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -24,12 +23,19 @@ class UserViewModel(
 ) : ViewModel() {
 
     private val _uiState: MutableLiveData<DataResult<UserUiState>> = MutableLiveData(loading())
-    val uiState: LiveData<DataResult<UserUiState>> = _uiState
+    val uiState: LiveData<DataResult<UserUiState>> get() = _uiState
 
     private var currentJob: Job? = null
 
+    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+
     init {
         initUser()
+    }
+
+    fun onButtonClicked() {
+        _isButtonClicked.value = true
     }
 
     override fun onCleared() {

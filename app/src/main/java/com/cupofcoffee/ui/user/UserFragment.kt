@@ -37,6 +37,7 @@ class UserFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setButtonEnable()
         setUserUi()
         setMeetingsAdapter()
         setSettings()
@@ -48,8 +49,15 @@ class UserFragment : Fragment() {
         _binding = null
     }
 
+    private fun setButtonEnable() {
+        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
+            binding.ivSettings.isEnabled = !isButtonClicked
+        }
+    }
+
     private fun setSettings() {
         binding.ivSettings.setOnClickListener {
+            viewModel.onButtonClicked()
             val action = UserFragmentDirections.actionUserFragmentToSettingsFragment()
             findNavController().navigate(action)
         }

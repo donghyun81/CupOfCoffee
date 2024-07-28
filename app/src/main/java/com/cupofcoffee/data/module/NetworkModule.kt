@@ -1,17 +1,14 @@
 package com.cupofcoffee.data.module
 
-import android.util.Log
 import com.cupofcoffee.BuildConfig
 import com.cupofcoffee.data.remote.service.CommentService
 import com.cupofcoffee.data.remote.service.MeetingService
 import com.cupofcoffee.data.remote.service.PlaceService
 import com.cupofcoffee.data.remote.service.UserService
-import com.google.firebase.auth.FirebaseAuth
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 
 @OptIn(ExperimentalSerializationApi::class)
