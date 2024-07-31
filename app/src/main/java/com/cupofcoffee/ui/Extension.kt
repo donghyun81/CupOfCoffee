@@ -13,7 +13,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-val MEETING_TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+val MEETING_TIME_FORMAT = SimpleDateFormat("HH:mm", Locale.getDefault())
 val MEETING_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 fun Calendar.toCurrentTime(): String = MEETING_TIME_FORMAT.format(this.time)
 fun Calendar.toCurrentDate(): String = MEETING_DATE_FORMAT.format(this.time)
