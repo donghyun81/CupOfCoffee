@@ -11,11 +11,11 @@ plugins {
 }
 
 android {
-    namespace = "com.cupofcoffee"
+    namespace = "com.cupofcoffee0801"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.cupofcoffee"
+        applicationId = "com.cupofcoffee0801"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/splashFragment"
-        android:name="com.cupofcoffee.ui.splash.SplashFragment"
+        android:name="com.cupofcoffee0801.ui.splash.SplashFragment"
         android:label="SplashFragment">
         <action
             android:id="@+id/action_splashFragment_to_loginFragment"
@@ -23,7 +23,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.cupofcoffee.ui.home.HomeFragment"
+        android:name="com.cupofcoffee0801.ui.home.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
         <action
@@ -36,7 +36,7 @@
 
     <dialog
         android:id="@+id/makeMeetingFragment"
-        android:name="com.cupofcoffee.ui.makemeeting.MakeMeetingFragment"
+        android:name="com.cupofcoffee0801.ui.makemeeting.MakeMeetingFragment"
         android:label="MakeMeetingFragment">
         <argument
             android:name="placeName"
@@ -54,7 +54,7 @@
 
     <fragment
         android:id="@+id/userFragment"
-        android:name="com.cupofcoffee.ui.user.UserFragment"
+        android:name="com.cupofcoffee0801.ui.user.UserFragment"
         android:label="user_fragment">
         <action
             android:id="@+id/action_userFragment_to_settingsFragment"
@@ -72,7 +72,7 @@
 
     <dialog
         android:id="@+id/meetingListFragment"
-        android:name="com.cupofcoffee.ui.meetinglist.MeetingListFragment"
+        android:name="com.cupofcoffee0801.ui.meetinglist.MeetingListFragment"
         android:label="MeetingListFragment">
         <argument
             android:name="placeId"
@@ -83,7 +83,7 @@
     </dialog>
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.cupofcoffee.ui.login.LoginFragment"
+        android:name="com.cupofcoffee0801.ui.login.LoginFragment"
         android:label="LoginFragment">
         <action
             android:id="@+id/action_loginFragment_to_homeFragment"
@@ -94,7 +94,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.cupofcoffee.ui.settings.SettingsFragment"
+        android:name="com.cupofcoffee0801.ui.settings.SettingsFragment"
         android:label="SettingsFragment">
         <action
             android:id="@+id/action_settingsFragment_to_loginFragment"
@@ -103,7 +103,7 @@
 
     <fragment
         android:id="@+id/meetingDetailFragment"
-        android:name="com.cupofcoffee.ui.meetingdetail.MeetingDetailFragment"
+        android:name="com.cupofcoffee0801.ui.meetingdetail.MeetingDetailFragment"
         android:label="MeetingDetailFragment">
         <argument
             android:name="meetingId"
@@ -118,7 +118,7 @@
 
     <dialog
         android:id="@+id/commentEditFragment"
-        android:name="com.cupofcoffee.ui.commentdetail.CommentEditFragment"
+        android:name="com.cupofcoffee0801.ui.commentdetail.CommentEditFragment"
         android:label="CommentEditFragment">
         <argument
             android:name="commentId"
@@ -130,7 +130,7 @@
     </dialog>
     <dialog
         android:id="@+id/userEditFragment"
-        android:name="com.cupofcoffee.ui.user.useredit.UserEditFragment"
+        android:name="com.cupofcoffee0801.ui.user.useredit.UserEditFragment"
         android:label="UserEditFragment" />
 
 </navigation>
