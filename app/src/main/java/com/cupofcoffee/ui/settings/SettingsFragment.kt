@@ -103,6 +103,7 @@ class SettingsFragment : Fragment() {
     private fun cancelMembership() {
         val user = Firebase.auth.currentUser!!
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+
             viewModel.deleteUserData(user.uid)
             NaverIdLoginSDK.logout()
             withContext(Dispatchers.Main) {

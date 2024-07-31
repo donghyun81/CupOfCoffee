@@ -1,8 +1,10 @@
 package com.cupofcoffee.ui.user.useredit
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +22,12 @@ import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.ui.model.UserModel
 import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class UserEditFragment : DialogFragment() {
 
@@ -33,8 +40,8 @@ class UserEditFragment : DialogFragment() {
             setAddImage(isGranted)
         }
     private val pickImagesLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            addImage(result)
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            addImage(uri)
         }
 
     override fun onCreateView(
@@ -101,18 +108,34 @@ class UserEditFragment : DialogFragment() {
     private fun setSaveOnclick(userEntry: UserEntry, contentUri: String?) {
         binding.btnSave.setOnClickListener {
             viewModel.onButtonClicked()
-            val currentUserEntry = userEntry.copy(
+            viewLifecycleOwner.lifecycleScope.launch {
+                val currentUserEntry = getCurrentUser(userEntry, contentUri)
+                delay(2000L)
+                if (viewModel.isNetworkConnected()) {
+                    viewModel.updateUser(currentUserEntry)
+                    viewModel.updateUserComments(currentUserEntry)
+                    findNavController().navigateUp()
+                } else view?.showSnackBar(R.string.network_profile)
+            }
+        }
+    }
+
+    private suspend fun getCurrentUser(userEntry: UserEntry, contentUri: String?): UserEntry {
+        val uid = Firebase.auth.uid!!
+        val storageReference = FirebaseStorage.getInstance().reference
+        val ref = storageReference.child("images/$uid")
+        val imageUri = Uri.parse(contentUri)
+        return try {
+            ref.putFile(imageUri).await()
+            val uri = ref.downloadUrl.await()
+            userEntry.copy(
                 userModel = userEntry.userModel.copy(
                     nickname = binding.tvNickName.text.toString(),
-                    profileImageWebUrl = contentUri
+                    profileImageWebUrl = uri.toString()
                 )
             )
-            if (viewModel.isNetworkConnected()) viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.updateUser(currentUserEntry)
-                viewModel.updateUserComments(currentUserEntry)
-                findNavController().navigateUp()
-            }
-            else view?.showSnackBar(R.string.network_profile)
+        } catch (e: Exception) {
+            userEntry
         }
     }
 
@@ -127,12 +150,12 @@ class UserEditFragment : DialogFragment() {
 
     private fun setAddImage(isGranted: Boolean) {
         if (isGranted) {
-            pickImagesLauncher.launch(viewModel.getImagePick())
+            pickImagesLauncher.launch("image/*")
         }
     }
 
-    private fun addImage(result: ActivityResult) {
-        val contentUri: String = result.data?.data?.toString() ?: return
+    private fun addImage(uri: Uri?) {
+        val contentUri: String = uri?.toString() ?: return
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.updateUiState(contentUri)
             loadProfileImagePreview(contentUri)
@@ -149,7 +172,7 @@ class UserEditFragment : DialogFragment() {
     }
 
     private fun setUserProfile(userModel: UserModel) {
-        val profileUrl = userModel.profileImageWebUrl
+        val profileUrl = userModel.profileImageWebUrl ?: return
         Glide.with(binding.root.context)
             .load(profileUrl)
             .centerCrop()

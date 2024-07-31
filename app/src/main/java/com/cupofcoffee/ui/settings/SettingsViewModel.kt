@@ -18,6 +18,9 @@ import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.util.NetworkUtil
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
@@ -66,6 +69,11 @@ class SettingsViewModel(
 
     suspend fun deleteUserData(uid: String) {
         val user = userRepositoryImpl.getLocalUserById(uid)
+        val storageRef = Firebase.storage.reference.child("images/$uid")
+        storageRef.delete().addOnSuccessListener {
+
+        }.addOnFailureListener {
+        }
         user.userModel.attendedMeetingIds.keys.map { meetingId ->
             cancelMeeting(uid, meetingId)
         }

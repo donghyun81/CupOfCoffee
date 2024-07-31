@@ -1,6 +1,7 @@
 package com.cupofcoffee.ui.user.useredit
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.MediaStore
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,7 +19,9 @@ import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class UserEditViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
@@ -89,7 +92,10 @@ class UserEditViewModel(
         }
     }
 
-    fun getImagePick() = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+    fun getImagePick() = Intent().apply {
+        type = "image/*"
+        action = Intent.ACTION_GET_CONTENT
+    }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
