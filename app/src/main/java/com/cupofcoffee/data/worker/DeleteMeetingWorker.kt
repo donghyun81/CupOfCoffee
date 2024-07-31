@@ -1,7 +1,6 @@
 package com.cupofcoffee.data.worker
 
 import android.content.Context
-import androidx.lifecycle.viewModelScope
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.cupofcoffee.CupOfCoffeeApplication
@@ -10,11 +9,9 @@ import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.MeetingEntry
-import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 class DeleteMeetingWorker(
@@ -47,7 +44,7 @@ class DeleteMeetingWorker(
         updatePlace(placeId, meetingEntry.id)
         updateUser(meetingEntry.id)
         deleteComments(meetingEntry.meetingModel.commentIds.keys.toList())
-        meetingRepositoryImpl.delete(meetingEntry)
+        meetingRepositoryImpl.delete(meetingEntry.id)
     }
 
     private suspend fun updatePlace(placeId: String, meetingId: String) {

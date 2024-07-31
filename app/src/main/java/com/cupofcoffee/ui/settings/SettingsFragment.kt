@@ -44,6 +44,11 @@ class SettingsFragment : Fragment() {
         setAutoLogin()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun setAutoLogin() {
         viewModel.uiState.observe(viewLifecycleOwner) { result ->
             result.handle(
@@ -112,10 +117,5 @@ class SettingsFragment : Fragment() {
     private fun moveToLogin() {
         val action = SettingsFragmentDirections.actionSettingsFragmentToLoginFragment()
         findNavController().navigate(action)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

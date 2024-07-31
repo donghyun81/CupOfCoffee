@@ -27,8 +27,8 @@ class UserLocalDataSource(
         dao.update(userEntity)
     }
 
-    suspend fun delete(userEntity: UserEntity) = withContext(ioDispatcher) {
-        dao.delete(userEntity)
+    suspend fun delete(id: String) = withContext(ioDispatcher) {
+        dao.delete(id)
     }
 
     suspend fun getAllUsers() = withContext(ioDispatcher) {

@@ -58,30 +58,13 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/tv_attended_meeting_label"
-                android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:layout_margin="5dp"
-                android:text="@string/attended_meeting_count"
-                app:layout_constraintStart_toEndOf="@id/iv_profile_image"
-                app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
-
-            <TextView
-                android:id="@+id/tv_attended_meeting_count"
-                android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:layout_margin="5dp"
-                app:layout_constraintStart_toEndOf="@id/tv_attended_meeting_label"
-                app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
-
-            <TextView
                 android:id="@+id/tv_made_meeting_label"
                 android:layout_width="wrap_content"
                 android:layout_height="20dp"
                 android:layout_margin="5dp"
                 android:text="@string/made_meeting_count"
                 app:layout_constraintStart_toEndOf="@id/iv_profile_image"
-                app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_label" />
+                app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
 
             <TextView
                 android:id="@+id/tv_made_meeting_count"
@@ -89,7 +72,24 @@
                 android:layout_height="20dp"
                 android:layout_margin="5dp"
                 app:layout_constraintStart_toEndOf="@id/tv_made_meeting_label"
-                app:layout_constraintTop_toBottomOf="@id/tv_attended_meeting_count" />
+                app:layout_constraintTop_toBottomOf="@id/tv_nickName" />
+
+            <TextView
+                android:id="@+id/tv_attended_meeting_label"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_margin="5dp"
+                android:text="@string/attended_meeting_count"
+                app:layout_constraintStart_toEndOf="@id/iv_profile_image"
+                app:layout_constraintTop_toBottomOf="@id/tv_made_meeting_label" />
+
+            <TextView
+                android:id="@+id/tv_attended_meeting_count"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_margin="5dp"
+                app:layout_constraintStart_toEndOf="@id/tv_attended_meeting_label"
+                app:layout_constraintTop_toBottomOf="@id/tv_made_meeting_count" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>

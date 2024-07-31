@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.user
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,6 @@ import com.cupofcoffee.R
 import com.cupofcoffee.data.handle
 import com.cupofcoffee.databinding.FragmentUserBinding
 import com.cupofcoffee.ui.model.MeetingsCategory
-import com.cupofcoffee.ui.model.UserModel
 import com.cupofcoffee.ui.showLoading
 import com.cupofcoffee.ui.showSnackBar
 import com.cupofcoffee.ui.user.usermettings.UserMeetingsPagerAdapter
@@ -32,6 +32,7 @@ class UserFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentUserBinding.inflate(inflater)
+        viewModel.initUser()
         return binding.root
     }
 
@@ -44,8 +45,9 @@ class UserFragment : Fragment() {
         setUserEditOnClick()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.currentJob?.cancel()
         _binding = null
     }
 
@@ -70,7 +72,7 @@ class UserFragment : Fragment() {
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
                     val userModel = uiState.user?.userModel ?: return@observe
-                    setUserProfile(userModel)
+                    setUserProfile(userModel.profileImageWebUrl)
                     with(binding) {
                         tvNickName.text = userModel.nickname
                         tvAttendedMeetingCount.text = uiState.attendedMeetingsCount.toString()
@@ -85,10 +87,10 @@ class UserFragment : Fragment() {
         }
     }
 
-    private fun setUserProfile(userModel: UserModel) {
-        val profileUrl = userModel.profileImageWebUrl
+    private fun setUserProfile(profileUri: String?) {
+        val uri = Uri.parse(profileUri)
         Glide.with(binding.root.context)
-            .load(profileUrl)
+            .load(uri)
             .centerCrop()
             .into(binding.ivProfileImage)
     }

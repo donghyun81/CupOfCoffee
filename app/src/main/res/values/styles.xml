@@ -19,9 +19,10 @@
         <item name="android:gravity">end</item>
     </style>
 
-    <style name="SaveMeetingPlace" parent="SaveMeetingContent">
+    <style name="SaveMeetingPlace">
         <item name="android:textSize">24sp</item>
         <item name="android:maxLines">1</item>
+        <item name="android:gravity">end</item>
         <item name="android:ellipsize">end</item>
     </style>
 

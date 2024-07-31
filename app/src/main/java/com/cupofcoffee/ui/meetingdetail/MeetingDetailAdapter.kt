@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.meetingdetail
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
@@ -38,8 +39,9 @@ class MeetingDetailAdapter(
                 ivMoreMenu.setOnClickListener {
                     showPopupMenu(commentEntry, commentClickListener)
                 }
+                val uri = Uri.parse(commentEntry.commentModel.profileImageWebUrl)
                 Glide.with(binding.root.context)
-                    .load(commentEntry.commentModel.profileImageWebUrl)
+                    .load(uri)
                     .centerCrop()
                     .into(ivUserProfile)
             }

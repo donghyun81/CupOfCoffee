@@ -18,6 +18,16 @@
         app:navermap_locationButtonEnabled="true"
         app:navermap_tiltGesturesEnabled="false" />
 
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/btn_my_location"
+        android:src="@drawable/baseline_my_location_24"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/cpi_loading"
         android:layout_width="wrap_content"

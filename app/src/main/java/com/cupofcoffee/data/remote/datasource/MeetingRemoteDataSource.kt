@@ -46,15 +46,19 @@ class MeetingRemoteDataSource(
     }
 
     suspend fun getMeetingsByIds(ids: List<String>) = withContext(ioDispatcher) {
-        ids.associateWith { id ->
-            meetingService.getMeeting(
-                id = id,
-                authToken = getAuthToken()!!
-            )
-        }
+        ids.mapNotNull { id ->
+            try {
+                id to meetingService.getMeeting(
+                    id = id,
+                    authToken = getAuthToken()!!
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }.toMap()
     }
 
-    suspend fun getCommentsByIdsInFlow(ids: List<String>): Flow<Map<String, MeetingDTO>> =
+    suspend fun getMeetingsByIdsInFlow(ids: List<String>): Flow<Map<String, MeetingDTO>> =
         withContext(ioDispatcher) {
             flow {
                 while (true) {

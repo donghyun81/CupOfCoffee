@@ -1,6 +1,5 @@
 package com.cupofcoffee.data.module
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 
 object AuthTokenManager {
@@ -16,7 +15,6 @@ object AuthTokenManager {
                 }
             }
         } else {
-            // 사용자 로그아웃 시 토큰을 null로 설정
             uid = null
         }
     }

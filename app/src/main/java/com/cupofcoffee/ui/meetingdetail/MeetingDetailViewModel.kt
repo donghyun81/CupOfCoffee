@@ -2,7 +2,6 @@ package com.cupofcoffee.ui.meetingdetail
 
 import android.net.ConnectivityManager
 import android.net.Network
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -21,11 +20,9 @@ import com.cupofcoffee.data.DataResult.Companion.loading
 import com.cupofcoffee.data.DataResult.Companion.success
 import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.data.worker.DeleteMeetingWorker
 import com.cupofcoffee.ui.model.MeetingEntry
-import com.cupofcoffee.ui.model.asMeetingEntity
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -38,7 +35,6 @@ import kotlinx.serialization.json.Json
 
 class MeetingDetailViewModel(
     savedStateHandle: SavedStateHandle,
-    private val placeRepositoryImpl: PlaceRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
     private val commentRepositoryImpl: CommentRepositoryImpl,
     private val userRepositoryImpl: UserRepositoryImpl,
@@ -55,7 +51,7 @@ class MeetingDetailViewModel(
 
     val meetingDetailUiState: LiveData<DataResult<MeetingDetailUiState>> get() = _meetingDetailUiState
 
-    private var currentJob: Job? = null
+    var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -133,7 +129,6 @@ class MeetingDetailViewModel(
             initializer {
                 MeetingDetailViewModel(
                     savedStateHandle = createSavedStateHandle(),
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
                     meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
                     commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,

@@ -46,6 +46,7 @@ class MeetingDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        viewModel.currentJob?.cancel()
         _binding = null
     }
 

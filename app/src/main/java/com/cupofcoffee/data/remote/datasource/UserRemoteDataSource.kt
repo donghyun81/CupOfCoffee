@@ -28,13 +28,16 @@ class UserRemoteDataSource(
     }
 
     suspend fun getUsersByIds(ids: List<String>) = withContext(ioDispatcher) {
-        val users = ids.associateWith { id ->
-            userService.getUserById(
-                authToken = getAuthToken()!!,
-                id = id
-            )!!
-        }
-        users
+        ids.mapNotNull { id ->
+            try {
+                id to userService.getUserById(
+                    authToken = getAuthToken()!!,
+                    id = id
+                )!!
+            } catch (e: Exception) {
+                null
+            }
+        }.toMap()
     }
 
     suspend fun update(id: String, userDTO: UserDTO) = withContext(ioDispatcher) {

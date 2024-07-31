@@ -27,6 +27,10 @@ import com.cupofcoffee.ui.model.asMeetingListEntry
 import com.cupofcoffee.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
 class MeetingListViewModel(
@@ -46,6 +50,8 @@ class MeetingListViewModel(
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
 
+    var currentJob: Job? = null
+
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -58,7 +64,6 @@ class MeetingListViewModel(
     }
 
     init {
-        initUiState()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -69,27 +74,31 @@ class MeetingListViewModel(
     fun isNetworkConnected() = networkUtil.isConnected()
 
     private fun initUiState() {
-        viewModelScope.launch {
+        currentJob?.cancel()
+        currentJob = viewModelScope.launch {
             try {
                 val placeEntry =
                     placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())!!
-                val meetingEntriesWithPeople = convertMeetingEntriesWithPeople(placeEntry)
-                _uiState.value = success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
+                val meetingEntriesWithPeopleInFlow = convertMeetingEntriesWithPeople(placeEntry)
+                meetingEntriesWithPeopleInFlow.collect { meetingEntriesWithPeople ->
+                    if (Firebase.auth.uid == null) return@collect
+                    _uiState.value =
+                        success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
+                }
             } catch (e: Exception) {
                 _uiState.value = error(e)
             }
         }
     }
 
-    private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): List<MeetingEntryWithPeople> {
+    private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): Flow<List<MeetingEntryWithPeople>> {
         val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
-        val meetings = meetingRepositoryImpl.getMeetingsByIds(meetingIds, networkUtil.isConnected())
-        addLocalMeetings(meetings)
-        return if (networkUtil.isConnected()) meetings.map { meetingEntry ->
-            convertMeetingListEntry(meetingEntry)
-        }
-        else meetings.map { meetingEntry ->
-            meetingEntry.asMeetingListEntry(emptyList())
+        val meetings =
+            meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
+        return meetings.flatMapLatest { meetings ->
+            addLocalMeetings(meetings)
+            if (networkUtil.isConnected()) flow { emit(meetings.map { convertMeetingListEntry(it) }) }
+            else flow { emit(meetings.map { it.asMeetingListEntry(emptyList()) }) }
         }
     }
 

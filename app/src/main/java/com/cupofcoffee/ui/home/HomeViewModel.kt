@@ -2,7 +2,6 @@ package com.cupofcoffee.ui.home
 
 import android.net.ConnectivityManager
 import android.net.Network
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -33,7 +32,7 @@ class HomeViewModel(
         MutableLiveData(DataResult.Loading)
     val uiState: LiveData<DataResult<HomeUiState>> get() = _uiState
 
-    private var currentJob: Job? = null
+    var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -48,7 +47,6 @@ class HomeViewModel(
     }
 
     init {
-        initMarkers()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 

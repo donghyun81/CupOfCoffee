@@ -42,7 +42,7 @@ class MeetingLocalDataSource(
         meetingDao.update(meetingEntity)
     }
 
-    suspend fun delete(meetingEntity: MeetingEntity) = withContext(ioDispatcher) {
-        meetingDao.delete(meetingEntity)
+    suspend fun delete(id: String) = withContext(ioDispatcher) {
+        meetingDao.delete(id)
     }
 }

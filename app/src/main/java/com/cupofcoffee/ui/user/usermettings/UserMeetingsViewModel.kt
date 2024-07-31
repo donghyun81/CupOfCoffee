@@ -53,22 +53,19 @@ class UserMeetingsViewModel(
         MutableLiveData()
     val uiState: LiveData<DataResult<UserMeetingsUiState>> get() = _uiState
 
-    private var currentJob: Job? = null
+    var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            currentJob?.cancel()
-            currentJob = initUiState()
+            initUiState()
         }
 
         override fun onLost(network: Network) {
-            currentJob?.cancel()
-            currentJob = initUiState()
+            initUiState()
         }
     }
 
     init {
-        initUiState()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -79,8 +76,9 @@ class UserMeetingsViewModel(
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    private fun initUiState() =
-        viewModelScope.launch {
+    fun initUiState() {
+        currentJob?.cancel()
+        currentJob = viewModelScope.launch {
             val uid = Firebase.auth.uid ?: return@launch
             val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
             user.flatMapLatest { userEntry: UserEntry? ->
@@ -103,6 +101,7 @@ class UserMeetingsViewModel(
                 _uiState.postValue(success(it))
             }
         }
+    }
 
     private suspend fun getMeetingEntries(meetingIds: List<String>) =
         meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())

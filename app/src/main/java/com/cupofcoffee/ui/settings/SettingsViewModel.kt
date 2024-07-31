@@ -17,8 +17,6 @@ import com.cupofcoffee.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
-import com.cupofcoffee.ui.model.MeetingEntry
-import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.util.NetworkUtil
 import kotlinx.coroutines.launch
 
@@ -74,11 +72,11 @@ class SettingsViewModel(
         user.userModel.madeMeetingIds.keys.map { meetingId ->
             val meetingEntry =
                 meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
-            deleteMeeting(meetingEntry)
+            deleteMeeting(meetingId)
             deleteMadeMeetingsInPlace(meetingEntry.meetingModel.placeId, meetingId)
         }
         deleteComments(uid)
-        deleteUser(user)
+        deleteUser(uid)
     }
 
     private suspend fun cancelMeeting(uid: String, meetingId: String) {
@@ -88,8 +86,8 @@ class SettingsViewModel(
         meetingRepositoryImpl.update(meetingEntry)
     }
 
-    private suspend fun deleteMeeting(meetingEntry: MeetingEntry) {
-        meetingRepositoryImpl.delete(meetingEntry)
+    private suspend fun deleteMeeting(id: String) {
+        meetingRepositoryImpl.delete(id = id)
     }
 
     private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
@@ -107,8 +105,8 @@ class SettingsViewModel(
         }
     }
 
-    private suspend fun deleteUser(userEntry: UserEntry) {
-        userRepositoryImpl.delete(userEntry)
+    private suspend fun deleteUser(id: String) {
+        userRepositoryImpl.delete(id)
     }
 
     companion object {

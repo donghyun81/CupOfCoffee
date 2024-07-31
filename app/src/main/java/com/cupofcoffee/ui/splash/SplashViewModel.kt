@@ -7,18 +7,30 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.repository.PreferencesRepositoryImpl
+import com.cupofcoffee.data.repository.UserRepositoryImpl
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class SplashViewModel(
-    preferencesRepositoryImpl: PreferencesRepositoryImpl
+    preferencesRepositoryImpl: PreferencesRepositoryImpl,
+    private val userRepositoryImpl: UserRepositoryImpl,
 ) : ViewModel() {
 
     val isAutoLoginFlow = preferencesRepositoryImpl.isAutoLoginFlow.asLiveData()
+
+    suspend fun isUserDeleted(): Boolean {
+        val uid = Firebase.auth.uid ?: return true
+        val isUserDeleted = userRepositoryImpl.getRemoteUserById(uid) == null
+        if (isUserDeleted) Firebase.auth.signOut()
+        return isUserDeleted
+    }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 SplashViewModel(
-                    preferencesRepositoryImpl = CupOfCoffeeApplication.preferencesRepositoryImpl
+                    preferencesRepositoryImpl = CupOfCoffeeApplication.preferencesRepositoryImpl,
+                    userRepositoryImpl = CupOfCoffeeApplication.userRepository
                 )
             }
         }

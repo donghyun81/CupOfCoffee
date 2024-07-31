@@ -3,7 +3,6 @@ package com.cupofcoffee.ui.home
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,7 +41,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private val locationPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-                naverMap.locationTrackingMode = LocationTrackingMode.Follow
+                naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
             }
         }
 
@@ -56,12 +55,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater)
+        viewModel.currentJob = viewModel.initMarkers()
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadMap()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.currentJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -76,7 +81,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: NaverMap) {
         naverMap = map
-        naverMap.locationSource = locationSource
 
         setLocationPermission()
         showUserLocation()
@@ -86,6 +90,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setLocationPermission() {
+        naverMap.locationSource = locationSource
+        naverMap.uiSettings.isLocationButtonEnabled = false
+        binding.btnMyLocation.setOnClickListener {
+            val location = naverMap.locationOverlay.position
+            val cameraUpdate = CameraUpdate.scrollTo(location)
+            naverMap.moveCamera(cameraUpdate)
+        }
+
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -95,7 +107,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            naverMap.locationTrackingMode = LocationTrackingMode.Face
+            naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
         } else {
             locationPermissionRequest.launch(
                 arrayOf(

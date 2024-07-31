@@ -1,6 +1,5 @@
 package com.cupofcoffee.data.repository
 
-import android.util.Log
 import com.cupofcoffee.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee.data.local.model.MeetingEntity
 import com.cupofcoffee.data.local.model.asMeetingEntry
@@ -38,17 +37,18 @@ class MeetingRepositoryImpl(
         else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries().sortedByDate()
 
     suspend fun getMeetingsByIdsInFlow(ids: List<String>, isConnected: Boolean = true) =
-        if (isConnected) meetingRemoteDataSource.getCommentsByIdsInFlow(ids).map { meetingEntries ->
-            Log.d("123456","원격 미팅 조회")
+        if (isConnected) meetingRemoteDataSource.getMeetingsByIdsInFlow(ids).map { meetingEntries ->
             meetingEntries.convertMeetingEntries().sortedByDate()
         }
         else meetingLocalDataSource.getMeetingsByIdsInFlow(ids).map {
-            Log.d("123456","로컬 미팅 조회")
             it.convertMeetingEntries().sortedByDate()
         }
 
     suspend fun getAllLocalMeetings(): List<MeetingEntity> =
         meetingLocalDataSource.getAllMeetings()
+
+    suspend fun getRemoteMeetingsByIds(ids: List<String>) =
+        meetingRemoteDataSource.getMeetingsByIds(ids)
 
     suspend fun update(meetingEntry: MeetingEntry) {
         meetingEntry.apply {
@@ -57,14 +57,16 @@ class MeetingRepositoryImpl(
         }
     }
 
-    suspend fun deleteLocal(meetingEntity: MeetingEntity) =
-        meetingLocalDataSource.delete(meetingEntity)
+    suspend fun updateLocal(meetingEntity: MeetingEntity) {
+        meetingLocalDataSource.update(meetingEntity)
+    }
 
-    suspend fun deleteRemote(id: String) = meetingRemoteDataSource.delete(id)
+    suspend fun deleteLocal(id: String) =
+        meetingLocalDataSource.delete(id)
 
-    suspend fun delete(meetingEntry: MeetingEntry) {
-        meetingLocalDataSource.delete(meetingEntry.asMeetingEntity())
-        meetingRemoteDataSource.delete(meetingEntry.id)
+    suspend fun delete(id: String) {
+        meetingLocalDataSource.delete(id)
+        meetingRemoteDataSource.delete(id)
     }
 
     private fun List<MeetingEntry>.sortedByDate() =

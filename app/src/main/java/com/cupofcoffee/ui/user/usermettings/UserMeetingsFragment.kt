@@ -31,6 +31,7 @@ class UserMeetingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentUserMeetingsBinding.inflate(inflater)
+        viewModel.initUiState()
         return binding.root
     }
 
@@ -41,6 +42,7 @@ class UserMeetingsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        viewModel.currentJob?.cancel()
         _binding = null
     }
 

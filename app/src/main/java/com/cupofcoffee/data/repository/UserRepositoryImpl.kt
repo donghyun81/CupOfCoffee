@@ -1,6 +1,5 @@
 package com.cupofcoffee.data.repository
 
-import android.util.Log
 import com.cupofcoffee.data.local.datasource.UserLocalDataSource
 import com.cupofcoffee.data.local.model.UserEntity
 import com.cupofcoffee.data.local.model.asUserEntry
@@ -39,11 +38,17 @@ class UserRepositoryImpl(
         }
     }
 
-    suspend fun delete(userEntry: UserEntry) {
-        userEntry.apply {
-            userRemoteDataSource.delete(id)
-            userLocalDataSource.delete(userModel.asUserEntity(id))
-        }
+    suspend fun updateLocal(userEntity: UserEntity) {
+        userLocalDataSource.update(userEntity)
+    }
+
+    suspend fun delete(id: String) {
+        userRemoteDataSource.delete(id)
+        userLocalDataSource.delete(id)
+    }
+
+    suspend fun deleteLocal(id: String) {
+        userLocalDataSource.delete(id)
     }
 
     suspend fun getAllUsers(): List<UserEntity> = userLocalDataSource.getAllUsers()

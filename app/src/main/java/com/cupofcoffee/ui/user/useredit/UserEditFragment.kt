@@ -1,5 +1,6 @@
 package com.cupofcoffee.ui.user.useredit
 
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,6 +25,9 @@ import kotlinx.coroutines.launch
 class UserEditFragment : DialogFragment() {
 
     private var _binding: FragmentUserEditBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: UserEditViewModel by viewModels { UserEditViewModel.Factory }
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             setAddImage(isGranted)
@@ -32,9 +36,6 @@ class UserEditFragment : DialogFragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             addImage(result)
         }
-
-    private val binding get() = _binding!!
-    private val viewModel: UserEditViewModel by viewModels { UserEditViewModel.Factory }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,6 +52,11 @@ class UserEditFragment : DialogFragment() {
         setUserUi()
         setEditUserProfileOnclick()
         setEditProfileImage()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun setButtonEnable() {
@@ -103,6 +109,7 @@ class UserEditFragment : DialogFragment() {
             )
             if (viewModel.isNetworkConnected()) viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.updateUser(currentUserEntry)
+                viewModel.updateUserComments(currentUserEntry)
                 findNavController().navigateUp()
             }
             else view?.showSnackBar(R.string.network_profile)
@@ -133,9 +140,10 @@ class UserEditFragment : DialogFragment() {
     }
 
     private fun loadProfileImagePreview(contentUri: String) {
+        val uri = Uri.parse(contentUri)
         binding.ivProfileImage.run {
             Glide.with(context)
-                .load(contentUri)
+                .load(uri)
                 .into(this)
         }
     }

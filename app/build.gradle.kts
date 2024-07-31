@@ -35,10 +35,24 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+
+            signingConfigs {
+                create("release") {
+                    keyAlias = getApiKey("KEY_ALIAS")
+                    keyPassword = getApiKey("KEY_PASSWORD")
+                    storeFile = file(getApiKey("KEY_STORE_PATH"))
+                    storePassword = getApiKey("STORE_PASSWORD")
+                }
+            }
+
+            getByName("release") {
+                isMinifyEnabled = true
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

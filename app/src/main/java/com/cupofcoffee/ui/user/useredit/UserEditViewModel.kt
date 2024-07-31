@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cupofcoffee.CupOfCoffeeApplication
 import com.cupofcoffee.data.DataResult
 import com.cupofcoffee.data.DataResult.Companion.success
+import com.cupofcoffee.data.repository.CommentRepositoryImpl
 import com.cupofcoffee.data.repository.UserRepositoryImpl
 import com.cupofcoffee.ui.model.UserEntry
 import com.cupofcoffee.util.NetworkUtil
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 
 class UserEditViewModel(
     private val userRepositoryImpl: UserRepositoryImpl,
+    private val commentRepositoryImpl: CommentRepositoryImpl,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -78,6 +80,15 @@ class UserEditViewModel(
         userRepositoryImpl.update(userEntry)
     }
 
+    suspend fun updateUserComments(userEntry: UserEntry) {
+        commentRepositoryImpl.getCommentsByUserId().filterValues { it.userId == userEntry.id }.map {
+            val (id, commentDTO) = it
+            val currentComment =
+                commentDTO.copy(profileImageWebUrl = userEntry.userModel.profileImageWebUrl)
+            commentRepositoryImpl.update(id, currentComment)
+        }
+    }
+
     fun getImagePick() = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
 
     companion object {
@@ -85,6 +96,7 @@ class UserEditViewModel(
             initializer {
                 UserEditViewModel(
                     userRepositoryImpl = CupOfCoffeeApplication.userRepository,
+                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
                     networkUtil = CupOfCoffeeApplication.networkUtil
                 )
             }

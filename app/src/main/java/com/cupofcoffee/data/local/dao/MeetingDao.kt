@@ -1,7 +1,6 @@
 package com.cupofcoffee.data.local.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -33,6 +32,6 @@ interface MeetingDao {
     @Update
     suspend fun update(meetingEntity: MeetingEntity)
 
-    @Delete
-    suspend fun delete(meetingEntity: MeetingEntity)
+    @Query("DELETE FROM users WHERE id = :id")
+    suspend fun delete(id: String)
 }

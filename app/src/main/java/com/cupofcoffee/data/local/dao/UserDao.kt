@@ -1,7 +1,6 @@
 package com.cupofcoffee.data.local.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -24,11 +23,8 @@ interface UserDao {
     @Update
     suspend fun update(userEntity: UserEntity): Int
 
-    @Delete
-    suspend fun delete(userEntity: UserEntity)
-
-    @Query("SELECT * From users Where id In (:ids)")
-    suspend fun getUsersByIds(ids: List<String>): List<UserEntity>
+    @Query("DELETE FROM users WHERE id = :id")
+    suspend fun delete(id: String)
 
     @Query("SELECT * From users")
     fun getAllUsers(): List<UserEntity>

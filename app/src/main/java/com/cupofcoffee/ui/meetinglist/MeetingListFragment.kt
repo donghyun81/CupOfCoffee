@@ -37,6 +37,11 @@ class MeetingListFragment : BottomSheetDialogFragment() {
         setCancelButton()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.currentJob?.cancel()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
