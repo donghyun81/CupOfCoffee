@@ -79,6 +79,11 @@ class MeetingListFragment : BottomSheetDialogFragment() {
             else view?.showSnackBar(R.string.attended_network_message)
         }
 
+        override fun onCancelClick(meetingEntryWithPeople: MeetingEntryWithPeople) {
+            if (viewModel.isNetworkConnected()) viewModel.cancelMeeting(meetingEntryWithPeople)
+            else view?.showSnackBar(R.string.attended_network_message)
+        }
+
         override fun onDetailClick(meetingId: String) {
             val action =
                 MeetingListFragmentDirections.actionMeetingListFragmentToMeetingDetailFragment(

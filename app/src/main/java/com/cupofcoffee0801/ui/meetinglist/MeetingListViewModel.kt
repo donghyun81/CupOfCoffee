@@ -134,6 +134,26 @@ class MeetingListViewModel(
         userRepositoryImpl.update(userEntry)
     }
 
+    fun cancelMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
+        viewModelScope.launch {
+            deleteUserToMeeting(meetingEntryWithPeople)
+            deleteAttendedMeetingToUser(meetingEntryWithPeople.id)
+        }
+    }
+
+    private suspend fun deleteUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
+        val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
+        meetingEntry.meetingModel.personIds.remove(Firebase.auth.uid!!)
+        meetingRepositoryImpl.update(meetingEntry)
+    }
+
+    private suspend fun deleteAttendedMeetingToUser(meetingId: String) {
+        val uid = Firebase.auth.uid!!
+        val userEntry = userRepositoryImpl.getLocalUserById(uid)
+        userEntry.userModel.attendedMeetingIds.remove(meetingId)
+        userRepositoryImpl.update(userEntry)
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

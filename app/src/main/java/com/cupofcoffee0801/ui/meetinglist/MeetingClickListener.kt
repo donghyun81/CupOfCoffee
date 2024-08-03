@@ -4,5 +4,7 @@ interface MeetingClickListener {
 
     fun onApplyClick(meetingEntryWithPeople: MeetingEntryWithPeople)
 
+    fun onCancelClick(meetingEntryWithPeople: MeetingEntryWithPeople)
+
     fun onDetailClick(meetingId: String)
 }

@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.cupofcoffee0801.R
 import com.cupofcoffee0801.databinding.MeetingListItemBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -39,12 +40,19 @@ class MeetingListAdapter(
                 tvTime.text = meetingModel.time
                 rvPeople.adapter = adapter
                 root.setOnClickListener { meetingClickListener.onDetailClick(meetingEntryWithPeople.id) }
-                val hasUserId = meetingModel.people.none { it.id == uid }
-                btnApply.isEnabled = hasUserId
+                val hasUserId = meetingModel.people.any { it.id == uid }
+
                 if (hasUserId) {
+                    btnApply.setText(R.string.cancel)
                     btnApply.setOnClickListener {
+                        btnApply.setText(R.string.apply)
+                        meetingClickListener.onCancelClick(meetingEntryWithPeople)
+                    }
+                } else {
+                    btnApply.setText(R.string.apply)
+                    btnApply.setOnClickListener {
+                        btnApply.setText(R.string.cancel)
                         meetingClickListener.onApplyClick(meetingEntryWithPeople)
-                        btnApply.isEnabled = false
                     }
                 }
             }

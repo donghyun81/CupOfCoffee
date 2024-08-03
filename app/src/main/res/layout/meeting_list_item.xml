@@ -46,8 +46,7 @@
                 android:id="@+id/btn_apply"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/brown"
-                android:text="@string/apply_button" />
+                android:backgroundTint="@color/brown" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
