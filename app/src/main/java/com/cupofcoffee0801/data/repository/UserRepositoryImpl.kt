@@ -24,10 +24,14 @@ class UserRepositoryImpl(
     fun getLocalUserByIdInFlow(id: String) =
         userLocalDataSource.getUserByIdInFlow(id).map { it?.asUserEntry() }
 
-    suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id).asUserEntry()
+    suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id)?.asUserEntry()
 
     suspend fun getRemoteUserById(id: String) =
         userRemoteDataSource.getUserById(id)?.asUserEntry(id)
+
+    suspend fun getUser(id: String, isNetworkConnected: Boolean = true) =
+        if (isNetworkConnected) userRemoteDataSource.getUserById(id)?.asUserEntry(id)
+        else userLocalDataSource.getUserById(id)?.asUserEntry()
 
     suspend fun getRemoteUsersByIds(ids: List<String>) = userRemoteDataSource.getUsersByIds(ids)
 

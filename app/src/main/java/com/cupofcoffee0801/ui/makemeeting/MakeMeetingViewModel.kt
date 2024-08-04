@@ -118,7 +118,7 @@ class MakeMeetingViewModel(
 
     private suspend fun updateUserMeeting(meetingId: String) {
         val uid = Firebase.auth.uid ?: return
-        val userEntry = userRepositoryImpl.getLocalUserById(uid)
+        val userEntry = userRepositoryImpl.getLocalUserById(uid)!!
         addUserMadeMeeting(userEntry, meetingId)
     }
 

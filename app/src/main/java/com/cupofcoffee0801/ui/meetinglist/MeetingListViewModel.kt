@@ -64,6 +64,7 @@ class MeetingListViewModel(
     }
 
     init {
+        if (isNetworkConnected().not()) initUiState()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -93,9 +94,9 @@ class MeetingListViewModel(
 
     private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): Flow<List<MeetingEntryWithPeople>> {
         val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
-        val meetings =
+        val meetingsInFlow =
             meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
-        return meetings.flatMapLatest { meetings ->
+        return meetingsInFlow.flatMapLatest { meetings ->
             addLocalMeetings(meetings)
             if (networkUtil.isConnected()) flow { emit(meetings.map { convertMeetingListEntry(it) }) }
             else flow { emit(meetings.map { it.asMeetingListEntry(emptyList()) }) }
@@ -103,6 +104,7 @@ class MeetingListViewModel(
     }
 
     private suspend fun addLocalMeetings(meetings: List<MeetingEntry>) {
+        if (networkUtil.isConnected().not()) return
         meetings.forEach { meeting ->
             meetingRepositoryImpl.insertLocal(meeting.asMeetingEntity())
         }
@@ -129,7 +131,7 @@ class MeetingListViewModel(
 
     private suspend fun addAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val userEntry = userRepositoryImpl.getLocalUserById(uid)
+        val userEntry = userRepositoryImpl.getLocalUserById(uid)!!
         userEntry.userModel.attendedMeetingIds[meetingId] = true
         userRepositoryImpl.update(userEntry)
     }
@@ -149,7 +151,7 @@ class MeetingListViewModel(
 
     private suspend fun deleteAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val userEntry = userRepositoryImpl.getLocalUserById(uid)
+        val userEntry = userRepositoryImpl.getLocalUserById(uid)!!
         userEntry.userModel.attendedMeetingIds.remove(meetingId)
         userRepositoryImpl.update(userEntry)
     }

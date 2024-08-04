@@ -62,7 +62,7 @@ class DeleteMeetingWorker(
 
     private suspend fun updateUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getLocalUserById(uid)
+        val user = userRepositoryImpl.getLocalUserById(uid)!!
         user.userModel.madeMeetingIds.remove(meetingId)
         userRepositoryImpl.update(user)
     }

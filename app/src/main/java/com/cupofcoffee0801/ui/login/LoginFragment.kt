@@ -62,7 +62,7 @@ class LoginFragment : Fragment() {
 
     private fun setNaverLogin() {
         binding.btnNaverLogin.setOnClickListener {
-            viewModel.onButtonClicked()
+            viewModel.switchButtonClicked()
             NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
             NaverIdLoginSDK.authenticate(requireContext(), object : OAuthLoginCallback {
                 override fun onSuccess() {
@@ -70,9 +70,11 @@ class LoginFragment : Fragment() {
                 }
 
                 override fun onFailure(httpStatus: Int, message: String) {
+                    viewModel.switchButtonClicked()
                 }
 
                 override fun onError(errorCode: Int, message: String) {
+                    viewModel.switchButtonClicked()
                 }
             })
         }
@@ -94,10 +96,12 @@ class LoginFragment : Fragment() {
             }
 
             override fun onFailure(httpStatus: Int, message: String) {
+                viewModel.switchButtonClicked()
                 throwLoginError(false)
             }
 
             override fun onError(errorCode: Int, message: String) {
+                viewModel.switchButtonClicked()
                 throwLoginError(false)
             }
         })
@@ -115,6 +119,7 @@ class LoginFragment : Fragment() {
                             moveToHome()
                         }
                     } else {
+                        viewModel.switchButtonClicked()
                         createAccount(naverUser)
                     }
                 }
@@ -132,7 +137,10 @@ class LoginFragment : Fragment() {
                             viewModel.insertUser(naverUser.asUserEntry(uid))
                             moveToHome()
                         }
-                    } else throwLoginError(task.isSuccessful)
+                    } else {
+                        viewModel.switchButtonClicked()
+                        throwLoginError(task.isSuccessful)
+                    }
                 }
         }
     }

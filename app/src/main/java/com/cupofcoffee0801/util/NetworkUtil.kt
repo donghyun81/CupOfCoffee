@@ -20,7 +20,6 @@ class NetworkUtil(context: Context) {
         val networkRequest = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
-
         connectivityManager.registerNetworkCallback(networkRequest, callback)
     }
 }

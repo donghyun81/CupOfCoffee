@@ -1,6 +1,7 @@
 package com.cupofcoffee0801.ui.meetingdetail
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -53,8 +54,11 @@ class MeetingDetailFragment : Fragment() {
     private fun initUi() {
         viewModel.meetingDetailUiState.observe(viewLifecycleOwner) { result ->
             result.handle(
-                onLoading = { binding.cpiLoading.showLoading(result) },
+                onLoading = {
+                    binding.cpiLoading.showLoading(result)
+                },
                 onSuccess = { uiState ->
+                    Log.d("123456", uiState.toString())
                     binding.cpiLoading.showLoading(result)
                     setEdit(uiState.isMyMeeting, uiState.meeting)
                     setMeeting(uiState.meeting)

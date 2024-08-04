@@ -18,7 +18,7 @@ class UserLocalDataSource(
     fun getUserByIdInFlow(id: String): Flow<UserEntity?> =
         dao.getUserByIdInFlow(id)
 
-    suspend fun getUserById(id: String): UserEntity = withContext(ioDispatcher) {
+    suspend fun getUserById(id: String): UserEntity? = withContext(ioDispatcher) {
         dao.getUserById(id)
     }
 

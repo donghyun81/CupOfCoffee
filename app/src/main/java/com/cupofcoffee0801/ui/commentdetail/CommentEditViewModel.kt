@@ -55,7 +55,7 @@ class CommentEditViewModel(
         viewModelScope.launch {
             try {
                 val uid = Firebase.auth.uid!!
-                val user = userRepositoryImpl.getLocalUserById(uid)
+                val user = userRepositoryImpl.getLocalUserById(uid)!!
                 val commentId = args.commentId
                 if (commentId != null) {
                     val comment = commentRepositoryImpl.getComment(commentId).commentModel

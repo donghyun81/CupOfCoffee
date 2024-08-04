@@ -67,7 +67,7 @@ class SettingsViewModel(
     fun isConnected() = networkUtil.isConnected()
 
     suspend fun deleteUserData(uid: String) {
-        val user = userRepositoryImpl.getLocalUserById(uid)
+        val user = userRepositoryImpl.getLocalUserById(uid)!!
         val storageRef = Firebase.storage.reference.child("images/$uid")
         storageRef.delete().addOnSuccessListener {
 

@@ -26,8 +26,8 @@ class LoginViewModel(
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
+    fun switchButtonClicked() {
+        _isButtonClicked.value = _isButtonClicked.value?.not()
     }
 
     suspend fun insertUser(userEntry: UserEntry) {

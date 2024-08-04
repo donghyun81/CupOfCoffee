@@ -24,8 +24,7 @@ class MeetingListAdapter(
 
     class ViewHolder(
         private val binding: MeetingListItemBinding
-    ) :
-        RecyclerView.ViewHolder(binding.root) {
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(
             meetingEntryWithPeople: MeetingEntryWithPeople,
@@ -39,10 +38,12 @@ class MeetingListAdapter(
                 tvDate.text = meetingModel.date
                 tvTime.text = meetingModel.time
                 rvPeople.adapter = adapter
-                root.setOnClickListener { meetingClickListener.onDetailClick(meetingEntryWithPeople.id) }
+                root.setOnClickListener {
+                    meetingClickListener.onDetailClick(meetingEntryWithPeople.id)
+                }
                 val hasUserId = meetingModel.people.any { it.id == uid }
-
-                if (hasUserId) {
+                val isMyMeeting = meetingModel.managerId == uid
+                if (hasUserId && isMyMeeting.not()) {
                     btnApply.setText(R.string.cancel)
                     btnApply.setOnClickListener {
                         btnApply.setText(R.string.apply)
@@ -50,6 +51,7 @@ class MeetingListAdapter(
                     }
                 } else {
                     btnApply.setText(R.string.apply)
+                    btnApply.isEnabled = isMyMeeting.not()
                     btnApply.setOnClickListener {
                         btnApply.setText(R.string.cancel)
                         meetingClickListener.onApplyClick(meetingEntryWithPeople)

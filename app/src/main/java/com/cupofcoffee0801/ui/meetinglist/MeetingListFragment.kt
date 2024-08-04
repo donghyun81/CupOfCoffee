@@ -1,6 +1,7 @@
 package com.cupofcoffee0801.ui.meetinglist
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,10 +54,12 @@ class MeetingListFragment : BottomSheetDialogFragment() {
             result.handle(
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
                     setTitle(uiState.placeEntry)
                     setAdapter(uiState.meetingEntriesWithPeople)
                 },
                 onError = {
+                    binding.cpiLoading.showLoading(result)
                     view?.showSnackBar(R.string.data_error_message)
                 }
             )

@@ -45,7 +45,7 @@ class UserEditViewModel(
         viewModelScope.launch {
             val uid = Firebase.auth.uid!!
             try {
-                val user = userRepositoryImpl.getLocalUserById(uid)
+                val user = userRepositoryImpl.getLocalUserById(uid)!!
                 _uiState.value = success(
                     UserEditUiState(
                         userEntry = user,
@@ -63,7 +63,7 @@ class UserEditViewModel(
     suspend fun updateUiState(contentUri: String?) {
         val uid = Firebase.auth.uid!!
         try {
-            val user = userRepositoryImpl.getLocalUserById(uid)
+            val user = userRepositoryImpl.getLocalUserById(uid)!!
             _uiState.value = success(
                 UserEditUiState(
                     userEntry = user,

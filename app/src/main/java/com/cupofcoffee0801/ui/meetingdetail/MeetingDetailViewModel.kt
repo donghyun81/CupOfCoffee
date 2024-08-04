@@ -28,6 +28,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -66,24 +67,41 @@ class MeetingDetailViewModel(
     }
 
     init {
+        if (isNetworkConnected().not()) {
+            currentJob?.cancel()
+            currentJob = initUiState()
+        }
         networkUtil.registerNetworkCallback(networkCallback)
     }
+
+    fun isNetworkConnected() = networkUtil.isConnected()
 
 
     private fun initUiState() = viewModelScope.launch {
         try {
             val meetingEntryInFlow =
-                meetingRepositoryImpl.getMeetingInFlow(meetingId, networkUtil.isConnected())
-            val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)
+                meetingRepositoryImpl.getMeetingInFlow(meetingId, isNetworkConnected())
+            val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)!!
             meetingEntryInFlow
                 .flatMapLatest { meetingEntry ->
                     meetingEntry!!
-                    getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList()).map { commentEntries ->
-                        MeetingDetailUiState(
-                            userEntry,
-                            meetingEntry,
-                            commentEntries,
-                            meetingEntry.meetingModel.managerId == userEntry.id
+                    if (isNetworkConnected()) {
+                        getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList()).map { commentEntries ->
+                            MeetingDetailUiState(
+                                userEntry,
+                                meetingEntry,
+                                commentEntries,
+                                meetingEntry.meetingModel.managerId == userEntry.id
+                            )
+                        }
+                    } else flow {
+                        emit(
+                            MeetingDetailUiState(
+                                userEntry,
+                                meetingEntry,
+                                emptyList(),
+                                meetingEntry.meetingModel.managerId == userEntry.id
+                            )
                         )
                     }
                 }
