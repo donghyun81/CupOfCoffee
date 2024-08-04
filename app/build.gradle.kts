@@ -11,11 +11,11 @@ plugins {
 }
 
 android {
-    namespace = "com.cupofcoffee"
+    namespace = "com.cupofcoffee0801"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.cupofcoffee"
+        applicationId = "com.cupofcoffee0801"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -35,10 +35,24 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+
+            signingConfigs {
+                create("release") {
+                    keyAlias = getApiKey("KEY_ALIAS")
+                    keyPassword = getApiKey("KEY_PASSWORD")
+                    storeFile = file(getApiKey("KEY_STORE_PATH"))
+                    storePassword = getApiKey("STORE_PASSWORD")
+                }
+            }
+
+            getByName("release") {
+                isMinifyEnabled = true
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
@@ -77,6 +91,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation ("com.google.firebase:firebase-storage-ktx:19.2.0")
+
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

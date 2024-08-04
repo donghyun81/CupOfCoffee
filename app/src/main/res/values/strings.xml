@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CupOfCoffee</string>
+    <string name="app_name">CupOfCoffee0801</string>
     <string name="save_title">모임 등록</string>
     <string name="cancel">취소</string>
     <string name="save_create">생성</string>
@@ -29,4 +29,5 @@
     <string name="edit">수정</string>
     <string name="delete">삭제</string>
     <string name="network_profile">프로필 수정을 위해서 네트워크 연결이 필요합니다!</string>
+    <string name="apply">참여</string>
 </resources>
