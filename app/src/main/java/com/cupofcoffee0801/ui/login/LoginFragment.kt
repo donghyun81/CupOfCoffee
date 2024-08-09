@@ -20,6 +20,7 @@ import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -27,11 +28,12 @@ private const val EMPTY_NAME = "익명"
 private const val NAVER_ID_TO_EMAIL_COUNT = 7
 private const val CREATE_USER_ERROR_MESSAGE = "회원 가입 오류"
 
+@AndroidEntryPoint
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: LoginViewModel by viewModels { LoginViewModel.Factory }
+    private val viewModel: LoginViewModel by viewModels()
     private val auth: FirebaseAuth = Firebase.auth
 
     override fun onCreateView(

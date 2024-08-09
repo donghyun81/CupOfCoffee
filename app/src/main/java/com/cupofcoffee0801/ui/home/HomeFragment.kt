@@ -25,16 +25,18 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.LocationOverlay
 import com.naver.maps.map.util.FusedLocationSource
+import dagger.hilt.android.AndroidEntryPoint
 
 private const val INIT_ZOOM_LEVEL = 17.0
 private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
 
+@AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by viewModels { HomeViewModel.Factory }
+    private val viewModel: HomeViewModel by viewModels()
 
     private lateinit var naverMap: NaverMap
     private lateinit var locationSource: FusedLocationSource

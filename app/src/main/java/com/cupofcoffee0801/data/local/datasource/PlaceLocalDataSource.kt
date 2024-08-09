@@ -6,11 +6,14 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class PlaceLocalDataSource(
+class PlaceLocalDataSource @Inject constructor(
     private val placeDao: PlaceDao,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
     suspend fun insert(placeEntity: PlaceEntity) = withContext(ioDispatcher) {
         placeDao.insert(placeEntity)
     }

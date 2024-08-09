@@ -10,61 +10,69 @@ import com.cupofcoffee0801.ui.model.MeetingEntry
 import com.cupofcoffee0801.ui.model.asMeetingDTO
 import com.cupofcoffee0801.ui.model.asMeetingEntity
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class MeetingRepositoryImpl(
+class MeetingRepositoryImpl @Inject constructor(
     private val meetingLocalDataSource: MeetingLocalDataSource,
     private val meetingRemoteDataSource: MeetingRemoteDataSource
-) {
+) : MeetingRepository {
 
-    suspend fun insertLocal(meetingEntity: MeetingEntity) =
+    override suspend fun insertLocal(meetingEntity: MeetingEntity) =
         meetingLocalDataSource.insert(meetingEntity)
 
-    suspend fun insertRemote(meetingDTO: MeetingDTO) = meetingRemoteDataSource.insert(meetingDTO)
+    override suspend fun insertRemote(meetingDTO: MeetingDTO) =
+        meetingRemoteDataSource.insert(meetingDTO)
 
-    suspend fun getMeeting(id: String, isConnected: Boolean = true) =
+    override suspend fun getMeeting(id: String, isConnected: Boolean): MeetingEntry =
         if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeetingEntry(id)
         else meetingLocalDataSource.getMeeting(id).asMeetingEntry()
 
-    suspend fun getMeetingInFlow(id: String, isConnected: Boolean = true) =
+    override suspend fun getMeetingInFlow(id: String, isConnected: Boolean) =
         if (isConnected) meetingRemoteDataSource.getMeetingInFlow(id).map {
             it?.asMeetingEntry(id)
         }
         else meetingLocalDataSource.getMeetingInFlow(id).map { it.asMeetingEntry() }
 
-    suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean = true) =
+
+    override suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean) =
         if (isConnected) meetingRemoteDataSource.getMeetingsByIds(ids).convertMeetingEntries()
             .sortedByDate()
         else meetingLocalDataSource.getMeetingsByIds(ids).convertMeetingEntries().sortedByDate()
 
-    suspend fun getMeetingsByIdsInFlow(ids: List<String>, isConnected: Boolean = true) =
-        if (isConnected) meetingRemoteDataSource.getMeetingsByIdsInFlow(ids).map { meetingEntries ->
-            meetingEntries.convertMeetingEntries().sortedByDate()
-        }
+    override suspend fun getMeetingsByIdsInFlow(ids: List<String>, isConnected: Boolean) =
+        if (isConnected) meetingRemoteDataSource.getMeetingsByIdsInFlow(ids)
+            .map { meetingEntries ->
+                meetingEntries.convertMeetingEntries().sortedByDate()
+            }
         else meetingLocalDataSource.getMeetingsByIdsInFlow(ids).map {
             it.convertMeetingEntries().sortedByDate()
         }
 
-    suspend fun getAllLocalMeetings(): List<MeetingEntity> =
-        meetingLocalDataSource.getAllMeetings()
-
-    suspend fun getRemoteMeetingsByIds(ids: List<String>) =
+    override suspend fun getRemoteMeetingsByIds(ids: List<String>): Map<String, MeetingDTO> =
         meetingRemoteDataSource.getMeetingsByIds(ids)
 
-    suspend fun update(meetingEntry: MeetingEntry) {
+    override suspend fun getAllLocalMeetings(): List<MeetingEntity> =
+        meetingLocalDataSource.getAllMeetings()
+
+
+    override suspend fun update(meetingEntry: MeetingEntry) {
         meetingEntry.apply {
             meetingLocalDataSource.update(asMeetingEntity())
             meetingRemoteDataSource.update(id, asMeetingDTO())
         }
     }
 
-    suspend fun updateLocal(meetingEntity: MeetingEntity) {
+    override suspend fun updateLocal(meetingEntity: MeetingEntity) {
         meetingLocalDataSource.update(meetingEntity)
     }
 
-    suspend fun deleteLocal(id: String) =
+    override suspend fun deleteLocal(id: String) =
         meetingLocalDataSource.delete(id)
 
-    suspend fun delete(id: String) {
+    override suspend fun deleteRemote(id: String) =
+        meetingRemoteDataSource.delete(id)
+
+    override suspend fun delete(id: String) {
         meetingLocalDataSource.delete(id)
         meetingRemoteDataSource.delete(id)
     }

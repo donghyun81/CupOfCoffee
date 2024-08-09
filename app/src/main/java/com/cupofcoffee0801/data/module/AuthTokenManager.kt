@@ -1,7 +1,12 @@
 package com.cupofcoffee0801.data.module
 
 import com.google.firebase.auth.FirebaseAuth
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
+@Module
+@InstallIn(SingletonComponent::class)
 object AuthTokenManager {
     @Volatile
     private var uid: String? = null

@@ -16,15 +16,17 @@ import com.cupofcoffee0801.ui.model.UserEntry
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Date
 
+@AndroidEntryPoint
 class CommentEditFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentCommentEditBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: CommentEditViewModel by viewModels { CommentEditViewModel.Factory }
+    private val viewModel: CommentEditViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

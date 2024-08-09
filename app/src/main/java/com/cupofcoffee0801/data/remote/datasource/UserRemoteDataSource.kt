@@ -6,8 +6,9 @@ import com.cupofcoffee0801.data.remote.service.UserService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class UserRemoteDataSource(
+class UserRemoteDataSource @Inject constructor(
     private val userService: UserService,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
@@ -17,7 +18,7 @@ class UserRemoteDataSource(
             authToken = getAuthToken()!!,
             id = id,
             userDTO = userDTO
-        )
+        ).name
     }
 
     suspend fun getUserById(id: String) = withContext(ioDispatcher) {

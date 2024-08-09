@@ -34,11 +34,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 
 private const val CATEGORY_TAG = "category"
 
-class UserMeetingsViewModel(
+class UserMeetingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val userRepositoryImpl: UserRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
@@ -126,21 +127,6 @@ class UserMeetingsViewModel(
                 placeRepositoryImpl.delete(this)
             } else {
                 placeRepositoryImpl.update(placeEntry)
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                UserMeetingsViewModel(
-                    savedStateHandle = createSavedStateHandle(),
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
             }
         }
     }

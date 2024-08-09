@@ -13,18 +13,17 @@ import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
-class DeleteMeetingWorker(
+class DeleteMeetingWorker @Inject constructor(
     context: Context,
     workerParams: WorkerParameters,
+    private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val meetingRepositoryImpl: MeetingRepositoryImpl,
+    private val userRepositoryImpl: UserRepositoryImpl,
+    private val commentRepositoryImpl: CommentRepositoryImpl
 ) : CoroutineWorker(context, workerParams) {
 
-    private val placeRepositoryImpl: PlaceRepositoryImpl = CupOfCoffeeApplication.placeRepository
-    private val meetingRepositoryImpl: MeetingRepositoryImpl =
-        CupOfCoffeeApplication.meetingRepository
-    private val userRepositoryImpl: UserRepositoryImpl = CupOfCoffeeApplication.userRepository
-    private val commentRepositoryImpl: CommentRepositoryImpl =
-        CupOfCoffeeApplication.commentRepository
     private val networkUtil: NetworkUtil = CupOfCoffeeApplication.networkUtil
 
     override suspend fun doWork(): Result {

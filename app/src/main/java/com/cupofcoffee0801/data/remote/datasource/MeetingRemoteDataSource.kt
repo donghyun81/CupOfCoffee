@@ -9,8 +9,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class MeetingRemoteDataSource(
+class MeetingRemoteDataSource @Inject constructor(
     private val meetingService: MeetingService,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val refreshIntervalMs: Long = 3000L

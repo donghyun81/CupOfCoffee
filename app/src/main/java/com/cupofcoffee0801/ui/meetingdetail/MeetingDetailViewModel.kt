@@ -6,26 +6,25 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
-import com.cupofcoffee0801.CupOfCoffeeApplication
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.error
 import com.cupofcoffee0801.data.DataResult.Companion.loading
 import com.cupofcoffee0801.data.DataResult.Companion.success
+import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
+import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
+import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
 import com.cupofcoffee0801.data.worker.DeleteMeetingWorker
 import com.cupofcoffee0801.ui.model.MeetingEntry
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -33,12 +32,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
-class MeetingDetailViewModel(
+@HiltViewModel
+class MeetingDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val meetingRepositoryImpl: MeetingRepositoryImpl,
-    private val commentRepositoryImpl: CommentRepositoryImpl,
-    private val userRepositoryImpl: UserRepositoryImpl,
+    private val meetingRepository: MeetingRepository,
+    private val commentRepository: CommentRepository,
+    private val userRepository: UserRepository,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -80,8 +81,8 @@ class MeetingDetailViewModel(
     private fun initUiState() = viewModelScope.launch {
         try {
             val meetingEntryInFlow =
-                meetingRepositoryImpl.getMeetingInFlow(meetingId, isNetworkConnected())
-            val userEntry = userRepositoryImpl.getLocalUserById(Firebase.auth.uid!!)!!
+                meetingRepository.getMeetingInFlow(meetingId, isNetworkConnected())
+            val userEntry = userRepository.getLocalUserById(Firebase.auth.uid!!)!!
             meetingEntryInFlow
                 .flatMapLatest { meetingEntry ->
                     meetingEntry!!
@@ -114,7 +115,7 @@ class MeetingDetailViewModel(
     }
 
     private suspend fun getCommentsInFlow(ids: List<String>) =
-        commentRepositoryImpl.getCommentsByIdsInFlow(ids)
+        commentRepository.getCommentsByIdsInFlow(ids)
 
     fun getDeleteMeetingWorker(meetingEntry: MeetingEntry): OneTimeWorkRequest {
         val jsonMeetingEntry = Json.encodeToString(meetingEntry)
@@ -130,29 +131,15 @@ class MeetingDetailViewModel(
     fun deleteComment(commentId: String) {
         viewModelScope.launch {
             val meetingEntry =
-                meetingRepositoryImpl.getMeeting(meetingId, networkUtil.isConnected())
+                meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
             meetingEntry.meetingModel.commentIds.remove(commentId)
-            meetingRepositoryImpl.update(meetingEntry)
-            commentRepositoryImpl.delete(commentId)
+            meetingRepository.update(meetingEntry)
+            commentRepository.delete(commentId)
         }
     }
 
     override fun onCleared() {
         super.onCleared()
         currentJob?.cancel()
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                MeetingDetailViewModel(
-                    savedStateHandle = createSavedStateHandle(),
-                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
-        }
     }
 }

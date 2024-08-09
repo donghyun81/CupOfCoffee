@@ -10,15 +10,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class CommentRemoteDataSource(
+class CommentRemoteDataSource @Inject constructor(
     private val commentService: CommentService,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val refreshIntervalMs: Long = 3000L
 ) {
 
-    suspend fun insert(commentDTO: CommentDTO): RemoteIdWrapper = withContext(ioDispatcher) {
-        commentService.insert(getAuthToken()!!, commentDTO)
+    suspend fun insert(commentDTO: CommentDTO) = withContext(ioDispatcher) {
+        commentService.insert(getAuthToken()!!, commentDTO).name
     }
 
     suspend fun getComment(id: String): CommentDTO = withContext(ioDispatcher) {

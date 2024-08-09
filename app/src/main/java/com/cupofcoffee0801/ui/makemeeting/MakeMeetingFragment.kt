@@ -23,16 +23,18 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 
+@AndroidEntryPoint
 class MakeMeetingFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentMakeMeetingBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MakeMeetingViewModel by viewModels { MakeMeetingViewModel.Factory }
+    private val viewModel: MakeMeetingViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
