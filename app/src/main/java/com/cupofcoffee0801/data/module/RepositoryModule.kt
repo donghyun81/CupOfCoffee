@@ -1,41 +1,50 @@
 package com.cupofcoffee0801.data.module
 
-import android.content.Context
-import com.cupofcoffee0801.data.local.CupOfCoffeeDatabase
-import com.cupofcoffee0801.data.remote.datasource.CommentRemoteDataSource
-import com.cupofcoffee0801.data.remote.datasource.MeetingRemoteDataSource
-import com.cupofcoffee0801.data.remote.datasource.PlaceRemoteDataSource
-import com.cupofcoffee0801.data.remote.datasource.UserRemoteDataSource
+import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
+import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
+import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
+import com.cupofcoffee0801.data.repository.PreferencesRepository
 import com.cupofcoffee0801.data.repository.PreferencesRepositoryImpl
+import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-object RepositoryModule {
 
-    private val meetingRemoteDataSource = MeetingRemoteDataSource(NetworkModule.getMeetingService())
-    private val placeDataSource = PlaceRemoteDataSource(NetworkModule.getPlaceService())
-    private val userRemoteDataSource = UserRemoteDataSource(NetworkModule.getUserService())
-    private val commentRemoteDataSource = CommentRemoteDataSource(NetworkModule.getCommentService())
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+    @Singleton
+    @Binds
+    abstract fun bindMeetingRepository(
+        meetingRepositoryImpl: MeetingRepositoryImpl
+    ): MeetingRepository
 
-    private lateinit var database: CupOfCoffeeDatabase
+    @Singleton
+    @Binds
+    abstract fun bindPlaceRepository(
+        placeRepositoryImpl: PlaceRepositoryImpl
+    ): PlaceRepository
 
-    private val meetingLocalDataSource by lazy { LocalModule.provideMeetingLocalDataSource(database) }
-    private val placeLocalDataSource by lazy { LocalModule.providePlaceLocalDataSource(database) }
-    private val userLocalDataSource by lazy { LocalModule.provideUserLocalDataSource(database) }
+    @Singleton
+    @Binds
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
 
-    fun initDatabase(context: Context) {
-        database = LocalModule.provideDatabase(context)
-    }
+    @Singleton
+    @Binds
+    abstract fun bindCommentRepository(
+        commentRepositoryImpl: CommentRepositoryImpl
+    ): CommentRepository
 
-    fun getMeetingRepository() =
-        MeetingRepositoryImpl(meetingLocalDataSource, meetingRemoteDataSource)
-
-    fun getPlaceRepository() = PlaceRepositoryImpl(placeLocalDataSource, placeDataSource)
-    fun getUserRepository() = UserRepositoryImpl(userLocalDataSource, userRemoteDataSource)
-
-    fun getCommentRepository() = CommentRepositoryImpl(commentRemoteDataSource)
-
-    fun getPreferencesRepository(context: Context) = PreferencesRepositoryImpl(context)
+    @Singleton
+    @Binds
+    abstract fun bindPreferencesRepository(preferencesRepositoryImpl: PreferencesRepositoryImpl): PreferencesRepository
 }

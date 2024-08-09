@@ -5,14 +5,11 @@ import android.net.Network
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.cupofcoffee0801.CupOfCoffeeApplication
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.success
+import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee0801.ui.model.PlaceEntry
 import com.cupofcoffee0801.ui.model.asPlaceEntity
@@ -20,11 +17,14 @@ import com.cupofcoffee0801.util.NetworkUtil
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class HomeViewModel(
-    private val placeRepositoryImpl: PlaceRepositoryImpl,
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val placeRepository: PlaceRepository,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -56,11 +56,11 @@ class HomeViewModel(
     }
 
     fun initMarkers() = viewModelScope.launch {
-        val placesFlow = placeRepositoryImpl.getAllPlacesInFlow(networkUtil.isConnected())
+        val placesFlow = placeRepository.getAllPlacesInFlow(networkUtil.isConnected())
         placesFlow.collect { places ->
             try {
                 places.forEach { place ->
-                    placeRepositoryImpl.insertLocal(
+                    placeRepository.insertLocal(
                         place.placeModel.asPlaceEntity(
                             place.id
                         )
@@ -89,16 +89,5 @@ class HomeViewModel(
         tag = id
         icon = OverlayImage
             .fromResource(R.drawable.cup_of_coffee_mini)
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                HomeViewModel(
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
-        }
     }
 }

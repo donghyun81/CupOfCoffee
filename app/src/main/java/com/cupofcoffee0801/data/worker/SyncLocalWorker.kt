@@ -11,16 +11,15 @@ import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 
-class SyncLocalWorker(
+class SyncLocalWorker @Inject constructor(
     context: Context,
     workerParams: WorkerParameters,
+    private val placeRepositoryImpl: PlaceRepositoryImpl,
+    private val meetingRepositoryImpl: MeetingRepositoryImpl,
+    private val userRepositoryImpl: UserRepositoryImpl
 ) : CoroutineWorker(context, workerParams) {
-
-    private val placeRepositoryImpl: PlaceRepositoryImpl = CupOfCoffeeApplication.placeRepository
-    private val meetingRepositoryImpl: MeetingRepositoryImpl =
-        CupOfCoffeeApplication.meetingRepository
-    private val userRepositoryImpl: UserRepositoryImpl = CupOfCoffeeApplication.userRepository
 
     override suspend fun doWork(): Result {
         return try {

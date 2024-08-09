@@ -6,8 +6,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class MeetingLocalDataSource(
+class MeetingLocalDataSource @Inject constructor(
     private val meetingDao: MeetingDao,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {

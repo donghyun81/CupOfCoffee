@@ -15,11 +15,13 @@ import com.cupofcoffee0801.data.repository.UserRepositoryImpl
 import com.cupofcoffee0801.data.worker.SyncLocalWorker
 import com.cupofcoffee0801.util.NetworkUtil
 import com.navercorp.nid.NaverIdLoginSDK
+import dagger.hilt.android.HiltAndroidApp
 
 private const val NAVER_LOGIN_CLIENT_ID = BuildConfig.NAVER_LOGIN_CLIENT_ID
 private const val NAVER_LOGIN_CLIENT_SECRET = BuildConfig.NAVER_LOGIN_CLIENT_SECRET
 private const val APP_NAME = "CupOfCoffee"
 
+@HiltAndroidApp
 class CupOfCoffeeApplication : Application() {
 
 
@@ -27,11 +29,8 @@ class CupOfCoffeeApplication : Application() {
         super.onCreate()
         initNaverLogin()
         AuthTokenManager.initializeAuthListener()
-        RepositoryModule.initDatabase(applicationContext)
 
         networkUtil = NetworkUtil(applicationContext)
-
-        preferencesRepositoryImpl = RepositoryModule.getPreferencesRepository(applicationContext)
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -60,25 +59,6 @@ class CupOfCoffeeApplication : Application() {
     }
 
     companion object {
-
-        val meetingRepository: MeetingRepositoryImpl by lazy {
-            RepositoryModule.getMeetingRepository()
-        }
-
-        val placeRepository: PlaceRepositoryImpl by lazy {
-            RepositoryModule.getPlaceRepository()
-        }
-
-        val userRepository: UserRepositoryImpl by lazy {
-            RepositoryModule.getUserRepository()
-        }
-
-        val commentRepository: CommentRepositoryImpl by lazy {
-            RepositoryModule.getCommentRepository()
-        }
-
-        lateinit var preferencesRepositoryImpl: PreferencesRepositoryImpl
-
         lateinit var networkUtil: NetworkUtil
     }
 }

@@ -16,14 +16,16 @@ import com.cupofcoffee0801.ui.model.MeetingsCategory
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
 import com.cupofcoffee0801.ui.user.UserFragmentDirections
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class UserMeetingsFragment : Fragment() {
 
     private var _binding: FragmentUserMeetingsBinding? = null
     private val binding get() = _binding!!
 
     private val adapter = UserMeetingsAdapter(userMeetingDeleteClick())
-    private val viewModel: UserMeetingsViewModel by viewModels { UserMeetingsViewModel.Factory }
+    private val viewModel: UserMeetingsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,

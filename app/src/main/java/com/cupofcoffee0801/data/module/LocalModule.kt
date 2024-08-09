@@ -5,16 +5,26 @@ import com.cupofcoffee0801.data.local.CupOfCoffeeDatabase
 import com.cupofcoffee0801.data.local.datasource.MeetingLocalDataSource
 import com.cupofcoffee0801.data.local.datasource.PlaceLocalDataSource
 import com.cupofcoffee0801.data.local.datasource.UserLocalDataSource
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
+@Module
+@InstallIn(SingletonComponent::class)
 object LocalModule {
-    fun provideDatabase(context: Context) = CupOfCoffeeDatabase.from(context)
+    @Singleton
+    @Provides
+    fun provideDatabase(@ApplicationContext context: Context) = CupOfCoffeeDatabase.from(context)
 
-    fun provideMeetingLocalDataSource(database: CupOfCoffeeDatabase) =
-        MeetingLocalDataSource(database.meetingDao())
+    @Provides
+    fun provideMeetingDao(database: CupOfCoffeeDatabase) = database.meetingDao()
 
-    fun providePlaceLocalDataSource(database: CupOfCoffeeDatabase) =
-        PlaceLocalDataSource(database.placeDao())
+    @Provides
+    fun providePlaceDao(database: CupOfCoffeeDatabase) = database.placeDao()
 
-    fun provideUserLocalDataSource(database: CupOfCoffeeDatabase) =
-        UserLocalDataSource(database.userDao())
+    @Provides
+    fun provideUserDao(database: CupOfCoffeeDatabase) = database.userDao()
 }

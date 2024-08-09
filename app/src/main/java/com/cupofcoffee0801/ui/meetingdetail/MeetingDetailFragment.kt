@@ -20,13 +20,15 @@ import com.cupofcoffee0801.ui.model.CommentEntry
 import com.cupofcoffee0801.ui.model.MeetingEntry
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MeetingDetailFragment : Fragment() {
 
     private var _binding: FragmentMeetingDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MeetingDetailViewModel by viewModels { MeetingDetailViewModel.Factory }
+    private val viewModel: MeetingDetailViewModel by viewModels()
 
     private val adapter: MeetingDetailAdapter = MeetingDetailAdapter(getCommentClickListener())
 

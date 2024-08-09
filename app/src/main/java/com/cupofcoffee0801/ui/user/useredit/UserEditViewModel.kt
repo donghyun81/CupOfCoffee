@@ -18,8 +18,9 @@ import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UserEditViewModel(
+class UserEditViewModel @Inject constructor(
     private val userRepositoryImpl: UserRepositoryImpl,
     private val commentRepositoryImpl: CommentRepositoryImpl,
     private val networkUtil: NetworkUtil
@@ -80,7 +81,7 @@ class UserEditViewModel(
     }
 
     suspend fun updateUserComments(userEntry: UserEntry) {
-        commentRepositoryImpl.getCommentsByUserId().filterValues { it.userId == userEntry.id }.map {
+        commentRepositoryImpl.getCommentsByUserId(userEntry.id).map {
             val (id, commentDTO) = it
             val currentComment =
                 commentDTO.copy(profileImageWebUrl = userEntry.userModel.profileImageWebUrl)
@@ -91,17 +92,5 @@ class UserEditViewModel(
     fun getImagePick() = Intent().apply {
         type = "image/*"
         action = Intent.ACTION_GET_CONTENT
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                UserEditViewModel(
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
-        }
     }
 }

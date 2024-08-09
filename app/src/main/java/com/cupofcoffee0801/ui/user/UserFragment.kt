@@ -17,12 +17,14 @@ import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
 import com.cupofcoffee0801.ui.user.usermettings.UserMeetingsPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class UserFragment : Fragment() {
 
     private var _binding: FragmentUserBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: UserViewModel by viewModels { UserViewModel.Factory }
+    private val viewModel: UserViewModel by viewModels()
 
     private lateinit var userMeetingsPagerAdapter: UserMeetingsPagerAdapter
 

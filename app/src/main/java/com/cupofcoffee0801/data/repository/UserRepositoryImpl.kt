@@ -14,46 +14,49 @@ import kotlinx.coroutines.flow.map
 class UserRepositoryImpl(
     private val userLocalDataSource: UserLocalDataSource,
     private val userRemoteDataSource: UserRemoteDataSource,
-) {
+) : UserRepository {
 
-    suspend fun insertLocal(userEntity: UserEntity) = userLocalDataSource.insert(userEntity)
+    override suspend fun insertLocal(userEntity: UserEntity) =
+        userLocalDataSource.insert(userEntity)
 
-    suspend fun insertRemote(id: String, userDTO: UserDTO) =
+    override suspend fun insertRemote(id: String, userDTO: UserDTO) =
         userRemoteDataSource.insert(id, userDTO)
 
-    fun getLocalUserByIdInFlow(id: String) =
-        userLocalDataSource.getUserByIdInFlow(id).map { it?.asUserEntry() }
-
-    suspend fun getLocalUserById(id: String) = userLocalDataSource.getUserById(id)?.asUserEntry()
-
-    suspend fun getRemoteUserById(id: String) =
-        userRemoteDataSource.getUserById(id)?.asUserEntry(id)
-
-    suspend fun getUser(id: String, isNetworkConnected: Boolean = true) =
+    override suspend fun getUser(id: String, isNetworkConnected: Boolean) =
         if (isNetworkConnected) userRemoteDataSource.getUserById(id)?.asUserEntry(id)
         else userLocalDataSource.getUserById(id)?.asUserEntry()
 
-    suspend fun getRemoteUsersByIds(ids: List<String>) = userRemoteDataSource.getUsersByIds(ids)
+    override fun getLocalUserByIdInFlow(id: String) =
+        userLocalDataSource.getUserByIdInFlow(id).map { it?.asUserEntry() }
 
-    suspend fun update(userEntry: UserEntry) {
+    override suspend fun getLocalUserById(id: String) =
+        userLocalDataSource.getUserById(id)?.asUserEntry()
+
+    override suspend fun getRemoteUserById(id: String) =
+        userRemoteDataSource.getUserById(id)?.asUserEntry(id)
+
+    override suspend fun getRemoteUsersByIds(ids: List<String>) =
+        userRemoteDataSource.getUsersByIds(ids)
+
+    override suspend fun update(userEntry: UserEntry) {
         userEntry.apply {
             userRemoteDataSource.update(id, asUserDTO())
             userLocalDataSource.update(asUserEntity())
         }
     }
 
-    suspend fun updateLocal(userEntity: UserEntity) {
+    override suspend fun updateLocal(userEntity: UserEntity) {
         userLocalDataSource.update(userEntity)
     }
 
-    suspend fun delete(id: String) {
+    override suspend fun delete(id: String) {
         userRemoteDataSource.delete(id)
         userLocalDataSource.delete(id)
     }
 
-    suspend fun deleteLocal(id: String) {
+    override suspend fun deleteLocal(id: String) {
         userLocalDataSource.delete(id)
     }
 
-    suspend fun getAllUsers(): List<UserEntity> = userLocalDataSource.getAllUsers()
+    override suspend fun getAllUsers(): List<UserEntity> = userLocalDataSource.getAllUsers()
 }

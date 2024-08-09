@@ -17,8 +17,9 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UserViewModel(
+class UserViewModel @Inject constructor(
     private val userRepositoryImpl: UserRepositoryImpl
 ) : ViewModel() {
 
@@ -62,17 +63,6 @@ class UserViewModel(
                 } catch (e: Exception) {
                     error(e)
                 }
-            }
-        }
-    }
-
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                UserViewModel(
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository
-                )
             }
         }
     }

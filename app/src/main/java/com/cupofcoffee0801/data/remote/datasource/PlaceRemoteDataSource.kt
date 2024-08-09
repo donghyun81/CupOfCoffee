@@ -9,8 +9,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class PlaceRemoteDataSource(
+class PlaceRemoteDataSource @Inject constructor(
     private val placeService: PlaceService,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val refreshIntervalMs: Long = 3000
@@ -21,7 +22,7 @@ class PlaceRemoteDataSource(
             id = id,
             authToken = getAuthToken()!!,
             placeDTO = placeDTO
-        )
+        ).name
     }
 
     suspend fun getPlaceById(id: String) = withContext(ioDispatcher) {

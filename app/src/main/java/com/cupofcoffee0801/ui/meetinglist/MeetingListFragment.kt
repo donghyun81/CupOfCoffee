@@ -14,12 +14,14 @@ import com.cupofcoffee0801.ui.model.PlaceEntry
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MeetingListFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentMeetingListBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: MeetingListViewModel by viewModels { MeetingListViewModel.Factory }
+    private val viewModel: MeetingListViewModel by viewModels()
 
     private val adapter: MeetingListAdapter = MeetingListAdapter(applyOnclick())
 

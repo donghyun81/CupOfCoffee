@@ -22,15 +22,17 @@ import com.cupofcoffee0801.ui.showSnackBar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+@AndroidEntryPoint
 class UserEditFragment : DialogFragment() {
 
     private var _binding: FragmentUserEditBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: UserEditViewModel by viewModels { UserEditViewModel.Factory }
+    private val viewModel: UserEditViewModel by viewModels()
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
