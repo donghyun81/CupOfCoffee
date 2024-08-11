@@ -3,21 +3,20 @@ package com.cupofcoffee0801.ui.login
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.cupofcoffee0801.CupOfCoffeeApplication
-import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee0801.data.repository.UserRepositoryImpl
+import com.cupofcoffee0801.data.repository.MeetingRepository
+import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.UserEntry
 import com.cupofcoffee0801.ui.model.asMeetingEntity
 import com.cupofcoffee0801.ui.model.asUserDTO
 import com.cupofcoffee0801.ui.model.asUserEntity
 import com.cupofcoffee0801.util.NetworkUtil
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class LoginViewModel(
-    private val userRepository: UserRepositoryImpl,
-    private val meetingsRepositoryImpl: MeetingRepositoryImpl,
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val meetingsRepository: MeetingRepository,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -47,34 +46,22 @@ class LoginViewModel(
 
     private suspend fun insertUserMeetings(userEntry: UserEntry) {
         val madeMeetings =
-            meetingsRepositoryImpl.getMeetingsByIds(userEntry.userModel.madeMeetingIds.keys.toList())
+            meetingsRepository.getMeetingsByIds(userEntry.userModel.madeMeetingIds.keys.toList())
         val attendMeetings =
-            meetingsRepositoryImpl.getMeetingsByIds(userEntry.userModel.attendedMeetingIds.keys.toList())
+            meetingsRepository.getMeetingsByIds(userEntry.userModel.attendedMeetingIds.keys.toList())
         madeMeetings.forEach { madeMeeting ->
-            meetingsRepositoryImpl.insertLocal(
+            meetingsRepository.insertLocal(
                 madeMeeting.meetingModel.asMeetingEntity(
                     madeMeeting.id
                 )
             )
         }
         attendMeetings.forEach { attendMeeting ->
-            meetingsRepositoryImpl.insertLocal(
+            meetingsRepository.insertLocal(
                 attendMeeting.meetingModel.asMeetingEntity(
                     attendMeeting.id
                 )
             )
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                LoginViewModel(
-                    userRepository = CupOfCoffeeApplication.userRepository,
-                    meetingsRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
         }
     }
 }

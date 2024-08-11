@@ -6,20 +6,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.cupofcoffee0801.CupOfCoffeeApplication
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.error
 import com.cupofcoffee0801.data.DataResult.Companion.loading
 import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.remote.model.asUserEntry
-import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
-import com.cupofcoffee0801.data.repository.UserRepositoryImpl
+import com.cupofcoffee0801.data.repository.MeetingRepository
+import com.cupofcoffee0801.data.repository.PlaceRepository
+import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.MeetingEntry
 import com.cupofcoffee0801.ui.model.PlaceEntry
 import com.cupofcoffee0801.ui.model.asMeetingEntity
@@ -27,17 +22,20 @@ import com.cupofcoffee0801.ui.model.asMeetingListEntry
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MeetingListViewModel(
+@HiltViewModel
+class MeetingListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val meetingRepositoryImpl: MeetingRepositoryImpl,
-    private val placeRepositoryImpl: PlaceRepositoryImpl,
-    private val userRepositoryImpl: UserRepositoryImpl,
+    private val meetingRepository: MeetingRepository,
+    private val placeRepository: PlaceRepository,
+    private val userRepository: UserRepository,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -79,7 +77,7 @@ class MeetingListViewModel(
         currentJob = viewModelScope.launch {
             try {
                 val placeEntry =
-                    placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected())!!
+                    placeRepository.getPlaceById(placeId, networkUtil.isConnected())!!
                 val meetingEntriesWithPeopleInFlow = convertMeetingEntriesWithPeople(placeEntry)
                 meetingEntriesWithPeopleInFlow.collect { meetingEntriesWithPeople ->
                     if (Firebase.auth.uid == null) return@collect
@@ -95,7 +93,7 @@ class MeetingListViewModel(
     private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): Flow<List<MeetingEntryWithPeople>> {
         val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
         val meetingsInFlow =
-            meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
+            meetingRepository.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
         return meetingsInFlow.flatMapLatest { meetings ->
             addLocalMeetings(meetings)
             if (networkUtil.isConnected()) flow { emit(meetings.map { convertMeetingListEntry(it) }) }
@@ -106,13 +104,13 @@ class MeetingListViewModel(
     private suspend fun addLocalMeetings(meetings: List<MeetingEntry>) {
         if (networkUtil.isConnected().not()) return
         meetings.forEach { meeting ->
-            meetingRepositoryImpl.insertLocal(meeting.asMeetingEntity())
+            meetingRepository.insertLocal(meeting.asMeetingEntity())
         }
     }
 
     private suspend fun convertMeetingListEntry(meeting: MeetingEntry): MeetingEntryWithPeople {
         val users =
-            userRepositoryImpl.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
+            userRepository.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
         return meeting.asMeetingListEntry(users.map { it.value.asUserEntry(it.key) })
     }
 
@@ -126,14 +124,14 @@ class MeetingListViewModel(
     private suspend fun addUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
         val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
         meetingEntry.meetingModel.personIds[Firebase.auth.uid!!] = true
-        meetingRepositoryImpl.update(meetingEntry)
+        meetingRepository.update(meetingEntry)
     }
 
     private suspend fun addAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val userEntry = userRepositoryImpl.getLocalUserById(uid)!!
+        val userEntry = userRepository.getLocalUserById(uid)!!
         userEntry.userModel.attendedMeetingIds[meetingId] = true
-        userRepositoryImpl.update(userEntry)
+        userRepository.update(userEntry)
     }
 
     fun cancelMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
@@ -146,27 +144,13 @@ class MeetingListViewModel(
     private suspend fun deleteUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
         val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
         meetingEntry.meetingModel.personIds.remove(Firebase.auth.uid!!)
-        meetingRepositoryImpl.update(meetingEntry)
+        meetingRepository.update(meetingEntry)
     }
 
     private suspend fun deleteAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val userEntry = userRepositoryImpl.getLocalUserById(uid)!!
+        val userEntry = userRepository.getLocalUserById(uid)!!
         userEntry.userModel.attendedMeetingIds.remove(meetingId)
-        userRepositoryImpl.update(userEntry)
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                MeetingListViewModel(
-                    savedStateHandle = createSavedStateHandle(),
-                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
-        }
+        userRepository.update(userEntry)
     }
 }

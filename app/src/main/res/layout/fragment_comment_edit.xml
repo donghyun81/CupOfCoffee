@@ -20,8 +20,7 @@
         android:inputType="text"
         app:layout_constraintEnd_toStartOf="@id/btn_add_comment"
         app:layout_constraintStart_toEndOf="@id/iv_user_profile"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
 
     <com.google.android.material.button.MaterialButton
@@ -37,6 +36,7 @@
         android:id="@+id/cpi_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:indeterminate="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

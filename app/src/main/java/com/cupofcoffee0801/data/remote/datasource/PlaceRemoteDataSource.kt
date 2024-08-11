@@ -1,19 +1,21 @@
 package com.cupofcoffee0801.data.remote.datasource
 
 import com.cupofcoffee0801.data.module.AuthTokenManager.getAuthToken
+import com.cupofcoffee0801.data.module.IoDispatcher
+import com.cupofcoffee0801.data.module.RefreshInterval
 import com.cupofcoffee0801.data.remote.model.PlaceDTO
 import com.cupofcoffee0801.data.remote.service.PlaceService
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class PlaceRemoteDataSource(
+class PlaceRemoteDataSource @Inject constructor(
     private val placeService: PlaceService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val refreshIntervalMs: Long = 3000
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @RefreshInterval private val refreshIntervalMs: Long
 ) {
 
     suspend fun insert(id: String, placeDTO: PlaceDTO) = withContext(ioDispatcher) {

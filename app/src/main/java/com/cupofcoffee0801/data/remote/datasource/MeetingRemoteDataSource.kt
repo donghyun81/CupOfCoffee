@@ -1,23 +1,25 @@
 package com.cupofcoffee0801.data.remote.datasource
 
 import com.cupofcoffee0801.data.module.AuthTokenManager.getAuthToken
+import com.cupofcoffee0801.data.module.IoDispatcher
+import com.cupofcoffee0801.data.module.RefreshInterval
 import com.cupofcoffee0801.data.remote.model.MeetingDTO
 import com.cupofcoffee0801.data.remote.service.MeetingService
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class MeetingRemoteDataSource(
+class MeetingRemoteDataSource @Inject constructor(
     private val meetingService: MeetingService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val refreshIntervalMs: Long = 3000L
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @RefreshInterval private val refreshIntervalMs: Long
 ) {
 
     suspend fun insert(meetingDTO: MeetingDTO) = withContext(ioDispatcher) {
-        meetingService.insert(getAuthToken()!!, meetingDTO).name
+        meetingService.insert(getAuthToken()!!, meetingDTO)
     }
 
     suspend fun getMeeting(id: String) = withContext(ioDispatcher) {

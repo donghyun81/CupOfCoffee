@@ -2,14 +2,15 @@ package com.cupofcoffee0801.data.local.datasource
 
 import com.cupofcoffee0801.data.local.dao.MeetingDao
 import com.cupofcoffee0801.data.local.model.MeetingEntity
+import com.cupofcoffee0801.data.module.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class MeetingLocalDataSource(
+class MeetingLocalDataSource @Inject constructor(
     private val meetingDao: MeetingDao,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
     suspend fun insert(meetingEntity: MeetingEntity) = withContext(ioDispatcher) {
         meetingDao.insert(meetingEntity)

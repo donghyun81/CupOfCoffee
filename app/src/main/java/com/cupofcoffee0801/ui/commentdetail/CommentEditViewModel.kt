@@ -4,31 +4,29 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.cupofcoffee0801.CupOfCoffeeApplication
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.error
 import com.cupofcoffee0801.data.DataResult.Companion.loading
 import com.cupofcoffee0801.data.DataResult.Companion.success
-import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
-import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee0801.data.repository.UserRepositoryImpl
+import com.cupofcoffee0801.data.repository.CommentRepository
+import com.cupofcoffee0801.data.repository.MeetingRepository
+import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.CommentModel
 import com.cupofcoffee0801.ui.model.asCommentDTO
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CommentEditViewModel(
+@HiltViewModel
+class CommentEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val commentRepositoryImpl: CommentRepositoryImpl,
-    private val userRepositoryImpl: UserRepositoryImpl,
-    private val meetingRepositoryImpl: MeetingRepositoryImpl,
+    private val commentRepository: CommentRepository,
+    private val userRepository: UserRepository,
+    private val meetingRepository: MeetingRepository,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -55,10 +53,10 @@ class CommentEditViewModel(
         viewModelScope.launch {
             try {
                 val uid = Firebase.auth.uid!!
-                val user = userRepositoryImpl.getLocalUserById(uid)!!
+                val user = userRepository.getLocalUserById(uid)!!
                 val commentId = args.commentId
                 if (commentId != null) {
-                    val comment = commentRepositoryImpl.getComment(commentId).commentModel
+                    val comment = commentRepository.getComment(commentId).commentModel
                     _commentEditUiState.postValue(success(CommentEditUiState(user, comment)))
                 } else
                     _commentEditUiState.postValue(success(CommentEditUiState(user, null)))
@@ -69,27 +67,13 @@ class CommentEditViewModel(
     }
 
     suspend fun insertComment(commentModel: CommentModel) {
-        val commentId = commentRepositoryImpl.insert(commentModel.asCommentDTO())
-        val meeting = meetingRepositoryImpl.getMeeting(args.meetingId)
-        meeting.meetingModel.commentIds[commentId.name] = true
-        meetingRepositoryImpl.update(meeting)
+        val commentId = commentRepository.insert(commentModel.asCommentDTO())
+        val meeting = meetingRepository.getMeeting(args.meetingId)
+        meeting.meetingModel.commentIds[commentId!!] = true
+        meetingRepository.update(meeting)
     }
 
     suspend fun updateComment(commentModel: CommentModel) {
-        commentRepositoryImpl.update(args.commentId!!, commentModel.asCommentDTO())
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                CommentEditViewModel(
-                    savedStateHandle = createSavedStateHandle(),
-                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
-        }
+        commentRepository.update(args.commentId!!, commentModel.asCommentDTO())
     }
 }

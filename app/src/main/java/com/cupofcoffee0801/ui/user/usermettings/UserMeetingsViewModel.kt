@@ -6,19 +6,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
-import com.cupofcoffee0801.CupOfCoffeeApplication
+import androidx.work.OneTimeWorkRequestBuilder
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.success
-import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
 import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
 import com.cupofcoffee0801.data.worker.DeleteMeetingWorker
 import com.cupofcoffee0801.ui.model.MeetingEntry
@@ -27,6 +21,7 @@ import com.cupofcoffee0801.ui.model.UserEntry
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -34,16 +29,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 
 private const val CATEGORY_TAG = "category"
 
-class UserMeetingsViewModel(
+@HiltViewModel
+class UserMeetingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val userRepositoryImpl: UserRepositoryImpl,
     private val meetingRepositoryImpl: MeetingRepositoryImpl,
-    private val placeRepositoryImpl: PlaceRepositoryImpl,
-    private val commentRepositoryImpl: CommentRepositoryImpl,
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
@@ -112,36 +107,8 @@ class UserMeetingsViewModel(
             .putString("meetingEntry", jsonMeetingEntry)
             .build()
 
-        return OneTimeWorkRequest.Builder(DeleteMeetingWorker::class.java)
+        return OneTimeWorkRequestBuilder<DeleteMeetingWorker>()
             .setInputData(inputData)
             .build()
-    }
-
-    private suspend fun updatePlace(placeId: String, meetingId: String) {
-        val placeEntry =
-            placeRepositoryImpl.getPlaceById(placeId, networkUtil.isConnected()) ?: return
-        with(placeEntry) {
-            placeModel.meetingIds.remove(meetingId)
-            if (placeModel.meetingIds.isEmpty()) {
-                placeRepositoryImpl.delete(this)
-            } else {
-                placeRepositoryImpl.update(placeEntry)
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                UserMeetingsViewModel(
-                    savedStateHandle = createSavedStateHandle(),
-                    userRepositoryImpl = CupOfCoffeeApplication.userRepository,
-                    meetingRepositoryImpl = CupOfCoffeeApplication.meetingRepository,
-                    placeRepositoryImpl = CupOfCoffeeApplication.placeRepository,
-                    commentRepositoryImpl = CupOfCoffeeApplication.commentRepository,
-                    networkUtil = CupOfCoffeeApplication.networkUtil
-                )
-            }
-        }
     }
 }
