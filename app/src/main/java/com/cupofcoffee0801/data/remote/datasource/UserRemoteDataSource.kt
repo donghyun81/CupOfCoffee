@@ -1,16 +1,16 @@
 package com.cupofcoffee0801.data.remote.datasource
 
 import com.cupofcoffee0801.data.module.AuthTokenManager.getAuthToken
+import com.cupofcoffee0801.data.module.IoDispatcher
 import com.cupofcoffee0801.data.remote.model.UserDTO
 import com.cupofcoffee0801.data.remote.service.UserService
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class UserRemoteDataSource @Inject constructor(
     private val userService: UserService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
     suspend fun insert(id: String, userDTO: UserDTO) = withContext(ioDispatcher) {
@@ -18,7 +18,7 @@ class UserRemoteDataSource @Inject constructor(
             authToken = getAuthToken()!!,
             id = id,
             userDTO = userDTO
-        ).name
+        ).id
     }
 
     suspend fun getUserById(id: String) = withContext(ioDispatcher) {

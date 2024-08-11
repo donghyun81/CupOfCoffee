@@ -39,7 +39,7 @@ fun View.showSnackBar(stringId: Int) {
 fun <T> View.showLoading(result: DataResult<T>) {
     visibility = when (result) {
         is DataResult.Error -> View.GONE
-        DataResult.Loading -> View.VISIBLE
+        is DataResult.Loading -> View.VISIBLE
         is DataResult.Success -> View.GONE
     }
 }

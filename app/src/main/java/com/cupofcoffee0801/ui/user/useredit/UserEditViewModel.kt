@@ -1,14 +1,9 @@
 package com.cupofcoffee0801.ui.user.useredit
 
-import android.content.Intent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.cupofcoffee0801.CupOfCoffeeApplication
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
@@ -17,9 +12,11 @@ import com.cupofcoffee0801.ui.model.UserEntry
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@HiltViewModel
 class UserEditViewModel @Inject constructor(
     private val userRepositoryImpl: UserRepositoryImpl,
     private val commentRepositoryImpl: CommentRepositoryImpl,
@@ -87,10 +84,5 @@ class UserEditViewModel @Inject constructor(
                 commentDTO.copy(profileImageWebUrl = userEntry.userModel.profileImageWebUrl)
             commentRepositoryImpl.update(id, currentComment)
         }
-    }
-
-    fun getImagePick() = Intent().apply {
-        type = "image/*"
-        action = Intent.ACTION_GET_CONTENT
     }
 }

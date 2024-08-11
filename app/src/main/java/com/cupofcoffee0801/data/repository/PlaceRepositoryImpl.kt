@@ -49,6 +49,10 @@ class PlaceRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteAllLocalPlaces() {
+        placeLocalDataSource.deleteAll()
+    }
+
     override suspend fun getAllRemotePlaces() = placeRemoteDataSource.getAllPlaces()
 
     override suspend fun getAllPlacesInFlow(isNetworkConnected: Boolean): Flow<List<PlaceEntry>> {

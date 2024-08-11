@@ -1,6 +1,5 @@
 package com.cupofcoffee0801.data.repository
 
-import com.cupofcoffee0801.data.remote.RemoteIdWrapper
 import com.cupofcoffee0801.data.remote.datasource.CommentRemoteDataSource
 import com.cupofcoffee0801.data.remote.model.CommentDTO
 import com.cupofcoffee0801.data.remote.model.asCommentEntry

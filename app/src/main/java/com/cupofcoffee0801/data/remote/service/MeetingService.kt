@@ -35,7 +35,6 @@ interface MeetingService {
 
     @DELETE("$MEETING_PATH/{id}.json")
     suspend fun delete(
-
-        @Path("id") id: String, @Query("auth") authToken: String,
+        @Path("id") id: String, @Query("auth") authToken: String
     )
 }

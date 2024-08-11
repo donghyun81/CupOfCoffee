@@ -105,7 +105,7 @@ class MakeMeetingViewModel @Inject constructor(
 
     suspend fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
         if (args.meetingId == null) {
-            val meetingId = meetingRepository.insertRemote(meetingModel.asMeetingDTO())
+            val meetingId = meetingRepository.insertRemote(meetingModel.asMeetingDTO()).id
             meetingRepository.insertLocal(meetingModel.asMeetingEntity(meetingId))
             savePlace(meetingId, placeModel)
             updateUserMeeting(meetingId)

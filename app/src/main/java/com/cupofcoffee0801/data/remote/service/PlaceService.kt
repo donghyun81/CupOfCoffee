@@ -1,6 +1,5 @@
 package com.cupofcoffee0801.data.remote.service
 
-import com.cupofcoffee0801.data.remote.RemoteIdWrapper
 import com.cupofcoffee0801.data.remote.model.PlaceDTO
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -20,7 +19,7 @@ interface PlaceService {
         @Path("id") id: String,
         @Query("auth") authToken: String,
         @Body placeDTO: PlaceDTO
-    ): RemoteIdWrapper
+    )
 
     @GET("$PlACE_PATH/{id}.json")
     suspend fun getPlaceById(

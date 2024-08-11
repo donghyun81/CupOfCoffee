@@ -1,56 +1,59 @@
 package com.cupofcoffee0801.data.worker
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.cupofcoffee0801.CupOfCoffeeApplication
 import com.cupofcoffee0801.data.remote.model.asMeetingEntity
 import com.cupofcoffee0801.data.remote.model.asPlaceEntity
 import com.cupofcoffee0801.data.remote.model.asUserEntity
-import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
-import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
-import com.cupofcoffee0801.data.repository.UserRepositoryImpl
+import com.cupofcoffee0801.data.repository.MeetingRepository
+import com.cupofcoffee0801.data.repository.PlaceRepository
+import com.cupofcoffee0801.data.repository.UserRepository
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
-import javax.inject.Inject
 
-class SyncLocalWorker @Inject constructor(
-    context: Context,
-    workerParams: WorkerParameters,
-    private val placeRepositoryImpl: PlaceRepositoryImpl,
-    private val meetingRepositoryImpl: MeetingRepositoryImpl,
-    private val userRepositoryImpl: UserRepositoryImpl
+@HiltWorker
+class SyncLocalWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val placeRepository: PlaceRepository,
+    private val meetingRepository: MeetingRepository,
+    private val userRepository: UserRepository
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
             delay(2000)
-            val placeDTOs = placeRepositoryImpl.getAllRemotePlaces()
-            placeDTOs.forEach { placeRepositoryImpl.insertLocal(it.value.asPlaceEntity(it.key)) }
+            val placeDTOs = placeRepository.getAllRemotePlaces()
+            placeRepository.deleteAllLocalPlaces()
+            placeDTOs.forEach { placeRepository.insertLocal(it.value.asPlaceEntity(it.key)) }
 
-            val meetingIds = meetingRepositoryImpl.getAllLocalMeetings().map { it.id }
-            val meetingDTOs = meetingRepositoryImpl.getRemoteMeetingsByIds(meetingIds)
+            val meetingIds = meetingRepository.getAllLocalMeetings().map { it.id }
+            val meetingDTOs = meetingRepository.getRemoteMeetingsByIds(meetingIds)
 
             meetingIds.forEach { id ->
                 if (meetingDTOs.keys.contains(id).not()) {
-                    meetingRepositoryImpl.deleteLocal(id)
+                    meetingRepository.deleteLocal(id)
                 }
             }
             meetingDTOs.forEach {
                 val (id, meetingDTO) = it
-                meetingRepositoryImpl.updateLocal(meetingDTO.asMeetingEntity(id))
+                meetingRepository.updateLocal(meetingDTO.asMeetingEntity(id))
             }
 
-            val userIds = userRepositoryImpl.getAllUsers().map { it.id }
-            val userDTOs = userRepositoryImpl.getRemoteUsersByIds(userIds)
+            val userIds = userRepository.getAllUsers().map { it.id }
+            val userDTOs = userRepository.getRemoteUsersByIds(userIds)
 
             userIds.forEach { id ->
                 if (userDTOs.keys.contains(id).not()) {
-                    userRepositoryImpl.deleteLocal(id)
+                    userRepository.deleteLocal(id)
                 }
             }
             userDTOs.forEach {
                 val (id, userDTO) = it
-                userRepositoryImpl.updateLocal(userDTO.asUserEntity(id))
+                userRepository.updateLocal(userDTO.asUserEntity(id))
             }
             Result.success()
         } catch (e: Exception) {

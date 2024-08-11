@@ -10,7 +10,6 @@ import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.PlaceRepository
-import com.cupofcoffee0801.data.repository.PlaceRepositoryImpl
 import com.cupofcoffee0801.ui.model.PlaceEntry
 import com.cupofcoffee0801.ui.model.asPlaceEntity
 import com.cupofcoffee0801.util.NetworkUtil

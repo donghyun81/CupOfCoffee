@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.work.WorkManager
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.handle
 import com.cupofcoffee0801.databinding.FragmentSettingsBinding
@@ -18,9 +19,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
@@ -104,15 +104,14 @@ class SettingsFragment : Fragment() {
 
     private fun cancelMembership() {
         val user = Firebase.auth.currentUser!!
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-
-            viewModel.deleteUserData(user.uid)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val deleteUserWorker = viewModel.getDeleteUserWorker()
             NaverIdLoginSDK.logout()
-            withContext(Dispatchers.Main) {
-                user.delete()
-                    .addOnCompleteListener {
-                        moveToLogin()
-                    }
+            WorkManager.getInstance(requireContext()).enqueue(deleteUserWorker)
+            binding.cpiLoading.visibility = View.VISIBLE
+            delay(2000)
+            user.delete().addOnCompleteListener {
+                moveToLogin()
             }
         }
     }

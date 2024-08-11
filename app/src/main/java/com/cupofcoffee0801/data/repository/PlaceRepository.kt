@@ -10,7 +10,7 @@ interface PlaceRepository {
 
     suspend fun insertLocal(placeEntity: PlaceEntity)
 
-    suspend fun insertRemote(id: String, placeDTO: PlaceDTO): String
+    suspend fun insertRemote(id: String, placeDTO: PlaceDTO)
 
     suspend fun insert(placeEntry: PlaceEntry)
 
@@ -18,6 +18,8 @@ interface PlaceRepository {
     suspend fun update(placeEntry: PlaceEntry)
 
     suspend fun delete(placeEntry: PlaceEntry)
+
+    suspend fun deleteAllLocalPlaces()
 
     suspend fun getAllRemotePlaces(): Map<String, PlaceDTO>
 

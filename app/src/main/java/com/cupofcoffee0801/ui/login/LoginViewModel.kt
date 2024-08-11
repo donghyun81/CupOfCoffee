@@ -10,8 +10,10 @@ import com.cupofcoffee0801.ui.model.asMeetingEntity
 import com.cupofcoffee0801.ui.model.asUserDTO
 import com.cupofcoffee0801.ui.model.asUserEntity
 import com.cupofcoffee0801.util.NetworkUtil
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+@HiltViewModel
 class LoginViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val meetingsRepository: MeetingRepository,

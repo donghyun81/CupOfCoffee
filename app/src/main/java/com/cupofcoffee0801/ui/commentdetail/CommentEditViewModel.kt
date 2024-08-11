@@ -69,7 +69,7 @@ class CommentEditViewModel @Inject constructor(
     suspend fun insertComment(commentModel: CommentModel) {
         val commentId = commentRepository.insert(commentModel.asCommentDTO())
         val meeting = meetingRepository.getMeeting(args.meetingId)
-        meeting.meetingModel.commentIds[commentId] = true
+        meeting.meetingModel.commentIds[commentId!!] = true
         meetingRepository.update(meeting)
     }
 

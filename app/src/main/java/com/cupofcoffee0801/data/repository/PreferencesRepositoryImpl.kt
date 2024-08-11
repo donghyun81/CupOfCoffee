@@ -7,8 +7,10 @@ import com.cupofcoffee0801.ui.dataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class PreferencesRepositoryImpl(@ApplicationContext context: Context) : PreferencesRepository {
+class PreferencesRepositoryImpl @Inject constructor(@ApplicationContext context: Context) :
+    PreferencesRepository {
     private val dataStore = context.dataStore
 
 

@@ -1,13 +1,14 @@
 package com.cupofcoffee0801.data.repository
 
 import com.cupofcoffee0801.data.local.model.MeetingEntity
+import com.cupofcoffee0801.data.remote.RemoteIdWrapper
 import com.cupofcoffee0801.data.remote.model.MeetingDTO
 import com.cupofcoffee0801.ui.model.MeetingEntry
 import kotlinx.coroutines.flow.Flow
 
 interface MeetingRepository {
     suspend fun insertLocal(meetingEntity: MeetingEntity)
-    suspend fun insertRemote(meetingDTO: MeetingDTO): String
+    suspend fun insertRemote(meetingDTO: MeetingDTO): RemoteIdWrapper
     suspend fun getMeeting(id: String, isConnected: Boolean = true): MeetingEntry
     suspend fun getMeetingInFlow(id: String, isConnected: Boolean = true): Flow<MeetingEntry?>
     suspend fun getMeetingsByIds(ids: List<String>, isConnected: Boolean = true): List<MeetingEntry>

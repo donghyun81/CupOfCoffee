@@ -69,6 +69,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
             result.handle(
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->
+                    binding.cpiLoading.showLoading(result)
                     if (uiState.meetingEntry != null) {
                         binding.tvPlace.text = uiState.placeName
                         binding.tvTime.text = uiState.meetingEntry.meetingModel.time
@@ -78,6 +79,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
                     setSaveButton(uiState.placeName, uiState.lat, uiState.lng)
                 },
                 onError = {
+                    binding.cpiLoading.showLoading(result)
                     view?.showSnackBar(R.string.data_error_message)
                 }
             )

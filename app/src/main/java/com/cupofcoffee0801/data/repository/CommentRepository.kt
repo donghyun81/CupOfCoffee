@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CommentRepository {
 
-    suspend fun insert(commentDTO: CommentDTO): String
+    suspend fun insert(commentDTO: CommentDTO): String?
     suspend fun getComment(id: String): CommentEntry
     suspend fun getCommentsByUserId(userId: String): Map<String, CommentDTO>
     suspend fun getCommentsByIdsInFlow(ids: List<String>): Flow<List<CommentEntry>>

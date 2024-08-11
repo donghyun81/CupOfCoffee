@@ -1,5 +1,6 @@
 package com.cupofcoffee0801.data.repository
 
+import android.util.Log
 import com.cupofcoffee0801.data.local.datasource.UserLocalDataSource
 import com.cupofcoffee0801.data.local.model.UserEntity
 import com.cupofcoffee0801.data.local.model.asUserEntry
@@ -10,8 +11,9 @@ import com.cupofcoffee0801.ui.model.UserEntry
 import com.cupofcoffee0801.ui.model.asUserDTO
 import com.cupofcoffee0801.ui.model.asUserEntity
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class UserRepositoryImpl(
+class UserRepositoryImpl @Inject constructor(
     private val userLocalDataSource: UserLocalDataSource,
     private val userRemoteDataSource: UserRemoteDataSource,
 ) : UserRepository {
@@ -50,8 +52,11 @@ class UserRepositoryImpl(
     }
 
     override suspend fun delete(id: String) {
+        Log.d("123456","바바보7")
         userRemoteDataSource.delete(id)
+        Log.d("123456","바바보8")
         userLocalDataSource.delete(id)
+        Log.d("123456","바바보9")
     }
 
     override suspend fun deleteLocal(id: String) {

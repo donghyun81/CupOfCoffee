@@ -1,11 +1,11 @@
 package com.cupofcoffee0801.data.remote.datasource
 
 import com.cupofcoffee0801.data.module.AuthTokenManager.getAuthToken
-import com.cupofcoffee0801.data.remote.RemoteIdWrapper
+import com.cupofcoffee0801.data.module.IoDispatcher
+import com.cupofcoffee0801.data.module.RefreshInterval
 import com.cupofcoffee0801.data.remote.model.CommentDTO
 import com.cupofcoffee0801.data.remote.service.CommentService
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -14,12 +14,12 @@ import javax.inject.Inject
 
 class CommentRemoteDataSource @Inject constructor(
     private val commentService: CommentService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val refreshIntervalMs: Long = 3000L
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @RefreshInterval private val refreshIntervalMs: Long
 ) {
 
     suspend fun insert(commentDTO: CommentDTO) = withContext(ioDispatcher) {
-        commentService.insert(getAuthToken()!!, commentDTO).name
+        commentService.insert(getAuthToken()!!, commentDTO).id
     }
 
     suspend fun getComment(id: String): CommentDTO = withContext(ioDispatcher) {
