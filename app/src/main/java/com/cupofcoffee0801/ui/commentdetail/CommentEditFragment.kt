@@ -49,7 +49,7 @@ class CommentEditFragment : BottomSheetDialogFragment() {
     }
 
     private fun initUi() {
-        viewModel.commentEditUiState.observe(viewLifecycleOwner) { result ->
+        viewModel.commentEditDataResult.observe(viewLifecycleOwner) { result ->
             result.handle(
                 onLoading = {
                     binding.cpiLoading.showLoading(result)

@@ -54,7 +54,7 @@ class MeetingDetailFragment : Fragment() {
     }
 
     private fun initUi() {
-        viewModel.meetingDetailUiState.observe(viewLifecycleOwner) { result ->
+        viewModel.meetingDetailDataResult.observe(viewLifecycleOwner) { result ->
             result.handle(
                 onLoading = {
                     binding.cpiLoading.showLoading(result)

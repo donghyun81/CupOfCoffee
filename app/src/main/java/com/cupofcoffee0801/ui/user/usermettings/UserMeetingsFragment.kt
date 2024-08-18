@@ -50,7 +50,7 @@ class UserMeetingsFragment : Fragment() {
 
     private fun setUserMeetingsAdapter() {
         binding.rvAttendedMeetings.adapter = adapter
-        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+        viewModel.dataResult.observe(viewLifecycleOwner) { result ->
             result.handle(
                 onLoading = {
                     binding.cpiLoading.showLoading(result)

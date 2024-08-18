@@ -1,7 +1,6 @@
 package com.cupofcoffee0801.ui.meetinglist
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,7 +51,7 @@ class MeetingListFragment : BottomSheetDialogFragment() {
 
     private fun initUi() {
         binding.rvMeetings.adapter = adapter
-        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+        viewModel.dataResult.observe(viewLifecycleOwner) { result ->
             result.handle(
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->

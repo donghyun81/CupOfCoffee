@@ -44,9 +44,9 @@ class UserMeetingsViewModel @Inject constructor(
 
     private val category = savedStateHandle.get<MeetingsCategory>(CATEGORY_TAG)!!
 
-    private val _uiState: MutableLiveData<DataResult<UserMeetingsUiState>> =
+    private val _dataResult: MutableLiveData<DataResult<UserMeetingsUiState>> =
         MutableLiveData()
-    val uiState: LiveData<DataResult<UserMeetingsUiState>> get() = _uiState
+    val dataResult: LiveData<DataResult<UserMeetingsUiState>> get() = _dataResult
 
     var currentJob: Job? = null
 
@@ -93,7 +93,7 @@ class UserMeetingsViewModel @Inject constructor(
                             }
                 }
             }.collect {
-                _uiState.postValue(success(it))
+                _dataResult.postValue(success(it))
             }
         }
     }

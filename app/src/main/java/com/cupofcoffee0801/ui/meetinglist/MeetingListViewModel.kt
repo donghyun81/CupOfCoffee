@@ -41,9 +41,9 @@ class MeetingListViewModel @Inject constructor(
 
     private val placeId = MeetingListFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
 
-    private val _uiState: MutableLiveData<DataResult<MeetingListUiState>> =
+    private val _dataResult: MutableLiveData<DataResult<MeetingListUiState>> =
         MutableLiveData(loading())
-    val uiState: LiveData<DataResult<MeetingListUiState>> get() = _uiState
+    val dataResult: LiveData<DataResult<MeetingListUiState>> get() = _dataResult
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -81,11 +81,11 @@ class MeetingListViewModel @Inject constructor(
                 val meetingEntriesWithPeopleInFlow = convertMeetingEntriesWithPeople(placeEntry)
                 meetingEntriesWithPeopleInFlow.collect { meetingEntriesWithPeople ->
                     if (Firebase.auth.uid == null) return@collect
-                    _uiState.value =
+                    _dataResult.value =
                         success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
                 }
             } catch (e: Exception) {
-                _uiState.value = error(e)
+                _dataResult.value = error(e)
             }
         }
     }

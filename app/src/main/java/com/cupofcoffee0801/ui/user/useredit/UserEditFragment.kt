@@ -78,7 +78,7 @@ class UserEditFragment : DialogFragment() {
     }
 
     private fun setUserUi() {
-        viewModel.uiState.observe(viewLifecycleOwner) { result ->
+        viewModel.dataResult.observe(viewLifecycleOwner) { result ->
             result.handle(
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->

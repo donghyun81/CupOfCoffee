@@ -26,8 +26,8 @@ class SettingsViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<DataResult<SettingsUiState>> = MutableLiveData(loading())
-    val uiState: LiveData<DataResult<SettingsUiState>> get() = _uiState
+    private val _dataResult: MutableLiveData<DataResult<SettingsUiState>> = MutableLiveData(loading())
+    val dataResult: LiveData<DataResult<SettingsUiState>> get() = _dataResult
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -46,9 +46,9 @@ class SettingsViewModel @Inject constructor(
     private suspend fun initUiState() {
         preferencesRepository.isAutoLoginFlow.collect { isAutoLogin ->
             try {
-                _uiState.postValue(success(SettingsUiState(isAutoLogin)))
+                _dataResult.postValue(success(SettingsUiState(isAutoLogin)))
             } catch (e: Exception) {
-                _uiState.postValue(error(e))
+                _dataResult.postValue(error(e))
             }
         }
     }

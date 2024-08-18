@@ -1,5 +1,6 @@
 package com.cupofcoffee0801.ui.login
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -38,7 +39,7 @@ class LoginViewModel @Inject constructor(
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
 
     private val _loginState = MutableLiveData<LoginState>(LoginState.Idle)
-    val loginState: LiveData<LoginState> = _loginState
+    val loginState: LiveData<LoginState> get() = _loginState
 
     private val auth = Firebase.auth
 

@@ -185,7 +185,7 @@ private fun initMarkers(
     lifecycleOwner: LifecycleOwner,
     onMarkerClick: (String) -> Unit
 ) {
-    viewModel.uiState.observe(lifecycleOwner) { result ->
+    viewModel.dataResult.observe(lifecycleOwner) { result ->
         result.handle(
             onLoading = {
             },

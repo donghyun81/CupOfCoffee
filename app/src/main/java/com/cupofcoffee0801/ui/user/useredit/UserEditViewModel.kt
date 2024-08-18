@@ -23,9 +23,9 @@ class UserEditViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<DataResult<UserEditUiState>> =
+    private val _dataResult: MutableLiveData<DataResult<UserEditUiState>> =
         MutableLiveData(DataResult.loading())
-    val uiState: LiveData<DataResult<UserEditUiState>> get() = _uiState
+    val dataResult: LiveData<DataResult<UserEditUiState>> get() = _dataResult
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -44,7 +44,7 @@ class UserEditViewModel @Inject constructor(
             val uid = Firebase.auth.uid!!
             try {
                 val user = userRepositoryImpl.getLocalUserById(uid)!!
-                _uiState.value = success(
+                _dataResult.value = success(
                     UserEditUiState(
                         userEntry = user,
                         contentUri = user.userModel.profileImageWebUrl
@@ -62,7 +62,7 @@ class UserEditViewModel @Inject constructor(
         val uid = Firebase.auth.uid!!
         try {
             val user = userRepositoryImpl.getLocalUserById(uid)!!
-            _uiState.value = success(
+            _dataResult.value = success(
                 UserEditUiState(
                     userEntry = user,
                     contentUri = contentUri

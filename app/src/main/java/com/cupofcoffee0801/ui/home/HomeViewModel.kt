@@ -27,9 +27,9 @@ class HomeViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<DataResult<HomeUiState>> =
+    private val _dataResult: MutableLiveData<DataResult<HomeUiState>> =
         MutableLiveData(DataResult.Loading)
-    val uiState: LiveData<DataResult<HomeUiState>> get() = _uiState
+    val dataResult: LiveData<DataResult<HomeUiState>> get() = _dataResult
 
     var currentJob: Job? = null
 
@@ -65,21 +65,21 @@ class HomeViewModel @Inject constructor(
                         )
                     )
                 }
-                _uiState.postValue(
+                _dataResult.postValue(
                     DataResult.Success(
                         HomeUiState(places.map { it.toMarker() })
                     )
                 )
             } catch (e: Exception) {
-                _uiState.postValue(DataResult.Error(e))
+                _dataResult.postValue(DataResult.Error(e))
             }
         }
     }
 
     fun updateShowedMarkers(markers: List<Marker>) {
-        val currentUiState = _uiState.value
+        val currentUiState = _dataResult.value
         if (currentUiState is DataResult.Success) {
-            _uiState.postValue(success(currentUiState.data.copy(showedMakers = markers)))
+            _dataResult.postValue(success(currentUiState.data.copy(showedMakers = markers)))
         }
     }
 

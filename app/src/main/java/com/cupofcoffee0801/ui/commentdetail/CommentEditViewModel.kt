@@ -32,9 +32,9 @@ class CommentEditViewModel @Inject constructor(
 
     val args = CommentEditFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _commentEditUiState: MutableLiveData<DataResult<CommentEditUiState>> =
+    private val _commentEditDataResult: MutableLiveData<DataResult<CommentEditUiState>> =
         MutableLiveData(loading())
-    val commentEditUiState: LiveData<DataResult<CommentEditUiState>> get() = _commentEditUiState
+    val commentEditDataResult: LiveData<DataResult<CommentEditUiState>> get() = _commentEditDataResult
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -57,11 +57,11 @@ class CommentEditViewModel @Inject constructor(
                 val commentId = args.commentId
                 if (commentId != null) {
                     val comment = commentRepository.getComment(commentId).commentModel
-                    _commentEditUiState.postValue(success(CommentEditUiState(user, comment)))
+                    _commentEditDataResult.postValue(success(CommentEditUiState(user, comment)))
                 } else
-                    _commentEditUiState.postValue(success(CommentEditUiState(user, null)))
+                    _commentEditDataResult.postValue(success(CommentEditUiState(user, null)))
             } catch (e: Exception) {
-                _commentEditUiState.postValue(error(e))
+                _commentEditDataResult.postValue(error(e))
             }
         }
     }

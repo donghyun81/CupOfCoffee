@@ -43,12 +43,12 @@ class MeetingDetailViewModel @Inject constructor(
     val meetingId =
         MeetingDetailFragmentArgs.fromSavedStateHandle(savedStateHandle).meetingId
 
-    private val _meetingDetailUiState: MutableLiveData<DataResult<MeetingDetailUiState>> =
+    private val _meetingDetailDataResult: MutableLiveData<DataResult<MeetingDetailUiState>> =
         MutableLiveData(
             loading()
         )
 
-    val meetingDetailUiState: LiveData<DataResult<MeetingDetailUiState>> get() = _meetingDetailUiState
+    val meetingDetailDataResult: LiveData<DataResult<MeetingDetailUiState>> get() = _meetingDetailDataResult
 
     var currentJob: Job? = null
 
@@ -104,10 +104,10 @@ class MeetingDetailViewModel @Inject constructor(
                     }
                 }
                 .collect { meetingDetailUiState ->
-                    _meetingDetailUiState.postValue(success(meetingDetailUiState))
+                    _meetingDetailDataResult.postValue(success(meetingDetailUiState))
                 }
         } catch (e: Exception) {
-            _meetingDetailUiState.postValue(error(e))
+            _meetingDetailDataResult.postValue(error(e))
         }
     }
 

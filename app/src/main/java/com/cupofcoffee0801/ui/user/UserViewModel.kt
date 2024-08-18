@@ -21,8 +21,8 @@ class UserViewModel @Inject constructor(
     private val userRepositoryImpl: UserRepositoryImpl
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<DataResult<UserUiState>> = MutableLiveData(loading())
-    val uiState: LiveData<DataResult<UserUiState>> get() = _uiState
+    private val _dataResult: MutableLiveData<DataResult<UserUiState>> = MutableLiveData(loading())
+    val dataResult: LiveData<DataResult<UserUiState>> get() = _dataResult
 
     var currentJob: Job? = null
 
@@ -51,7 +51,7 @@ class UserViewModel @Inject constructor(
                 if (Firebase.auth.uid == null) return@collect
                 try {
                     userEntry ?: return@collect
-                    _uiState.value = success(
+                    _dataResult.value = success(
                         UserUiState(
                             user = userEntry,
                             attendedMeetingsCount = userEntry.userModel.attendedMeetingIds.count(),
