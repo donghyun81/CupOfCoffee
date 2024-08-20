@@ -188,7 +188,7 @@ class MakeMeetingViewModel @Inject constructor(
         else createPlace(meetingId, PlaceEntry(placeId, placeModel))
     }
 
-    fun convertPlaceId(lat: Double, lng: Double): String {
+    private fun convertPlaceId(lat: Double, lng: Double): String {
         return (lat.toString().take(POSITION_COUNT) + lng.toString()
             .take(POSITION_COUNT)).filter { it != '.' }
     }

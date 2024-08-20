@@ -2,9 +2,9 @@ package com.cupofcoffee0801.ui.meetinglist
 
 interface MeetingClickListener {
 
-    fun onApplyClick(meetingEntryWithPeople: MeetingEntryWithPeople)
+    fun onApplyClick(meetingId: String)
 
-    fun onCancelClick(meetingEntryWithPeople: MeetingEntryWithPeople)
+    fun onCancelClick(meetingId: String)
 
     fun onDetailClick(meetingId: String)
 }

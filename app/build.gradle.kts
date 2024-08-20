@@ -153,6 +153,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation ("com.google.accompanist:accompanist-permissions:0.35.1-alpha")
     implementation ("com.android.volley:volley:1.2.1")
+    implementation ("io.coil-kt:coil-compose:2.7.0")
 }
 
 kapt {

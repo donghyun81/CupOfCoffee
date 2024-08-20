@@ -7,28 +7,41 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
-import com.cupofcoffee0801.data.remote.model.asUserEntry
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.MeetingEntry
-import com.cupofcoffee0801.ui.model.PlaceEntry
 import com.cupofcoffee0801.ui.model.asMeetingEntity
-import com.cupofcoffee0801.ui.model.asMeetingListEntry
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class MeetingListUiState(
+    val placeCaption: String = "",
+    val meetingsInPlace: List<MeetingInPlace> = emptyList(),
+    val isError: Boolean = false,
+    val isLoading: Boolean = false
+)
+
+data class MeetingInPlace(
+    val id: String,
+    val content: String,
+    val date: String,
+    val time: String,
+    val isAttendedMeeting: Boolean,
+    val userInMeeting: List<UserInMeeting>
+)
+
+data class UserInMeeting(
+    val nickName: String?,
+    val profilesUrl: String?
+)
 
 @HiltViewModel
 class MeetingListViewModel @Inject constructor(
@@ -41,14 +54,14 @@ class MeetingListViewModel @Inject constructor(
 
     private val placeId = MeetingListFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
 
-    private val _dataResult: MutableLiveData<DataResult<MeetingListUiState>> =
-        MutableLiveData(loading())
-    val dataResult: LiveData<DataResult<MeetingListUiState>> get() = _dataResult
+    private val _uiState: MutableLiveData<MeetingListUiState> =
+        MutableLiveData(MeetingListUiState(isLoading = true))
+    val uiState: LiveData<MeetingListUiState> get() = _uiState
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
 
-    var currentJob: Job? = null
+    private var currentJob: Job? = null
 
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
@@ -72,59 +85,76 @@ class MeetingListViewModel @Inject constructor(
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    private fun initUiState() {
+    fun initUiState() {
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             try {
                 val placeEntry =
                     placeRepository.getPlaceById(placeId, networkUtil.isConnected())!!
-                val meetingEntriesWithPeopleInFlow = convertMeetingEntriesWithPeople(placeEntry)
-                meetingEntriesWithPeopleInFlow.collect { meetingEntriesWithPeople ->
-                    if (Firebase.auth.uid == null) return@collect
-                    _dataResult.value =
-                        success(MeetingListUiState(placeEntry, meetingEntriesWithPeople))
+                val meetingsInFlow =
+                    meetingRepository.getMeetingsByIdsInFlow(placeEntry.placeModel.meetingIds.keys.toList())
+                meetingsInFlow.flatMapLatest { meetings ->
+                    addLocalMeetings(meetings)
+                    flow { emit(meetings.map { convertMeetingInPlace(it) }) }
+                }.collect {
+                    _uiState.value = MeetingListUiState(
+                        placeCaption = placeEntry.placeModel.caption,
+                        meetingsInPlace = it,
+                        isLoading = false
+                    )
                 }
             } catch (e: Exception) {
-                _dataResult.value = error(e)
+                _uiState.value = MeetingListUiState(
+                    isError = true,
+                    isLoading = false
+                )
             }
         }
     }
 
-    private suspend fun convertMeetingEntriesWithPeople(placeEntry: PlaceEntry): Flow<List<MeetingEntryWithPeople>> {
-        val meetingIds = placeEntry.placeModel.meetingIds.keys.toList()
-        val meetingsInFlow =
-            meetingRepository.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
-        return meetingsInFlow.flatMapLatest { meetings ->
-            addLocalMeetings(meetings)
-            if (networkUtil.isConnected()) flow { emit(meetings.map { convertMeetingListEntry(it) }) }
-            else flow { emit(meetings.map { it.asMeetingListEntry(emptyList()) }) }
-        }
-    }
-
     private suspend fun addLocalMeetings(meetings: List<MeetingEntry>) {
-        if (networkUtil.isConnected().not()) return
+        if (isNetworkConnected().not()) return
         meetings.forEach { meeting ->
             meetingRepository.insertLocal(meeting.asMeetingEntity())
         }
     }
 
-    private suspend fun convertMeetingListEntry(meeting: MeetingEntry): MeetingEntryWithPeople {
-        val users =
-            userRepository.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
-        return meeting.asMeetingListEntry(users.map { it.value.asUserEntry(it.key) })
-    }
-
-    fun applyMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
-        viewModelScope.launch {
-            addUserToMeeting(meetingEntryWithPeople)
-            addAttendedMeetingToUser(meetingEntryWithPeople.id)
+    private suspend fun convertMeetingInPlace(meeting: MeetingEntry): MeetingInPlace {
+        return if (isNetworkConnected().not()) MeetingInPlace(
+            meeting.id,
+            meeting.meetingModel.content,
+            meeting.meetingModel.date,
+            meeting.meetingModel.time,
+            false,
+            emptyList()
+        )
+        else {
+            val users =
+                userRepository.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
+            val userInMeeting = users.values.map { UserInMeeting(it.name, it.profileImageWebUrl) }
+            val isAttendedMeeting = users.keys.contains(Firebase.auth.uid)
+            return MeetingInPlace(
+                meeting.id,
+                meeting.meetingModel.content,
+                meeting.meetingModel.date,
+                meeting.meetingModel.time,
+                isAttendedMeeting,
+                userInMeeting
+            )
         }
     }
 
-    private suspend fun addUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
-        val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
-        meetingEntry.meetingModel.personIds[Firebase.auth.uid!!] = true
-        meetingRepository.update(meetingEntry)
+    fun applyMeeting(meetingId: String) {
+        viewModelScope.launch {
+            addUserToMeeting(meetingId)
+            addAttendedMeetingToUser(meetingId)
+        }
+    }
+
+    private suspend fun addUserToMeeting(meetingId: String) {
+        val meeting = meetingRepository.getMeeting(meetingId)
+        meeting.meetingModel.personIds[Firebase.auth.uid!!] = true
+        meetingRepository.update(meeting)
     }
 
     private suspend fun addAttendedMeetingToUser(meetingId: String) {
@@ -134,15 +164,15 @@ class MeetingListViewModel @Inject constructor(
         userRepository.update(userEntry)
     }
 
-    fun cancelMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
+    fun cancelMeeting(meetingId: String) {
         viewModelScope.launch {
-            deleteUserToMeeting(meetingEntryWithPeople)
-            deleteAttendedMeetingToUser(meetingEntryWithPeople.id)
+            deleteUserToMeeting(meetingId)
+            deleteAttendedMeetingToUser(meetingId)
         }
     }
 
-    private suspend fun deleteUserToMeeting(meetingEntryWithPeople: MeetingEntryWithPeople) {
-        val meetingEntry = meetingEntryWithPeople.asMeetingEntry()
+    private suspend fun deleteUserToMeeting(meetingId: String) {
+        val meetingEntry = meetingRepository.getMeeting(meetingId)
         meetingEntry.meetingModel.personIds.remove(Firebase.auth.uid!!)
         meetingRepository.update(meetingEntry)
     }
