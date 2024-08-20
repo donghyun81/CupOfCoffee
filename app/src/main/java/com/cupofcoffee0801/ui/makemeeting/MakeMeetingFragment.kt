@@ -6,26 +6,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.OutlinedTextField
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
@@ -112,7 +112,7 @@ fun MakeMeetingScreen(
         content = { paddingValues ->
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(paddingValues)
                     .padding(12.dp)
             ) {
@@ -124,63 +124,69 @@ fun MakeMeetingScreen(
                         .fillMaxWidth()
                         .height(200.dp)
                         .padding(6.dp)
-                        .weight(1f)
                 )
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(6.dp)
+                        .padding(vertical = 8.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.place_label),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = uiState!!.placeName,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(2f)
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .weight(2f)
+                            .wrapContentSize(align = Alignment.CenterEnd)
                     )
                 }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(6.dp)
-                        .clickable {
-                            showDatePicker()
-                        }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.date_label),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.weight(1f)
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .weight(1f)
                     )
                     Text(
                         text = uiState!!.date,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(2f)
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .weight(2f)
+                            .wrapContentSize(align = Alignment.CenterEnd)
+                            .clickable { showDatePicker() }
                     )
                 }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(6.dp)
-                        .clickable {
-                            showTimePicker()
-                        }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.time_label),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = uiState!!.time,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(2f)
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .weight(2f)
+                            .wrapContentSize(align = Alignment.CenterEnd)
+                            .clickable {
+                                showTimePicker()
+                            }
                     )
                 }
 
@@ -193,7 +199,7 @@ fun MakeMeetingScreen(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 20.dp)
+                        .padding(top = 16.dp)
                 ) {
                     Text(text = stringResource(R.string.save))
                 }
@@ -203,32 +209,4 @@ fun MakeMeetingScreen(
     LaunchedEffect(uiState!!.isComplete) {
         if (uiState!!.isComplete) onNavigateUp()
     }
-}
-
-@Composable
-fun showTimePicker(viewModel: MakeMeetingViewModel, isTimePickerState: MutableState<Boolean>) {
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-
-    val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay: Int, minute: Int ->
-        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-        calendar.set(Calendar.MINUTE, minute)
-        viewModel.updateTime(calendar.toCurrentTime())
-        isTimePickerState.value = false
-    }
-
-    val timePicker = TimePickerDialog(
-        context,
-        timeSetListener,
-        calendar.get(Calendar.HOUR_OF_DAY),
-        calendar.get(Calendar.MINUTE),
-        true
-    )
-    timePicker.setOnDismissListener {
-        isTimePickerState.value = false
-    }
-    timePicker.setOnCancelListener {
-        isTimePickerState.value = false
-    }
-    timePicker.show()
 }
