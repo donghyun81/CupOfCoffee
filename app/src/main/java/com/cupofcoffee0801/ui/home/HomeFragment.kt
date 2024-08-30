@@ -83,7 +83,7 @@ class HomeFragment : Fragment() {
 
     private fun moveToPlaceMeetings(placeId: String) {
         val action =
-            HomeFragmentDirections.actionHomeFragmentToMeetingListFragment(
+            HomeFragmentDirections.actionHomeFragmentToMeetingPlaceFragment(
                 placeId
             )
         findNavController().navigate(action)

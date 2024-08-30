@@ -1,4 +1,4 @@
-package com.cupofcoffee0801.ui.meetinglist
+package com.cupofcoffee0801.ui.meetingplace
 
 import android.net.ConnectivityManager
 import android.net.Network
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MeetingListViewModel @Inject constructor(
+class MeetingPlaceViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val meetingRepository: MeetingRepository,
     private val placeRepository: PlaceRepository,
@@ -31,11 +31,11 @@ class MeetingListViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val placeId = MeetingListFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
+    private val placeId = MeetingPlaceFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
 
-    private val _uiState: MutableLiveData<MeetingListUiState> =
-        MutableLiveData(MeetingListUiState(isLoading = true))
-    val uiState: LiveData<MeetingListUiState> get() = _uiState
+    private val _uiState: MutableLiveData<MeetingPlaceUiState> =
+        MutableLiveData(MeetingPlaceUiState(isLoading = true))
+    val uiState: LiveData<MeetingPlaceUiState> get() = _uiState
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -76,14 +76,14 @@ class MeetingListViewModel @Inject constructor(
                     addLocalMeetings(meetings)
                     flow { emit(meetings.map { convertMeetingInPlace(it) }) }
                 }.collect {
-                    _uiState.value = MeetingListUiState(
+                    _uiState.value = MeetingPlaceUiState(
                         placeCaption = place.caption,
                         meetingsInPlace = it,
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
-                _uiState.value = MeetingListUiState(
+                _uiState.value = MeetingPlaceUiState(
                     isError = true,
                     isLoading = false
                 )
@@ -98,10 +98,10 @@ class MeetingListViewModel @Inject constructor(
         }
     }
 
-    private suspend fun convertMeetingInPlace(meeting: Meeting): MeetingListMeetingUiModel {
+    private suspend fun convertMeetingInPlace(meeting: Meeting): MeetingPlaceMeetingUiModel {
         val isMyMeeting = Firebase.auth.uid == meeting.managerId
         val isAttendedMeeting = meeting.personIds.keys.contains(Firebase.auth.uid)
-        return if (isNetworkConnected().not()) MeetingListMeetingUiModel(
+        return if (isNetworkConnected().not()) MeetingPlaceMeetingUiModel(
             meeting.id,
             meeting.content,
             meeting.date,
@@ -113,15 +113,15 @@ class MeetingListViewModel @Inject constructor(
         else {
             val users =
                 userRepository.getRemoteUsersByIds(meeting.personIds.keys.toList())
-            val meetingListUserUiModel = users.values.map { MeetingListUserUiModel(it.name, it.profileImageWebUrl) }
-            return MeetingListMeetingUiModel(
+            val meetingPlaceUserUiModel = users.values.map { MeetingPlaceUserUiModel(it.name, it.profileImageWebUrl) }
+            return MeetingPlaceMeetingUiModel(
                 meeting.id,
                 meeting.content,
                 meeting.date,
                 meeting.time,
                 isAttendedMeeting,
                 isMyMeeting,
-                meetingListUserUiModel
+                meetingPlaceUserUiModel
             )
         }
     }

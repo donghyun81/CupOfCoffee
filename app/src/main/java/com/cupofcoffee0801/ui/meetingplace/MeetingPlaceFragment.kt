@@ -1,4 +1,4 @@
-package com.cupofcoffee0801.ui.meetinglist
+package com.cupofcoffee0801.ui.meetingplace
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -56,9 +56,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MeetingListFragment : BottomSheetDialogFragment() {
+class MeetingPlaceFragment : BottomSheetDialogFragment() {
 
-    private val viewModel: MeetingListViewModel by viewModels()
+    private val viewModel: MeetingPlaceViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -95,7 +95,7 @@ class MeetingListFragment : BottomSheetDialogFragment() {
 
         override fun onDetailClick(meetingId: String) {
             val action =
-                MeetingListFragmentDirections.actionMeetingListFragmentToMeetingDetailFragment(
+                MeetingPlaceFragmentDirections.actionMeetingPlaceFragmentToMeetingDetailFragment(
                     meetingId
                 )
             findNavController().navigate(action)
@@ -110,7 +110,7 @@ class MeetingListFragment : BottomSheetDialogFragment() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceMeetingsScreen(
-    viewModel: MeetingListViewModel = hiltViewModel(),
+    viewModel: MeetingPlaceViewModel = hiltViewModel(),
     meetingClickListener: MeetingClickListener,
     navigateUp: () -> Unit
 ) {
@@ -161,7 +161,7 @@ fun PlaceMeetingsScreen(
                     modifier = Modifier.weight(1f) // 화면 여분을 사용하는 데 기여
                 ) {
                     items(uiState!!.meetingsInPlace) { meetingInPlace ->
-                        MeetingItem(meetingListMeetingUiModel = meetingInPlace, meetingClickListener)
+                        MeetingItem(meetingPlaceMeetingUiModel = meetingInPlace, meetingClickListener)
                     }
                 }
             }
@@ -170,12 +170,12 @@ fun PlaceMeetingsScreen(
 }
 
 @Composable
-fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingClickListener: MeetingClickListener) {
+fun MeetingItem(meetingPlaceMeetingUiModel: MeetingPlaceMeetingUiModel, meetingClickListener: MeetingClickListener) {
     Column(
         modifier = Modifier
             .width(280.dp)
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
-            .clickable { meetingClickListener.onDetailClick(meetingId = meetingListMeetingUiModel.id) }
+            .clickable { meetingClickListener.onDetailClick(meetingId = meetingPlaceMeetingUiModel.id) }
             .padding(8.dp)
             .border(
                 1.dp,
@@ -184,7 +184,7 @@ fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingCli
             )
     ) {
         Text(
-            text = meetingListMeetingUiModel.content,
+            text = meetingPlaceMeetingUiModel.content,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 3, // 최대 2줄로 표시
@@ -198,7 +198,7 @@ fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingCli
             horizontalArrangement = Arrangement.End
         ) {
             Text(
-                text = meetingListMeetingUiModel.date,
+                text = meetingPlaceMeetingUiModel.date,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 4.dp)
             )
@@ -208,7 +208,7 @@ fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingCli
             horizontalArrangement = Arrangement.End
         ) {
             Text(
-                text = meetingListMeetingUiModel.time,
+                text = meetingPlaceMeetingUiModel.time,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 4.dp)
             )
@@ -217,18 +217,18 @@ fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingCli
             contentPadding = PaddingValues(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(meetingListMeetingUiModel.meetingListUserUiModel) { userInMeeting ->
-                UserItem(meetingListUserUiModel = userInMeeting)
+            items(meetingPlaceMeetingUiModel.meetingPlaceUserUiModel) { userInMeeting ->
+                UserItem(meetingPlaceUserUiModel = userInMeeting)
             }
         }
 
         Button(
             onClick = {
-                if (meetingListMeetingUiModel.isAttendedMeeting) meetingClickListener.onCancelClick(
-                    meetingListMeetingUiModel.isMyMeeting,
-                    meetingListMeetingUiModel.id
+                if (meetingPlaceMeetingUiModel.isAttendedMeeting) meetingClickListener.onCancelClick(
+                    meetingPlaceMeetingUiModel.isMyMeeting,
+                    meetingPlaceMeetingUiModel.id
                 )
-                else meetingClickListener.onApplyClick(meetingId = meetingListMeetingUiModel.id)
+                else meetingClickListener.onApplyClick(meetingId = meetingPlaceMeetingUiModel.id)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -239,7 +239,7 @@ fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingCli
                 .padding(top = 4.dp)
         ) {
             Text(
-                text = if (meetingListMeetingUiModel.isAttendedMeeting) stringResource(R.string.cancel)
+                text = if (meetingPlaceMeetingUiModel.isAttendedMeeting) stringResource(R.string.cancel)
                 else stringResource(R.string.apply)
             )
         }
@@ -247,13 +247,13 @@ fun MeetingItem(meetingListMeetingUiModel: MeetingListMeetingUiModel, meetingCli
 }
 
 @Composable
-fun UserItem(meetingListUserUiModel: MeetingListUserUiModel) {
+fun UserItem(meetingPlaceUserUiModel: MeetingPlaceUserUiModel) {
     Column(
         modifier = Modifier.padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = meetingListUserUiModel.profilesUrl,
+            model = meetingPlaceUserUiModel.profilesUrl,
             contentDescription = "사용자 프로필",
             modifier = Modifier
                 .size(48.dp)
@@ -263,7 +263,7 @@ fun UserItem(meetingListUserUiModel: MeetingListUserUiModel) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = meetingListUserUiModel.nickName ?: stringResource(R.string.unknown_user),
+            text = meetingPlaceUserUiModel.nickName ?: stringResource(R.string.unknown_user),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(horizontal = 8.dp),
             color = MaterialTheme.colorScheme.onSurface

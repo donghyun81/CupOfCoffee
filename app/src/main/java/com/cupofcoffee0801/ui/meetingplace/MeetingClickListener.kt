@@ -1,4 +1,4 @@
-package com.cupofcoffee0801.ui.meetinglist
+package com.cupofcoffee0801.ui.meetingplace
 
 interface MeetingClickListener {
 

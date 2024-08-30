@@ -22,11 +22,12 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -155,11 +156,13 @@ fun MeetingDetailScreen(
         if (uiState!!.isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
-                    .align(Alignment.Center)
+                    .align(Alignment.TopCenter)
             )
         } else {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()) // 전체 화면이 스크롤되도록 설정
             ) {
                 MeetingOptionsMenu(
                     modifier = Modifier
@@ -174,7 +177,7 @@ fun MeetingDetailScreen(
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
+                        .height(160.dp)
                         .padding(8.dp),
                     text = uiState!!.meetingUiModel.content,
                     style = MaterialTheme.typography.bodyMedium,
@@ -223,6 +226,10 @@ fun MeetingDetailScreen(
                 Comments(
                     comments = uiState!!.comments,
                     commentClickListener = commentClickListener,
+                    modifier = Modifier.weight(1f)
+                )
+
+                CommentInput(
                     onMakeCommentClick = { onMakeCommentClick(uiState!!.meetingUiModel.id) },
                     userProfileUrl = uiState!!.userUiModel.profileUrl
                 )
@@ -313,11 +320,10 @@ fun MeetingInfo(
 fun Comments(
     comments: List<MeetingDetailCommentUiModel>,
     commentClickListener: CommentClickListener,
-    onMakeCommentClick: () -> Unit,
-    userProfileUrl: String?
+    modifier: Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
     ) {
@@ -341,14 +347,8 @@ fun Comments(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
-
-        CommentInput(
-            onMakeCommentClick = onMakeCommentClick,
-            userProfileUrl = userProfileUrl
-        )
     }
 }
-
 @Composable
 fun CommentInput(
     onMakeCommentClick: () -> Unit,

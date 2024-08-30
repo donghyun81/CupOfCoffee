@@ -1,23 +1,23 @@
-package com.cupofcoffee0801.ui.meetinglist
+package com.cupofcoffee0801.ui.meetingplace
 
-data class MeetingListUiState(
+data class MeetingPlaceUiState(
     val placeCaption: String = "",
-    val meetingsInPlace: List<MeetingListMeetingUiModel> = emptyList(),
+    val meetingsInPlace: List<MeetingPlaceMeetingUiModel> = emptyList(),
     val isError: Boolean = false,
     val isLoading: Boolean = false
 )
 
-data class MeetingListMeetingUiModel(
+data class MeetingPlaceMeetingUiModel(
     val id: String,
     val content: String,
     val date: String,
     val time: String,
     val isAttendedMeeting: Boolean,
     val isMyMeeting: Boolean,
-    val meetingListUserUiModel: List<MeetingListUserUiModel>
+    val meetingPlaceUserUiModel: List<MeetingPlaceUserUiModel>
 )
 
-data class MeetingListUserUiModel(
+data class MeetingPlaceUserUiModel(
     val nickName: String?,
     val profilesUrl: String?
 )

@@ -30,8 +30,8 @@
             android:id="@+id/action_homeFragment_to_saveMeetingFragment"
             app:destination="@id/makeMeetingFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_meetingListFragment"
-            app:destination="@id/meetingListFragment" />
+            android:id="@+id/action_homeFragment_to_meetingPlaceFragment"
+            app:destination="@id/meetingPlaceFragment" />
     </fragment>
 
     <dialog
@@ -71,14 +71,14 @@
     </fragment>
 
     <dialog
-        android:id="@+id/meetingListFragment"
-        android:name="com.cupofcoffee0801.ui.meetinglist.MeetingListFragment"
-        android:label="MeetingListFragment">
+        android:id="@+id/meetingPlaceFragment"
+        android:name="com.cupofcoffee0801.ui.meetingplace.MeetingPlaceFragment"
+        android:label="MeetingPlaceFragment">
         <argument
             android:name="placeId"
             app:argType="string" />
         <action
-            android:id="@+id/action_meetingListFragment_to_meetingDetailFragment"
+            android:id="@+id/action_meetingPlaceFragment_to_meetingDetailFragment"
             app:destination="@id/meetingDetailFragment" />
     </dialog>
     <fragment
