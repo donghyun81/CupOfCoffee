@@ -10,13 +10,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.databinding.UserMeetingsItemBinding
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 class UserMeetingsAdapter(
     private val userMeetingClickListener: UserMeetingClickListener
-) : ListAdapter<MeetingEntry, UserMeetingsAdapter.ViewHolder>(diffUtil) {
+) : ListAdapter<Meeting, UserMeetingsAdapter.ViewHolder>(diffUtil) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
@@ -29,26 +29,25 @@ class UserMeetingsAdapter(
     class ViewHolder(private val binding: UserMeetingsItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(meetingEntry: MeetingEntry, userMeetingClickListener: UserMeetingClickListener) {
-            val meetingModel = meetingEntry.meetingModel
+        fun bind(meeting: Meeting, userMeetingClickListener: UserMeetingClickListener) {
             val uid = Firebase.auth.uid!!
             with(binding) {
-                tvPlace.text = meetingModel.caption
-                tvDate.text = meetingModel.date
-                tvTime.text = meetingModel.time
-                tvContent.text = meetingModel.content
-                if (meetingEntry.meetingModel.managerId != uid) ivMoreMenu.visibility = View.GONE
+                tvPlace.text = meeting.caption
+                tvDate.text = meeting.date
+                tvTime.text = meeting.time
+                tvContent.text = meeting.content
+                if (meeting.managerId != uid) ivMoreMenu.visibility = View.GONE
                 ivMoreMenu.setOnClickListener {
-                    showPopupMenu(meetingEntry, userMeetingClickListener)
+                    showPopupMenu(meeting, userMeetingClickListener)
                 }
                 root.setOnClickListener {
-                    userMeetingClickListener.onDetailClick(meetingEntry.id)
+                    userMeetingClickListener.onDetailClick(meeting.id)
                 }
             }
         }
 
         private fun showPopupMenu(
-            meetingEntry: MeetingEntry,
+            meeting: Meeting,
             userMeetingClickListener: UserMeetingClickListener
         ) {
             val popupMenu = PopupMenu(binding.root.context, binding.ivMoreMenu)
@@ -57,12 +56,12 @@ class UserMeetingsAdapter(
             popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
                 when (menuItem.itemId) {
                     R.id.edit -> {
-                        userMeetingClickListener.onUpdateClick(meetingEntry.id)
+                        userMeetingClickListener.onUpdateClick(meeting.id)
                         true
                     }
 
                     R.id.delete -> {
-                        userMeetingClickListener.onDeleteClick(meetingEntry)
+                        userMeetingClickListener.onDeleteClick(meeting)
                         true
                     }
 
@@ -84,17 +83,17 @@ class UserMeetingsAdapter(
     }
 
     companion object {
-        val diffUtil = object : DiffUtil.ItemCallback<MeetingEntry>() {
+        val diffUtil = object : DiffUtil.ItemCallback<Meeting>() {
             override fun areItemsTheSame(
-                oldItem: MeetingEntry,
-                newItem: MeetingEntry
+                oldItem: Meeting,
+                newItem: Meeting
             ): Boolean {
                 return oldItem.id == newItem.id
             }
 
             override fun areContentsTheSame(
-                oldItem: MeetingEntry,
-                newItem: MeetingEntry
+                oldItem: Meeting,
+                newItem: Meeting
             ): Boolean {
                 return oldItem == newItem
             }

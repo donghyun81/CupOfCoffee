@@ -1,7 +1,7 @@
 package com.cupofcoffee0801.ui.user.usermettings
 
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 
 data class UserMeetingsUiState(
-    val meetings: List<MeetingEntry> = emptyList()
+    val meetings: List<Meeting> = emptyList()
 )

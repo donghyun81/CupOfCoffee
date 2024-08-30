@@ -1,8 +1,8 @@
 package com.cupofcoffee0801.data.remote.model
 
 import com.cupofcoffee0801.data.local.model.UserEntity
-import com.cupofcoffee0801.ui.model.UserEntry
-import com.cupofcoffee0801.ui.model.UserModel
+import com.cupofcoffee0801.ui.model.User
+import com.cupofcoffee0801.ui.model.UserData
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,10 +14,10 @@ data class UserDTO(
     val attendedMeetingIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun UserDTO.asUserEntry(id: String): UserEntry {
-    return UserEntry(
+fun UserDTO.asUserEntry(id: String): User {
+    return User(
         id,
-        UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
+        name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds
     )
 }
 
@@ -26,7 +26,3 @@ fun UserDTO.asUserEntity(id: String): UserEntity {
         id, name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds
     )
 }
-
-fun UserDTO.asUserModel() =
-    UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
-

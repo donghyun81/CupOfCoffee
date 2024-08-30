@@ -10,7 +10,7 @@ import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.PlaceRepository
-import com.cupofcoffee0801.ui.model.PlaceEntry
+import com.cupofcoffee0801.ui.model.Place
 import com.cupofcoffee0801.ui.model.asPlaceEntity
 import com.cupofcoffee0801.util.NetworkUtil
 import com.naver.maps.geometry.LatLng
@@ -60,9 +60,7 @@ class HomeViewModel @Inject constructor(
             try {
                 places.forEach { place ->
                     placeRepository.insertLocal(
-                        place.placeModel.asPlaceEntity(
-                            place.id
-                        )
+                        place.asPlaceEntity()
                     )
                 }
                 _dataResult.postValue(
@@ -83,8 +81,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun PlaceEntry.toMarker() = Marker().apply {
-        position = LatLng(placeModel.lat, placeModel.lng)
+    private fun Place.toMarker() = Marker().apply {
+        position = LatLng(lat,lng)
         tag = id
         icon = OverlayImage
             .fromResource(R.drawable.cup_of_coffee_mini)

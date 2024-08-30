@@ -1,9 +1,9 @@
 package com.cupofcoffee0801.ui.commentdetail
 
-import com.cupofcoffee0801.ui.model.CommentModel
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.CommentData
+import com.cupofcoffee0801.ui.model.User
 
 data class CommentEditUiState(
-    val userEntry: UserEntry,
-    val commentModel: CommentModel?
+    val user: User,
+    val commentData: CommentData?
 )

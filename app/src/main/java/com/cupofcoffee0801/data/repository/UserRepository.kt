@@ -2,7 +2,7 @@ package com.cupofcoffee0801.data.repository
 
 import com.cupofcoffee0801.data.local.model.UserEntity
 import com.cupofcoffee0801.data.remote.model.UserDTO
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.User
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
@@ -11,15 +11,15 @@ interface UserRepository {
 
     suspend fun insertRemote(id: String, userDTO: UserDTO): String
 
-    suspend fun getUser(id: String, isNetworkConnected: Boolean = true): UserEntry?
+    suspend fun getUser(id: String, isNetworkConnected: Boolean = true): User?
 
-    fun getLocalUserByIdInFlow(id: String): Flow<UserEntry?>
+    fun getLocalUserByIdInFlow(id: String): Flow<User?>
 
-    suspend fun getLocalUserById(id: String): UserEntry?
-    suspend fun getRemoteUserById(id: String): UserEntry?
+    suspend fun getLocalUserById(id: String): User?
+    suspend fun getRemoteUserById(id: String): User?
 
     suspend fun getRemoteUsersByIds(ids: List<String>): Map<String, UserDTO>
-    suspend fun update(userEntry: UserEntry)
+    suspend fun update(user: User)
 
     suspend fun updateLocal(userEntity: UserEntity)
     suspend fun delete(id: String)

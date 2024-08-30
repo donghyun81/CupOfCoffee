@@ -12,8 +12,9 @@ import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.CommentModel
+import com.cupofcoffee0801.ui.model.CommentData
 import com.cupofcoffee0801.ui.model.asCommentDTO
+import com.cupofcoffee0801.ui.model.asCommentData
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -56,8 +57,8 @@ class CommentEditViewModel @Inject constructor(
                 val user = userRepository.getLocalUserById(uid)!!
                 val commentId = args.commentId
                 if (commentId != null) {
-                    val comment = commentRepository.getComment(commentId).commentModel
-                    _commentEditDataResult.postValue(success(CommentEditUiState(user, comment)))
+                    val comment = commentRepository.getComment(commentId)
+                    _commentEditDataResult.postValue(success(CommentEditUiState(user, comment.asCommentData())))
                 } else
                     _commentEditDataResult.postValue(success(CommentEditUiState(user, null)))
             } catch (e: Exception) {
@@ -66,14 +67,14 @@ class CommentEditViewModel @Inject constructor(
         }
     }
 
-    suspend fun insertComment(commentModel: CommentModel) {
-        val commentId = commentRepository.insert(commentModel.asCommentDTO())
+    suspend fun insertComment(commentData: CommentData) {
+        val commentId = commentRepository.insert(commentData.asCommentDTO())
         val meeting = meetingRepository.getMeeting(args.meetingId)
-        meeting.meetingModel.commentIds[commentId!!] = true
+        meeting.commentIds[commentId!!] = true
         meetingRepository.update(meeting)
     }
 
-    suspend fun updateComment(commentModel: CommentModel) {
-        commentRepository.update(args.commentId!!, commentModel.asCommentDTO())
+    suspend fun updateComment(commentData: CommentData) {
+        commentRepository.update(args.commentId!!, commentData.asCommentDTO())
     }
 }

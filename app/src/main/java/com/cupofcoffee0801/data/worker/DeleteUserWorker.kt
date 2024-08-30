@@ -8,7 +8,7 @@ import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -42,31 +42,31 @@ class DeleteUserWorker @AssistedInject constructor(
         storageRef.delete().addOnSuccessListener {
         }.addOnFailureListener {
         }
-        user.userModel.attendedMeetingIds.keys.map { meetingId ->
+        user.attendedMeetingIds.keys.map { meetingId ->
             cancelMeeting(uid, meetingId)
         }
-        user.userModel.madeMeetingIds.keys.map { meetingId ->
-            val meetingEntry =
+        user.madeMeetingIds.keys.map { meetingId ->
+            val meeting =
                 meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
-            deleteMeeting(meetingEntry)
-            deleteMadeMeetingsInPlace(meetingEntry.meetingModel.placeId, meetingId)
+            deleteMeeting(meeting)
+            deleteMadeMeetingsInPlace(meeting.placeId, meetingId)
         }
         deleteUserComments(uid)
         deleteUser(uid)
     }
 
     private suspend fun cancelMeeting(uid: String, meetingId: String) {
-        val meetingEntry =
+        val meeting =
             meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
-        meetingEntry.meetingModel.personIds.remove(uid)
-        meetingRepository.update(meetingEntry)
+        meeting.personIds.remove(uid)
+        meetingRepository.update(meeting)
     }
 
     private suspend fun deleteMadeMeetingsInPlace(placeId: String, meetingId: String) {
-        val placeEntry = placeRepository.getPlaceById(placeId)!!
-        placeEntry.placeModel.meetingIds.remove(meetingId)
-        if (placeEntry.placeModel.meetingIds.isEmpty()) placeRepository.delete(placeEntry)
-        else placeRepository.update(placeEntry)
+        val place = placeRepository.getPlaceById(placeId)!!
+        place.meetingIds.remove(meetingId)
+        if (place.meetingIds.isEmpty()) placeRepository.delete(place)
+        else placeRepository.update(place)
     }
 
     private suspend fun deleteUserComments(userId: String) {
@@ -77,9 +77,9 @@ class DeleteUserWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun deleteMeeting(meetingEntry: MeetingEntry) {
-        meetingRepository.delete(meetingEntry.id)
-        deleteMeetingComments(meetingEntry.meetingModel.commentIds.keys.toList())
+    private suspend fun deleteMeeting(meeting: Meeting) {
+        meetingRepository.delete(meeting.id)
+        deleteMeetingComments(meeting.commentIds.keys.toList())
     }
 
     private suspend fun deleteMeetingComments(commentIds: List<String>) {

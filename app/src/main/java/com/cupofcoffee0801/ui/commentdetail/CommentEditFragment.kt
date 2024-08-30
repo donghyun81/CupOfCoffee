@@ -11,8 +11,8 @@ import com.bumptech.glide.Glide
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.handle
 import com.cupofcoffee0801.databinding.FragmentCommentEditBinding
-import com.cupofcoffee0801.ui.model.CommentModel
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.CommentData
+import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -56,9 +56,9 @@ class CommentEditFragment : BottomSheetDialogFragment() {
                 },
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
-                    setAddButtonClick(uiState.userEntry)
-                    setUserProfile(uiState.userEntry.userModel.profileImageWebUrl)
-                    val content = uiState.commentModel?.content ?: return@handle
+                    setAddButtonClick(uiState.user)
+                    setUserProfile(uiState.user.profileImageWebUrl)
+                    val content = uiState.commentData?.content ?: return@handle
                     setComment(content)
                 },
                 onError = {
@@ -70,17 +70,17 @@ class CommentEditFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun setAddButtonClick(userEntry: UserEntry) {
+    private fun setAddButtonClick(user: User) {
         with(binding) {
             btnAddComment.setOnClickListener {
                 viewModel.onButtonClicked()
                 if (viewModel.isNetworkConnected()) {
                     viewLifecycleOwner.lifecycleScope.launch {
-                        val comment = CommentModel(
-                            userId = userEntry.id,
+                        val comment = CommentData(
+                            userId = user.id,
                             meetingId = viewModel.args.meetingId,
-                            nickname = userEntry.userModel.nickname,
-                            profileImageWebUrl = userEntry.userModel.profileImageWebUrl,
+                            nickname = user.nickname,
+                            profileImageWebUrl = user.profileImageWebUrl,
                             content = etComment.text.toString(),
                             createdDate = Date().time
                         )

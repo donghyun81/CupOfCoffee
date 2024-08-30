@@ -15,8 +15,8 @@ import com.bumptech.glide.Glide
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.handle
 import com.cupofcoffee0801.databinding.FragmentUserEditBinding
-import com.cupofcoffee0801.ui.model.UserEntry
-import com.cupofcoffee0801.ui.model.UserModel
+import com.cupofcoffee0801.ui.model.User
+import com.cupofcoffee0801.ui.model.UserData
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
 import com.google.firebase.auth.ktx.auth
@@ -83,12 +83,12 @@ class UserEditFragment : DialogFragment() {
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
-                    val userModel = uiState.userEntry.userModel
+                    val user = uiState.user
                     with(binding) {
-                        tvNickName.setText(userModel.nickname)
-                        setUserProfile(userModel)
+                        tvNickName.setText(user.nickname)
+                        setUserProfile(user.profileImageWebUrl)
                     }
-                    setSaveOnclick(uiState.userEntry, uiState.contentUri)
+                    setSaveOnclick(uiState.user, uiState.contentUri)
                 },
                 onError = {
                     binding.cpiLoading.showLoading(result)
@@ -104,11 +104,11 @@ class UserEditFragment : DialogFragment() {
         }
     }
 
-    private fun setSaveOnclick(userEntry: UserEntry, contentUri: String?) {
+    private fun setSaveOnclick(user: User, contentUri: String?) {
         binding.btnSave.setOnClickListener {
             viewModel.onButtonClicked()
             viewLifecycleOwner.lifecycleScope.launch {
-                val currentUserEntry = getCurrentUser(userEntry, contentUri)
+                val currentUserEntry = getCurrentUser(user, contentUri)
                 delay(2000L)
                 if (viewModel.isNetworkConnected()) {
                     viewModel.updateUser(currentUserEntry)
@@ -119,7 +119,7 @@ class UserEditFragment : DialogFragment() {
         }
     }
 
-    private suspend fun getCurrentUser(userEntry: UserEntry, contentUri: String?): UserEntry {
+    private suspend fun getCurrentUser(user: User, contentUri: String?): User {
         val uid = Firebase.auth.uid!!
         val storageReference = FirebaseStorage.getInstance().reference
         val ref = storageReference.child("images/$uid")
@@ -127,14 +127,12 @@ class UserEditFragment : DialogFragment() {
         return try {
             ref.putFile(imageUri).await()
             val uri = ref.downloadUrl.await()
-            userEntry.copy(
-                userModel = userEntry.userModel.copy(
-                    nickname = binding.tvNickName.text.toString(),
-                    profileImageWebUrl = uri.toString()
-                )
+            user.copy(
+                nickname = binding.tvNickName.text.toString(),
+                profileImageWebUrl = uri.toString()
             )
         } catch (e: Exception) {
-            userEntry
+            user
         }
     }
 
@@ -170,10 +168,9 @@ class UserEditFragment : DialogFragment() {
         }
     }
 
-    private fun setUserProfile(userModel: UserModel) {
-        val profileUrl = userModel.profileImageWebUrl ?: return
+    private fun setUserProfile(profileImageWebUrl: String?) {
         Glide.with(binding.root.context)
-            .load(profileUrl)
+            .load(profileImageWebUrl)
             .centerCrop()
             .into(binding.ivProfileImage)
     }

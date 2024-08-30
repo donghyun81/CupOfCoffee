@@ -1,13 +1,12 @@
 package com.cupofcoffee0801.data.repository
 
-import android.util.Log
 import com.cupofcoffee0801.data.local.datasource.UserLocalDataSource
 import com.cupofcoffee0801.data.local.model.UserEntity
 import com.cupofcoffee0801.data.local.model.asUserEntry
 import com.cupofcoffee0801.data.remote.datasource.UserRemoteDataSource
 import com.cupofcoffee0801.data.remote.model.UserDTO
 import com.cupofcoffee0801.data.remote.model.asUserEntry
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.ui.model.asUserDTO
 import com.cupofcoffee0801.ui.model.asUserEntity
 import kotlinx.coroutines.flow.map
@@ -40,10 +39,10 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getRemoteUsersByIds(ids: List<String>) =
         userRemoteDataSource.getUsersByIds(ids)
 
-    override suspend fun update(userEntry: UserEntry) {
-        userEntry.apply {
-            userRemoteDataSource.update(id, asUserDTO())
+    override suspend fun update(user: User) {
+        user.apply {
             userLocalDataSource.update(asUserEntity())
+            userRemoteDataSource.update(id, asUserDTO())
         }
     }
 
@@ -52,11 +51,8 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun delete(id: String) {
-        Log.d("123456","바바보7")
-        userRemoteDataSource.delete(id)
-        Log.d("123456","바바보8")
         userLocalDataSource.delete(id)
-        Log.d("123456","바바보9")
+        userRemoteDataSource.delete(id)
     }
 
     override suspend fun deleteLocal(id: String) {

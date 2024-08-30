@@ -8,7 +8,7 @@ import com.cupofcoffee0801.data.DataResult
 import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -46,8 +46,8 @@ class UserEditViewModel @Inject constructor(
                 val user = userRepositoryImpl.getLocalUserById(uid)!!
                 _dataResult.value = success(
                     UserEditUiState(
-                        userEntry = user,
-                        contentUri = user.userModel.profileImageWebUrl
+                        user = user,
+                        contentUri = user.profileImageWebUrl
                     )
                 )
             } catch (e: Exception) {
@@ -64,7 +64,7 @@ class UserEditViewModel @Inject constructor(
             val user = userRepositoryImpl.getLocalUserById(uid)!!
             _dataResult.value = success(
                 UserEditUiState(
-                    userEntry = user,
+                    user = user,
                     contentUri = contentUri
                 )
             )
@@ -73,15 +73,15 @@ class UserEditViewModel @Inject constructor(
         }
     }
 
-    suspend fun updateUser(userEntry: UserEntry) {
-        userRepositoryImpl.update(userEntry)
+    suspend fun updateUser(user: User) {
+        userRepositoryImpl.update(user)
     }
 
-    suspend fun updateUserComments(userEntry: UserEntry) {
-        commentRepositoryImpl.getCommentsByUserId(userEntry.id).map {
+    suspend fun updateUserComments(user: User) {
+        commentRepositoryImpl.getCommentsByUserId(user.id).map {
             val (id, commentDTO) = it
             val currentComment =
-                commentDTO.copy(profileImageWebUrl = userEntry.userModel.profileImageWebUrl)
+                commentDTO.copy(profileImageWebUrl = user.profileImageWebUrl)
             commentRepositoryImpl.update(id, currentComment)
         }
     }

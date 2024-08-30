@@ -44,18 +44,18 @@ class UserViewModel @Inject constructor(
 
     fun initUser() {
         val uid = Firebase.auth.uid!!
-        val user = userRepositoryImpl.getLocalUserByIdInFlow(uid)
+        val userInFlow = userRepositoryImpl.getLocalUserByIdInFlow(uid)
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
-            user.collect { userEntry ->
+            userInFlow.collect { user ->
                 if (Firebase.auth.uid == null) return@collect
                 try {
-                    userEntry ?: return@collect
+                    user ?: return@collect
                     _dataResult.value = success(
                         UserUiState(
-                            user = userEntry,
-                            attendedMeetingsCount = userEntry.userModel.attendedMeetingIds.count(),
-                            madeMeetingsCount = userEntry.userModel.madeMeetingIds.count()
+                            user = user,
+                            attendedMeetingsCount = user.attendedMeetingIds.count(),
+                            madeMeetingsCount = user.madeMeetingIds.count()
                         )
                     )
                 } catch (e: Exception) {

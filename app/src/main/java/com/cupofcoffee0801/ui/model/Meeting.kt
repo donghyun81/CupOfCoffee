@@ -2,11 +2,11 @@ package com.cupofcoffee0801.ui.model
 
 import com.cupofcoffee0801.data.local.model.MeetingEntity
 import com.cupofcoffee0801.data.remote.model.MeetingDTO
-import com.cupofcoffee0801.ui.meetinglist.MeetingModelWithPeople
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MeetingModel(
+data class Meeting(
+    val id: String,
     val caption: String,
     val lat: Double,
     val lng: Double,
@@ -20,7 +20,22 @@ data class MeetingModel(
     val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun MeetingModel.asMeetingDTO() =
+fun Meeting.asMeetingEntity() = MeetingEntity(
+    id,
+    caption,
+    lat,
+    lng,
+    managerId,
+    personIds,
+    placeId,
+    date,
+    time,
+    createDate,
+    content,
+    commentIds
+)
+
+fun Meeting.asMeetingDTO() =
     MeetingDTO(
         caption,
         lat,
@@ -35,32 +50,4 @@ fun MeetingModel.asMeetingDTO() =
         commentIds
     )
 
-fun MeetingModel.asMeetingEntity(id: String) =
-    MeetingEntity(
-        id,
-        caption,
-        lat,
-        lng,
-        managerId,
-        personIds,
-        placeId,
-        date,
-        time,
-        createDate,
-        content,
-        commentIds
-    )
 
-fun MeetingModel.asMeetingListModel(people: List<UserEntry>) =
-    MeetingModelWithPeople(
-        caption,
-        lat,
-        lng,
-        managerId,
-        people,
-        placeId,
-        date,
-        time,
-        createDate,
-        content
-    )

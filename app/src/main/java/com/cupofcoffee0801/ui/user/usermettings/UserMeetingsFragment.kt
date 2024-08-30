@@ -11,7 +11,7 @@ import androidx.work.WorkManager
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.handle
 import com.cupofcoffee0801.databinding.FragmentUserMeetingsBinding
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.ui.model.MeetingsCategory
 import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
@@ -70,9 +70,9 @@ class UserMeetingsFragment : Fragment() {
     }
 
     private fun userMeetingDeleteClick() = object : UserMeetingClickListener {
-        override fun onDeleteClick(meetingEntry: MeetingEntry) {
+        override fun onDeleteClick(meeting: Meeting) {
             if (viewModel.isNetworkConnected()) {
-                val deleteWorker = viewModel.getDeleteMeetingWorker(meetingEntry)
+                val deleteWorker = viewModel.getDeleteMeetingWorker(meeting)
                 WorkManager.getInstance(requireContext()).enqueue(deleteWorker)
             } else view?.showSnackBar(R.string.delete_meeting_network_message)
         }

@@ -73,7 +73,7 @@ class UserFragment : Fragment() {
                 onLoading = { binding.cpiLoading.showLoading(result) },
                 onSuccess = { uiState ->
                     binding.cpiLoading.showLoading(result)
-                    val userModel = uiState.user?.userModel ?: return@observe
+                    val userModel = uiState.user ?: return@observe
                     setUserProfile(userModel.profileImageWebUrl)
                     with(binding) {
                         tvNickName.text = userModel.nickname

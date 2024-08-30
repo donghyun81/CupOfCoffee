@@ -1,10 +1,10 @@
 package com.cupofcoffee0801.ui.user.usermettings
 
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 
 interface UserMeetingClickListener {
 
-    fun onDeleteClick(meetingEntry: MeetingEntry)
+    fun onDeleteClick(meeting: Meeting)
 
     fun onDetailClick(meetingId: String)
 

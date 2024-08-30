@@ -2,7 +2,7 @@ package com.cupofcoffee0801.ui.model
 
 import com.cupofcoffee0801.data.remote.model.CommentDTO
 
-data class CommentModel(
+data class CommentData(
     val userId: String,
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
@@ -11,5 +11,5 @@ data class CommentModel(
     val createdDate: Long
 )
 
-fun CommentModel.asCommentDTO() =
+fun CommentData.asCommentDTO() =
     CommentDTO(userId, nickname, profileImageWebUrl, meetingId, content, createdDate)

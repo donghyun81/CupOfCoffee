@@ -15,9 +15,9 @@ import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.MeetingRepositoryImpl
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
 import com.cupofcoffee0801.data.worker.DeleteMeetingWorker
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.ui.model.MeetingsCategory
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -75,20 +75,20 @@ class UserMeetingsViewModel @Inject constructor(
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             val uid = Firebase.auth.uid ?: return@launch
-            val user = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
-            user.flatMapLatest { userEntry: UserEntry? ->
-                userEntry ?: return@flatMapLatest emptyFlow()
+            val userInFlow = userRepositoryImpl.getLocalUserByIdInFlow(id = uid)
+            userInFlow.flatMapLatest { user: User? ->
+                user ?: return@flatMapLatest emptyFlow()
                 when (category) {
                     MeetingsCategory.ATTENDED_MEETINGS -> {
-                        getMeetingEntries(userEntry.userModel.attendedMeetingIds.keys.toList())
-                            .map { value: List<MeetingEntry> ->
+                        getMeetingEntries(user.attendedMeetingIds.keys.toList())
+                            .map { value: List<Meeting> ->
                                 UserMeetingsUiState(value)
                             }
                     }
 
                     MeetingsCategory.MADE_MEETINGS ->
-                        getMeetingEntries(userEntry.userModel.madeMeetingIds.keys.toList())
-                            .map { value: List<MeetingEntry> ->
+                        getMeetingEntries(user.madeMeetingIds.keys.toList())
+                            .map { value: List<Meeting> ->
                                 UserMeetingsUiState(value)
                             }
                 }
@@ -101,8 +101,8 @@ class UserMeetingsViewModel @Inject constructor(
     private suspend fun getMeetingEntries(meetingIds: List<String>) =
         meetingRepositoryImpl.getMeetingsByIdsInFlow(meetingIds, networkUtil.isConnected())
 
-    fun getDeleteMeetingWorker(meetingEntry: MeetingEntry): OneTimeWorkRequest {
-        val jsonMeetingEntry = Json.encodeToString(meetingEntry)
+    fun getDeleteMeetingWorker(meeting: Meeting): OneTimeWorkRequest {
+        val jsonMeetingEntry = Json.encodeToString(meeting)
         val inputData = Data.Builder()
             .putString("meetingEntry", jsonMeetingEntry)
             .build()

@@ -32,6 +32,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.data.handle
+import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -58,12 +59,14 @@ class HomeFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                HomeScreen(
-                    viewModel,
-                    fusedLocationSource,
-                    ::moveToSaveMeeting,
-                    ::moveToPlaceMeetings
-                )
+                AppTheme {
+                    HomeScreen(
+                        viewModel,
+                        fusedLocationSource,
+                        ::moveToSaveMeeting,
+                        ::moveToPlaceMeetings
+                    )
+                }
             }
         }
     }

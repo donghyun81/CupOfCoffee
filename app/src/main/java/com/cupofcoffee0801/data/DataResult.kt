@@ -20,7 +20,7 @@ inline fun <T, R> DataResult<T>.handle(
 ): R {
     return when (this) {
         is DataResult.Loading -> onLoading()
-        is DataResult.Success -> onSuccess(this.data)
-        is DataResult.Error -> onError(this.exception)
+        is DataResult.Success -> onSuccess(data)
+        is DataResult.Error -> onError(exception)
     }
 }

@@ -5,8 +5,8 @@ import com.cupofcoffee0801.data.local.model.MeetingEntity
 import com.cupofcoffee0801.data.local.model.asMeetingEntry
 import com.cupofcoffee0801.data.remote.datasource.MeetingRemoteDataSource
 import com.cupofcoffee0801.data.remote.model.MeetingDTO
-import com.cupofcoffee0801.data.remote.model.asMeetingEntry
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.data.remote.model.asMeeting
+import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.ui.model.asMeetingDTO
 import com.cupofcoffee0801.ui.model.asMeetingEntity
 import kotlinx.coroutines.flow.map
@@ -23,13 +23,13 @@ class MeetingRepositoryImpl @Inject constructor(
     override suspend fun insertRemote(meetingDTO: MeetingDTO) =
         meetingRemoteDataSource.insert(meetingDTO)
 
-    override suspend fun getMeeting(id: String, isConnected: Boolean): MeetingEntry =
-        if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeetingEntry(id)
+    override suspend fun getMeeting(id: String, isConnected: Boolean): Meeting =
+        if (isConnected) meetingRemoteDataSource.getMeeting(id).asMeeting(id)
         else meetingLocalDataSource.getMeeting(id).asMeetingEntry()
 
     override suspend fun getMeetingInFlow(id: String, isConnected: Boolean) =
         if (isConnected) meetingRemoteDataSource.getMeetingInFlow(id).map {
-            it?.asMeetingEntry(id)
+            it?.asMeeting(id)
         }
         else meetingLocalDataSource.getMeetingInFlow(id).map { it.asMeetingEntry() }
 
@@ -55,8 +55,8 @@ class MeetingRepositoryImpl @Inject constructor(
         meetingLocalDataSource.getAllMeetings()
 
 
-    override suspend fun update(meetingEntry: MeetingEntry) {
-        meetingEntry.apply {
+    override suspend fun update(meeting: Meeting) {
+        meeting.apply {
             meetingLocalDataSource.update(asMeetingEntity())
             meetingRemoteDataSource.update(id, asMeetingDTO())
         }
@@ -77,14 +77,14 @@ class MeetingRepositoryImpl @Inject constructor(
         meetingRemoteDataSource.delete(id)
     }
 
-    private fun List<MeetingEntry>.sortedByDate() =
-        sortedWith(compareBy<MeetingEntry> { it.meetingModel.date }.thenBy { it.meetingModel.time })
+    private fun List<Meeting>.sortedByDate() =
+        sortedWith(compareBy<Meeting> { it.date }.thenBy { it.time })
 
 
     private fun Map<String, MeetingDTO>.convertMeetingEntries() =
         map { entry ->
             val (id, meetingDTO) = entry
-            meetingDTO.asMeetingEntry(id)
+            meetingDTO.asMeeting(id)
         }
 
     private fun List<MeetingEntity>.convertMeetingEntries() =

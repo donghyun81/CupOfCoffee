@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.ui.model.asMeetingEntity
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
@@ -21,27 +21,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-data class MeetingListUiState(
-    val placeCaption: String = "",
-    val meetingsInPlace: List<MeetingInPlace> = emptyList(),
-    val isError: Boolean = false,
-    val isLoading: Boolean = false
-)
-
-data class MeetingInPlace(
-    val id: String,
-    val content: String,
-    val date: String,
-    val time: String,
-    val isAttendedMeeting: Boolean,
-    val userInMeeting: List<UserInMeeting>
-)
-
-data class UserInMeeting(
-    val nickName: String?,
-    val profilesUrl: String?
-)
 
 @HiltViewModel
 class MeetingListViewModel @Inject constructor(
@@ -89,16 +68,16 @@ class MeetingListViewModel @Inject constructor(
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             try {
-                val placeEntry =
+                val place =
                     placeRepository.getPlaceById(placeId, networkUtil.isConnected())!!
                 val meetingsInFlow =
-                    meetingRepository.getMeetingsByIdsInFlow(placeEntry.placeModel.meetingIds.keys.toList())
+                    meetingRepository.getMeetingsByIdsInFlow(place.meetingIds.keys.toList())
                 meetingsInFlow.flatMapLatest { meetings ->
                     addLocalMeetings(meetings)
                     flow { emit(meetings.map { convertMeetingInPlace(it) }) }
                 }.collect {
                     _uiState.value = MeetingListUiState(
-                        placeCaption = placeEntry.placeModel.caption,
+                        placeCaption = place.caption,
                         meetingsInPlace = it,
                         isLoading = false
                     )
@@ -112,34 +91,37 @@ class MeetingListViewModel @Inject constructor(
         }
     }
 
-    private suspend fun addLocalMeetings(meetings: List<MeetingEntry>) {
+    private suspend fun addLocalMeetings(meetings: List<Meeting>) {
         if (isNetworkConnected().not()) return
         meetings.forEach { meeting ->
             meetingRepository.insertLocal(meeting.asMeetingEntity())
         }
     }
 
-    private suspend fun convertMeetingInPlace(meeting: MeetingEntry): MeetingInPlace {
-        return if (isNetworkConnected().not()) MeetingInPlace(
+    private suspend fun convertMeetingInPlace(meeting: Meeting): MeetingListMeetingUiModel {
+        val isMyMeeting = Firebase.auth.uid == meeting.managerId
+        val isAttendedMeeting = meeting.personIds.keys.contains(Firebase.auth.uid)
+        return if (isNetworkConnected().not()) MeetingListMeetingUiModel(
             meeting.id,
-            meeting.meetingModel.content,
-            meeting.meetingModel.date,
-            meeting.meetingModel.time,
-            false,
+            meeting.content,
+            meeting.date,
+            meeting.time,
+            isAttendedMeeting,
+            isMyMeeting,
             emptyList()
         )
         else {
             val users =
-                userRepository.getRemoteUsersByIds(meeting.meetingModel.personIds.keys.toList())
-            val userInMeeting = users.values.map { UserInMeeting(it.name, it.profileImageWebUrl) }
-            val isAttendedMeeting = users.keys.contains(Firebase.auth.uid)
-            return MeetingInPlace(
+                userRepository.getRemoteUsersByIds(meeting.personIds.keys.toList())
+            val meetingListUserUiModel = users.values.map { MeetingListUserUiModel(it.name, it.profileImageWebUrl) }
+            return MeetingListMeetingUiModel(
                 meeting.id,
-                meeting.meetingModel.content,
-                meeting.meetingModel.date,
-                meeting.meetingModel.time,
+                meeting.content,
+                meeting.date,
+                meeting.time,
                 isAttendedMeeting,
-                userInMeeting
+                isMyMeeting,
+                meetingListUserUiModel
             )
         }
     }
@@ -153,15 +135,15 @@ class MeetingListViewModel @Inject constructor(
 
     private suspend fun addUserToMeeting(meetingId: String) {
         val meeting = meetingRepository.getMeeting(meetingId)
-        meeting.meetingModel.personIds[Firebase.auth.uid!!] = true
+        meeting.personIds[Firebase.auth.uid!!] = true
         meetingRepository.update(meeting)
     }
 
     private suspend fun addAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val userEntry = userRepository.getLocalUserById(uid)!!
-        userEntry.userModel.attendedMeetingIds[meetingId] = true
-        userRepository.update(userEntry)
+        val user = userRepository.getLocalUserById(uid)!!
+        user.attendedMeetingIds[meetingId] = true
+        userRepository.update(user)
     }
 
     fun cancelMeeting(meetingId: String) {
@@ -172,15 +154,15 @@ class MeetingListViewModel @Inject constructor(
     }
 
     private suspend fun deleteUserToMeeting(meetingId: String) {
-        val meetingEntry = meetingRepository.getMeeting(meetingId)
-        meetingEntry.meetingModel.personIds.remove(Firebase.auth.uid!!)
-        meetingRepository.update(meetingEntry)
+        val meeting = meetingRepository.getMeeting(meetingId)
+        meeting.personIds.remove(Firebase.auth.uid!!)
+        meetingRepository.update(meeting)
     }
 
     private suspend fun deleteAttendedMeetingToUser(meetingId: String) {
         val uid = Firebase.auth.uid!!
-        val userEntry = userRepository.getLocalUserById(uid)!!
-        userEntry.userModel.attendedMeetingIds.remove(meetingId)
-        userRepository.update(userEntry)
+        val user = userRepository.getLocalUserById(uid)!!
+        user.attendedMeetingIds.remove(meetingId)
+        userRepository.update(user)
     }
 }

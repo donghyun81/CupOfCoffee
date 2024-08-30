@@ -1,6 +1,5 @@
 package com.cupofcoffee0801.ui.login
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,11 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.NaverUser
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.ui.model.asMeetingEntity
 import com.cupofcoffee0801.ui.model.asUserDTO
 import com.cupofcoffee0801.ui.model.asUserEntity
-import com.cupofcoffee0801.ui.model.asUserEntry
+import com.cupofcoffee0801.ui.model.asUser
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -101,7 +100,7 @@ class LoginViewModel @Inject constructor(
                         val uid = Firebase.auth.uid!!
                         viewModelScope.launch {
                             delay(2000L)
-                            insertUser(naverUser.asUserEntry(uid))
+                            insertUser(naverUser.asUser(uid))
                             _loginState.value = LoginState.Success
                         }
                     } else {
@@ -112,10 +111,10 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private suspend fun insertUser(userEntry: UserEntry) {
-        with(userEntry) {
-            userRepository.insertLocal(userModel.asUserEntity(id))
-            userRepository.insertRemote(id, userModel.asUserDTO())
+    private suspend fun insertUser(user: User) {
+        with(user) {
+            userRepository.insertLocal(asUserEntity())
+            userRepository.insertRemote(id,asUserDTO())
         }
     }
 
@@ -127,23 +126,19 @@ class LoginViewModel @Inject constructor(
         userRepository.insertLocal(userEntry.asUserEntity())
     }
 
-    private suspend fun insertUserMeetings(userEntry: UserEntry) {
+    private suspend fun insertUserMeetings(user: User) {
         val madeMeetings =
-            meetingsRepository.getMeetingsByIds(userEntry.userModel.madeMeetingIds.keys.toList())
+            meetingsRepository.getMeetingsByIds(user.madeMeetingIds.keys.toList())
         val attendMeetings =
-            meetingsRepository.getMeetingsByIds(userEntry.userModel.attendedMeetingIds.keys.toList())
+            meetingsRepository.getMeetingsByIds(user.attendedMeetingIds.keys.toList())
         madeMeetings.forEach { madeMeeting ->
             meetingsRepository.insertLocal(
-                madeMeeting.meetingModel.asMeetingEntity(
-                    madeMeeting.id
-                )
+                madeMeeting.asMeetingEntity()
             )
         }
         attendMeetings.forEach { attendMeeting ->
             meetingsRepository.insertLocal(
-                attendMeeting.meetingModel.asMeetingEntity(
-                    attendMeeting.id
-                )
+                attendMeeting.asMeetingEntity()
             )
         }
     }

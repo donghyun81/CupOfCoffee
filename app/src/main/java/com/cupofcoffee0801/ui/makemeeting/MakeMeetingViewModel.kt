@@ -8,13 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.MeetingEntry
-import com.cupofcoffee0801.ui.model.MeetingModel
-import com.cupofcoffee0801.ui.model.PlaceEntry
-import com.cupofcoffee0801.ui.model.PlaceModel
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.MeetingData
+import com.cupofcoffee0801.ui.model.Place
+import com.cupofcoffee0801.ui.model.PlaceData
+import com.cupofcoffee0801.ui.model.User
+import com.cupofcoffee0801.ui.model.asMeeting
 import com.cupofcoffee0801.ui.model.asMeetingDTO
 import com.cupofcoffee0801.ui.model.asMeetingEntity
+import com.cupofcoffee0801.ui.model.asPlace
 import com.cupofcoffee0801.ui.toCurrentDate
 import com.cupofcoffee0801.ui.toCurrentTime
 import com.cupofcoffee0801.util.NetworkUtil
@@ -85,7 +86,7 @@ class MakeMeetingViewModel @Inject constructor(
 
     private suspend fun loadMeeting(meetingId: String) {
         try {
-            val meeting = meetingRepository.getMeeting(meetingId).meetingModel
+            val meeting = meetingRepository.getMeeting(meetingId)
             _uiState.postValue(
                 MakeMeetingUiState(
                     placeName = meeting.caption,
@@ -130,24 +131,25 @@ class MakeMeetingViewModel @Inject constructor(
     fun isNetworkConnected() = networkUtil.isConnected()
 
     fun saveMeeting(uiState: MakeMeetingUiState) {
-        val meeting = getMeeting(uiState)
+        val meetingData = getMeeting(uiState)
         val place = getPlace(uiState)
         viewModelScope.launch {
-            if (args.meetingId == null) {
-                val meetingId = meetingRepository.insertRemote(meeting.asMeetingDTO()).id
-                meetingRepository.insertLocal(meeting.asMeetingEntity(meetingId))
-                savePlace(meetingId, place)
-                updateUserMeeting(meetingId)
-            } else meetingRepository.update(MeetingEntry(args.meetingId!!, meeting))
+            val meetingId = args.meetingId
+            if (meetingId == null) {
+                val newMeetingId = meetingRepository.insertRemote(meetingData.asMeetingDTO()).id
+                meetingRepository.insertLocal(meetingData.asMeetingEntity(newMeetingId))
+                savePlace(newMeetingId, place)
+                updateUserMeeting(newMeetingId)
+            } else meetingRepository.update(meetingData.asMeeting(meetingId))
             _uiState.postValue(
                 uiState.copy(isComplete = true)
             )
         }
     }
 
-    fun getMeeting(uiState: MakeMeetingUiState): MeetingModel {
+    fun getMeeting(uiState: MakeMeetingUiState): MeetingData {
         val uid = Firebase.auth.uid!!
-        return MeetingModel(
+        return MeetingData(
             caption = uiState.placeName,
             lat = uiState.lat,
             lng = uiState.lng,
@@ -164,7 +166,7 @@ class MakeMeetingViewModel @Inject constructor(
         )
     }
 
-    private fun getPlace(uiState: MakeMeetingUiState) = PlaceModel(
+    private fun getPlace(uiState: MakeMeetingUiState) = PlaceData(
         caption = uiState.placeName,
         lat = uiState.lat,
         lng = uiState.lng
@@ -176,16 +178,16 @@ class MakeMeetingViewModel @Inject constructor(
         addUserMadeMeeting(userEntry, meetingId)
     }
 
-    private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
-        userEntry.userModel.madeMeetingIds[meetingId] = true
-        userRepository.update(userEntry)
+    private suspend fun addUserMadeMeeting(user: User, meetingId: String) {
+        user.madeMeetingIds[meetingId] = true
+        userRepository.update(user)
     }
 
-    private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
-        val placeId = convertPlaceId(placeModel.lat, placeModel.lng)
+    private suspend fun savePlace(meetingId: String, placeData: PlaceData) {
+        val placeId = convertPlaceId(placeData.lat, placeData.lng)
         val prvPlaceEntry = placeRepository.getPlaceById(placeId)
         if (prvPlaceEntry != null) updatePlace(meetingId, prvPlaceEntry)
-        else createPlace(meetingId, PlaceEntry(placeId, placeModel))
+        else createPlace(meetingId, placeData.asPlace(placeId))
     }
 
     private fun convertPlaceId(lat: Double, lng: Double): String {
@@ -194,13 +196,13 @@ class MakeMeetingViewModel @Inject constructor(
     }
 
 
-    private suspend fun createPlace(meetingId: String, placeEntry: PlaceEntry) {
-        placeEntry.placeModel.meetingIds[meetingId] = true
-        placeRepository.insert(placeEntry)
+    private suspend fun createPlace(meetingId: String, place: Place) {
+        place.meetingIds[meetingId] = true
+        placeRepository.insert(place)
     }
 
-    private suspend fun updatePlace(meetingId: String, prvPlaceEntry: PlaceEntry) {
-        prvPlaceEntry.placeModel.meetingIds[meetingId] = true
-        placeRepository.update(prvPlaceEntry)
+    private suspend fun updatePlace(meetingId: String, prvPlace: Place) {
+        prvPlace.meetingIds[meetingId] = true
+        placeRepository.update(prvPlace)
     }
 }

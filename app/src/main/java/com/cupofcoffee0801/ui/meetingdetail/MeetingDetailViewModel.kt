@@ -17,11 +17,14 @@ import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.data.worker.DeleteMeetingWorker
-import com.cupofcoffee0801.ui.model.MeetingEntry
+import com.cupofcoffee0801.ui.model.Comment
+import com.cupofcoffee0801.ui.model.Meeting
+import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -43,12 +46,11 @@ class MeetingDetailViewModel @Inject constructor(
     val meetingId =
         MeetingDetailFragmentArgs.fromSavedStateHandle(savedStateHandle).meetingId
 
-    private val _meetingDetailDataResult: MutableLiveData<DataResult<MeetingDetailUiState>> =
-        MutableLiveData(
-            loading()
-        )
+    private val _meetingDetailUiState: MutableLiveData<MeetingDetailUiState> =
+        MutableLiveData(MeetingDetailUiState(isLoading = true))
 
-    val meetingDetailDataResult: LiveData<DataResult<MeetingDetailUiState>> get() = _meetingDetailDataResult
+    val meetingDetailUiState: LiveData<MeetingDetailUiState> get() = _meetingDetailUiState
+
 
     var currentJob: Job? = null
 
@@ -75,47 +77,55 @@ class MeetingDetailViewModel @Inject constructor(
     fun isNetworkConnected() = networkUtil.isConnected()
 
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun initUiState() = viewModelScope.launch {
         try {
-            val meetingEntryInFlow =
-                meetingRepository.getMeetingInFlow(meetingId, isNetworkConnected())
-            val userEntry = userRepository.getLocalUserById(Firebase.auth.uid!!)!!
-            meetingEntryInFlow
-                .flatMapLatest { meetingEntry ->
-                    meetingEntry!!
-                    if (isNetworkConnected()) {
-                        getCommentsInFlow(meetingEntry.meetingModel.commentIds.keys.toList()).map { commentEntries ->
-                            MeetingDetailUiState(
-                                userEntry,
-                                meetingEntry,
-                                commentEntries,
-                                meetingEntry.meetingModel.managerId == userEntry.id
-                            )
-                        }
-                    } else flow {
-                        emit(
-                            MeetingDetailUiState(
-                                userEntry,
-                                meetingEntry,
-                                emptyList(),
-                                meetingEntry.meetingModel.managerId == userEntry.id
-                            )
-                        )
-                    }
+            val meetingInFlow = meetingRepository.getMeetingInFlow(meetingId, isNetworkConnected())
+            val user = userRepository.getLocalUserById(Firebase.auth.uid!!)!!
+            meetingInFlow
+                .flatMapLatest { meeting ->
+                    getMeetingDetailUiStateInFlow(meeting!!, user)
                 }
                 .collect { meetingDetailUiState ->
-                    _meetingDetailDataResult.postValue(success(meetingDetailUiState))
+                    _meetingDetailUiState.postValue(meetingDetailUiState)
                 }
         } catch (e: Exception) {
-            _meetingDetailDataResult.postValue(error(e))
+            _meetingDetailUiState.postValue(
+                MeetingDetailUiState(isError = true)
+            )
         }
     }
+
+    private suspend fun getMeetingDetailUiStateInFlow(meeting: Meeting, user: User) =
+        if (isNetworkConnected())
+            getCommentsInFlow(meeting.commentIds.keys.toList()).map { comments ->
+                MeetingDetailUiState(
+                    userUiModel = user.asUserUiModel(),
+                    meetingUiModel = meeting.asMeetingUiModel(),
+                    comments = comments.map { it.asCommentUiModel() },
+                    meeting.managerId == user.id,
+                    isLoading = false
+                )
+            }
+        else flow {
+            emit(
+                MeetingDetailUiState(
+                    userUiModel = user.asUserUiModel(),
+                    meetingUiModel = meeting.asMeetingUiModel(),
+                    comments = emptyList(),
+                    meeting.managerId == user.id,
+                    isLoading = false
+                )
+            )
+        }
+
 
     private suspend fun getCommentsInFlow(ids: List<String>) =
         commentRepository.getCommentsByIdsInFlow(ids)
 
-    fun getDeleteMeetingWorker(meetingEntry: MeetingEntry): OneTimeWorkRequest {
-        val jsonMeetingEntry = Json.encodeToString(meetingEntry)
+    suspend fun getDeleteMeetingWorker(meetingId: String): OneTimeWorkRequest {
+        val meeting = meetingRepository.getMeeting(meetingId)
+        val jsonMeetingEntry = Json.encodeToString(meeting)
         val inputData = Data.Builder()
             .putString("meetingEntry", jsonMeetingEntry)
             .build()
@@ -127,13 +137,33 @@ class MeetingDetailViewModel @Inject constructor(
 
     fun deleteComment(commentId: String) {
         viewModelScope.launch {
-            val meetingEntry =
+            val meeting =
                 meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
-            meetingEntry.meetingModel.commentIds.remove(commentId)
-            meetingRepository.update(meetingEntry)
+            meeting.commentIds.remove(commentId)
+            meetingRepository.update(meeting)
             commentRepository.delete(commentId)
         }
     }
+
+    private fun User.asUserUiModel() = MeetingDetailUserUiModel(
+        id, profileImageWebUrl
+    )
+
+    private fun Meeting.asMeetingUiModel() = MeetingDetailMeetingUiModel(
+        id,
+        content,
+        caption,
+        date,
+        time
+    )
+
+    private fun Comment.asCommentUiModel() = MeetingDetailCommentUiModel(
+        id,
+        nickname,
+        profileImageWebUrl,
+        content,
+        createdDate
+    )
 
     override fun onCleared() {
         super.onCleared()

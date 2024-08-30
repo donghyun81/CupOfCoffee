@@ -1,8 +1,8 @@
 package com.cupofcoffee0801.ui.user.useredit
 
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.User
 
 data class UserEditUiState(
-    val userEntry: UserEntry,
+    val user: User,
     val contentUri: String?
 )
