@@ -22,11 +22,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -151,7 +148,7 @@ fun MeetingDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp)  // 전체 화면의 여백을 더 넓게 설정
+            .padding(12.dp)
     ) {
         if (uiState!!.isLoading) {
             CircularProgressIndicator(
@@ -162,7 +159,6 @@ fun MeetingDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()) // 전체 화면이 스크롤되도록 설정
             ) {
                 MeetingOptionsMenu(
                     modifier = Modifier
@@ -253,7 +249,7 @@ fun MeetingOptionsMenu(
     ) {
         Icon(
             painterResource(id = R.drawable.baseline_more_vert_24),
-            contentDescription = "More options",
+            contentDescription = "옵션",
         )
     }
 
@@ -300,18 +296,18 @@ fun MeetingInfo(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),  // 내부 요소 사이에 여백 추가
+            .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary  // 라벨 색상을 강조
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface  // 값의 색상 추가
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -412,9 +408,9 @@ fun CommentItem(
     ) {
         AsyncImage(
             model = commentUiModel.profileImageWebUrl,
-            contentDescription = "User profile image",
+            contentDescription = "사용자 프로필",
             modifier = Modifier
-                .size(40.dp)  // 이미지 크기를 키워 시각적으로 강조
+                .size(40.dp)
                 .clip(RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop
         )

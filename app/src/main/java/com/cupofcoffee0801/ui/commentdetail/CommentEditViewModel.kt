@@ -5,21 +5,17 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.CommentData
 import com.cupofcoffee0801.ui.model.asCommentDTO
-import com.cupofcoffee0801.ui.model.asCommentData
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,12 +29,9 @@ class CommentEditViewModel @Inject constructor(
 
     val args = CommentEditFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _commentEditDataResult: MutableLiveData<DataResult<CommentEditUiState>> =
-        MutableLiveData(loading())
-    val commentEditDataResult: LiveData<DataResult<CommentEditUiState>> get() = _commentEditDataResult
-
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+    private val _uiState: MutableLiveData<CommentUiState> =
+        MutableLiveData(CommentUiState(isLoading = true))
+    val uiState: LiveData<CommentUiState> get() = _uiState
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
@@ -46,35 +39,58 @@ class CommentEditViewModel @Inject constructor(
         initUiState()
     }
 
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
-    }
-
     private fun initUiState() {
         viewModelScope.launch {
             try {
                 val uid = Firebase.auth.uid!!
                 val user = userRepository.getLocalUserById(uid)!!
+                val commentEditUser = CommentEditUser(user.id, user.profileImageWebUrl)
                 val commentId = args.commentId
                 if (commentId != null) {
                     val comment = commentRepository.getComment(commentId)
-                    _commentEditDataResult.postValue(success(CommentEditUiState(user, comment.asCommentData())))
+                    _uiState.postValue(CommentUiState(commentEditUser, comment))
                 } else
-                    _commentEditDataResult.postValue(success(CommentEditUiState(user, null)))
+                    _uiState.postValue(CommentUiState(commentEditUser, null))
             } catch (e: Exception) {
-                _commentEditDataResult.postValue(error(e))
+                _uiState.postValue(CommentUiState(isError = true))
             }
         }
     }
 
-    suspend fun insertComment(commentData: CommentData) {
+    fun updateContent(content: String) {
+        val updatedComment = uiState.value!!.comment!!.copy(content = content)
+        _uiState.value = uiState.value!!.copy(comment = updatedComment)
+    }
+
+    fun editComment(content: String) {
+        viewModelScope.launch {
+            val uid = Firebase.auth.uid!!
+            val user = userRepository.getLocalUserById(uid)!!
+            val comment = CommentData(
+                userId = user.id,
+                meetingId = args.meetingId,
+                nickname = user.nickname,
+                profileImageWebUrl = user.profileImageWebUrl,
+                content = content,
+                createdDate = Date().time
+            )
+            if (args.commentId == null) insertComment(comment)
+            else updateComment(comment)
+            completeEdit()
+        }
+    }
+
+    private suspend fun insertComment(commentData: CommentData) {
         val commentId = commentRepository.insert(commentData.asCommentDTO())
         val meeting = meetingRepository.getMeeting(args.meetingId)
         meeting.commentIds[commentId!!] = true
         meetingRepository.update(meeting)
     }
 
-    suspend fun updateComment(commentData: CommentData) {
+    private suspend fun updateComment(commentData: CommentData) =
         commentRepository.update(args.commentId!!, commentData.asCommentDTO())
+
+    private fun completeEdit() {
+        _uiState.value = uiState.value!!.copy(isCompleted = true)
     }
 }
