@@ -9,10 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.UserRepository
@@ -123,11 +119,9 @@ class MeetingDetailViewModel @Inject constructor(
     private suspend fun getCommentsInFlow(ids: List<String>) =
         commentRepository.getCommentsByIdsInFlow(ids)
 
-    suspend fun getDeleteMeetingWorker(meetingId: String): OneTimeWorkRequest {
-        val meeting = meetingRepository.getMeeting(meetingId)
-        val jsonMeetingEntry = Json.encodeToString(meeting)
+    fun getDeleteMeetingWorker(meetingId: String): OneTimeWorkRequest {
         val inputData = Data.Builder()
-            .putString("meetingEntry", jsonMeetingEntry)
+            .putString("meetingId", meetingId)
             .build()
 
         return OneTimeWorkRequest.Builder(DeleteMeetingWorker::class.java)

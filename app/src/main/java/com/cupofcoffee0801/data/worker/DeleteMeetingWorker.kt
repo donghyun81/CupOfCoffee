@@ -8,13 +8,11 @@ import com.cupofcoffee0801.data.repository.CommentRepository
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.serialization.json.Json
 
 @HiltWorker
 class DeleteMeetingWorker @AssistedInject constructor(
@@ -29,17 +27,16 @@ class DeleteMeetingWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val meeting =
-                inputData.getString("meetingEntry")?.let { Json.decodeFromString<Meeting>(it) }
-                    ?: return Result.failure()
-            deleteMeeting(meeting)
+            val meetingId = inputData.getString("meetingId") ?: return Result.failure()
+            deleteMeeting(meetingId)
             Result.success()
         } catch (e: Exception) {
             Result.failure()
         }
     }
 
-    private suspend fun deleteMeeting(meeting: Meeting) {
+    private suspend fun deleteMeeting(meetingId: String) {
+        val meeting = meetingRepository.getMeeting(meetingId)
         val placeId = meeting.placeId
         updatePlace(placeId, meeting.id)
         updateUser(meeting.id)

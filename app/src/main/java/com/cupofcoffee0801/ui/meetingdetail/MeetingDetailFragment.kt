@@ -110,11 +110,9 @@ class MeetingDetailFragment : Fragment() {
     }
 
     private fun deleteMeeting(meetingId: String) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val deleteMeetingWorker = viewModel.getDeleteMeetingWorker(meetingId)
-            WorkManager.getInstance(requireContext()).enqueue(deleteMeetingWorker)
-            findNavController().navigateUp()
-        }
+        val deleteMeetingWorker = viewModel.getDeleteMeetingWorker(meetingId)
+        WorkManager.getInstance(requireContext()).enqueue(deleteMeetingWorker)
+        findNavController().navigateUp()
     }
 
 
@@ -345,6 +343,7 @@ fun Comments(
         }
     }
 }
+
 @Composable
 fun CommentInput(
     onMakeCommentClick: () -> Unit,

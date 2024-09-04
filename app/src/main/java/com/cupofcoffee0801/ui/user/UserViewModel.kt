@@ -4,11 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
-import com.cupofcoffee0801.data.repository.UserRepositoryImpl
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import com.cupofcoffee0801.data.repository.MeetingRepository
+import com.cupofcoffee0801.data.repository.PlaceRepository
+import com.cupofcoffee0801.data.repository.UserRepository
+import com.cupofcoffee0801.data.worker.DeleteMeetingWorker
+import com.cupofcoffee0801.ui.model.Meeting
+import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,11 +22,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val userRepositoryImpl: UserRepositoryImpl
+    private val userRepository: UserRepository,
+    private val meetingRepository: MeetingRepository,
+    private val placeRepository: PlaceRepository,
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _dataResult: MutableLiveData<DataResult<UserUiState>> = MutableLiveData(loading())
-    val dataResult: LiveData<DataResult<UserUiState>> get() = _dataResult
+    private val _userUiState: MutableLiveData<UserUiState> =
+        MutableLiveData(UserUiState(isLoading = true))
+    val userUiState: LiveData<UserUiState> get() = _userUiState
 
     var currentJob: Job? = null
 
@@ -37,6 +45,8 @@ class UserViewModel @Inject constructor(
         _isButtonClicked.value = true
     }
 
+    fun isNetworkConnected() = networkUtil.isConnected()
+
     override fun onCleared() {
         super.onCleared()
         currentJob?.cancel()
@@ -44,24 +54,50 @@ class UserViewModel @Inject constructor(
 
     fun initUser() {
         val uid = Firebase.auth.uid!!
-        val userInFlow = userRepositoryImpl.getLocalUserByIdInFlow(uid)
+        val userInFlow = userRepository.getLocalUserByIdInFlow(uid)
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             userInFlow.collect { user ->
                 if (Firebase.auth.uid == null) return@collect
                 try {
                     user ?: return@collect
-                    _dataResult.value = success(
+                    _userUiState.value =
                         UserUiState(
-                            user = user,
-                            attendedMeetingsCount = user.attendedMeetingIds.count(),
-                            madeMeetingsCount = user.madeMeetingIds.count()
+                            userId = user.id,
+                            nickName = user.nickname,
+                            profileUrl = user.profileImageWebUrl,
+                            attendedMeetings = getMeetings(user.attendedMeetingIds.keys),
+                            madeMeetings = getMeetings(user.madeMeetingIds.keys)
                         )
-                    )
                 } catch (e: Exception) {
-                    error(e)
+                    _userUiState.value =
+                        UserUiState(
+                            isError = true
+                        )
                 }
             }
         }
     }
+
+    fun getDeleteMeetingWorker(meetingId: String): OneTimeWorkRequest {
+        val inputData = Data.Builder()
+            .putString("meetingId", meetingId)
+            .build()
+
+        return OneTimeWorkRequestBuilder<DeleteMeetingWorker>()
+            .setInputData(inputData)
+            .build()
+    }
+
+    private suspend fun getMeetings(meetingIds: Set<String>): List<UserMeeting> {
+        val meetings = meetingRepository.getMeetingsByIds(meetingIds.toList())
+        return meetings.map {
+            val placeName = placeRepository.getPlaceById(it.placeId)!!.caption
+            it.asUserMeeting(placeName)
+        }
+    }
+
+    private fun Meeting.asUserMeeting(place: String) = UserMeeting(
+        id, date, time, place, content
+    )
 }
