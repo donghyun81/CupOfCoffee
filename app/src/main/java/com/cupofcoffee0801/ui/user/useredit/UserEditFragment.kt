@@ -1,177 +1,172 @@
 package com.cupofcoffee0801.ui.user.useredit
 
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.handle
-import com.cupofcoffee0801.databinding.FragmentUserEditBinding
-import com.cupofcoffee0801.ui.model.User
-import com.cupofcoffee0801.ui.model.UserData
-import com.cupofcoffee0801.ui.showLoading
-import com.cupofcoffee0801.ui.showSnackBar
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
+import com.cupofcoffee0801.ui.graphics.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 @AndroidEntryPoint
 class UserEditFragment : DialogFragment() {
 
-    private var _binding: FragmentUserEditBinding? = null
-    private val binding get() = _binding!!
     private val viewModel: UserEditViewModel by viewModels()
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            setAddImage(isGranted)
-        }
-    private val pickImagesLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            addImage(uri)
-        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentUserEditBinding.inflate(inflater)
-        return binding.root
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setButtonEnable()
-        setUserUi()
-        setEditUserProfileOnclick()
-        setEditProfileImage()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun setButtonEnable() {
-        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
-            binding.btnSave.isEnabled = !isButtonClicked
-        }
-    }
-
-    private fun setEditUserProfileOnclick() {
-        binding.ivProfileImage.setOnClickListener {
-            requestAlbumAccessPermission()
-        }
-    }
-
-    private fun setUserUi() {
-        viewModel.dataResult.observe(viewLifecycleOwner) { result ->
-            result.handle(
-                onLoading = { binding.cpiLoading.showLoading(result) },
-                onSuccess = { uiState ->
-                    binding.cpiLoading.showLoading(result)
-                    val user = uiState.user
-                    with(binding) {
-                        tvNickName.setText(user.nickname)
-                        setUserProfile(user.profileImageWebUrl)
-                    }
-                    setSaveOnclick(uiState.user, uiState.contentUri)
-                },
-                onError = {
-                    binding.cpiLoading.showLoading(result)
-                    view?.showSnackBar(R.string.data_error_message)
+        return ComposeView(requireContext()).apply {
+            setContent {
+                AppTheme {
+                    UserEditScreen(
+                        viewModel = viewModel,
+                        navigateUp = ::navigateUp
+                    )
                 }
-            )
-        }
-    }
-
-    private fun setEditProfileImage() {
-        binding.ivProfileImage.setOnClickListener {
-            requestAlbumAccessPermission()
-        }
-    }
-
-    private fun setSaveOnclick(user: User, contentUri: String?) {
-        binding.btnSave.setOnClickListener {
-            viewModel.onButtonClicked()
-            viewLifecycleOwner.lifecycleScope.launch {
-                val currentUserEntry = getCurrentUser(user, contentUri)
-                delay(2000L)
-                if (viewModel.isNetworkConnected()) {
-                    viewModel.updateUser(currentUserEntry)
-                    viewModel.updateUserComments(currentUserEntry)
-                    findNavController().navigateUp()
-                } else view?.showSnackBar(R.string.network_profile)
             }
         }
     }
 
-    private suspend fun getCurrentUser(user: User, contentUri: String?): User {
-        val uid = Firebase.auth.uid!!
-        val storageReference = FirebaseStorage.getInstance().reference
-        val ref = storageReference.child("images/$uid")
-        val imageUri = Uri.parse(contentUri)
-        return try {
-            ref.putFile(imageUri).await()
-            val uri = ref.downloadUrl.await()
-            user.copy(
-                nickname = binding.tvNickName.text.toString(),
-                profileImageWebUrl = uri.toString()
-            )
-        } catch (e: Exception) {
-            user
-        }
+    private fun navigateUp() {
+        findNavController().navigateUp()
+    }
+}
+
+@Composable
+fun UserEditScreen(
+    viewModel: UserEditViewModel,
+    navigateUp: () -> Unit
+) {
+    val uiState by viewModel.uiState.observeAsState()
+
+    val pickImagesLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        viewModel.handleImagePickerResult(uri)
     }
 
-    private fun requestAlbumAccessPermission() {
-        val permissionId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            android.Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-        requestPermissionLauncher.launch(permissionId)
-    }
-
-    private fun setAddImage(isGranted: Boolean) {
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
         if (isGranted) {
             pickImagesLauncher.launch("image/*")
         }
     }
 
-    private fun addImage(uri: Uri?) {
-        val contentUri: String = uri?.toString() ?: return
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.updateUiState(contentUri)
-            loadProfileImagePreview(contentUri)
-        }
-    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(280.dp)
+            .padding(16.dp)
+    ) {
+        if (uiState!!.isLoading) CircularProgressIndicator(
+            modifier = Modifier.align(Alignment.Center),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        ) else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                AsyncImage(
+                    model = uiState?.contentUri,
+                    contentDescription = "Profile Image",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable {
+                            viewModel.requestAlbumAccessPermission(requestPermissionLauncher)
+                        }
+                )
 
-    private fun loadProfileImagePreview(contentUri: String) {
-        val uri = Uri.parse(contentUri)
-        binding.ivProfileImage.run {
-            Glide.with(context)
-                .load(uri)
-                .into(this)
-        }
-    }
+                Spacer(modifier = Modifier.height(8.dp))
 
-    private fun setUserProfile(profileImageWebUrl: String?) {
-        Glide.with(binding.root.context)
-            .load(profileImageWebUrl)
-            .centerCrop()
-            .into(binding.ivProfileImage)
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "별명",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    TextField(
+                        value = uiState?.nickname ?: "익명",
+                        onValueChange = { viewModel.updateNickname(it) },
+                        placeholder = { Text(text = "이름을 작성해주세요") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Button(
+                        onClick = { navigateUp() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { viewModel.editUser() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(id = R.string.save))
+                    }
+                }
+            }
+            LaunchedEffect(uiState!!.isCompleted) {
+                if (uiState!!.isCompleted) navigateUp()
+            }
+        }
     }
 }

@@ -1,8 +1,10 @@
 package com.cupofcoffee0801.ui.user.useredit
 
-import com.cupofcoffee0801.ui.model.User
-
 data class UserEditUiState(
-    val user: User,
-    val contentUri: String?
+    val userId: String = "",
+    val nickname: String? = null,
+    val contentUri: String? = null,
+    val isLoading: Boolean = false,
+    val isError: Boolean = false,
+    val isCompleted:Boolean = false
 )

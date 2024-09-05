@@ -1,19 +1,24 @@
 package com.cupofcoffee0801.ui.user.useredit
 
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
 import com.cupofcoffee0801.data.repository.UserRepositoryImpl
 import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,9 +28,9 @@ class UserEditViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _dataResult: MutableLiveData<DataResult<UserEditUiState>> =
-        MutableLiveData(DataResult.loading())
-    val dataResult: LiveData<DataResult<UserEditUiState>> get() = _dataResult
+    private val _uiState: MutableLiveData<UserEditUiState> =
+        MutableLiveData(UserEditUiState(isLoading = true))
+    val uiState: LiveData<UserEditUiState> get() = _uiState
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -44,40 +49,79 @@ class UserEditViewModel @Inject constructor(
             val uid = Firebase.auth.uid!!
             try {
                 val user = userRepositoryImpl.getLocalUserById(uid)!!
-                _dataResult.value = success(
+                _uiState.value =
                     UserEditUiState(
-                        user = user,
+                        userId = user.id,
+                        nickname = user.nickname,
                         contentUri = user.profileImageWebUrl
                     )
-                )
             } catch (e: Exception) {
-                DataResult.error(e)
+                _uiState.value = UserEditUiState(isError = true)
             }
         }
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    suspend fun updateUiState(contentUri: String?) {
-        val uid = Firebase.auth.uid!!
-        try {
-            val user = userRepositoryImpl.getLocalUserById(uid)!!
-            _dataResult.value = success(
-                UserEditUiState(
-                    user = user,
-                    contentUri = contentUri
-                )
-            )
-        } catch (e: Exception) {
-            DataResult.error(e)
+    fun updateNickname(nickname: String) {
+        _uiState.value = uiState.value!!.copy(nickname = nickname)
+    }
+
+    fun requestAlbumAccessPermission(permissionLauncher: ManagedActivityResultLauncher<String, Boolean>) {
+        val permissionId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            android.Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        permissionLauncher.launch(permissionId)
+    }
+
+    fun handleImagePickerResult(uri: Uri?) {
+        uri?.let {
+            updateContentUri(it.toString())
         }
     }
 
-    suspend fun updateUser(user: User) {
+    private fun updateContentUri(contentUri: String?) {
+        _uiState.value = uiState.value!!.copy(contentUri = contentUri)
+    }
+
+    fun editUser() {
+        viewModelScope.launch {
+            val contentUri = uiState.value!!.contentUri
+            val currentUserEntry = getCurrentUser(contentUri)
+            delay(2000L)
+            updateUser(currentUserEntry)
+            updateUserComments(currentUserEntry)
+            _uiState.value = uiState.value!!.copy(isCompleted = true)
+        }
+    }
+
+    private suspend fun getCurrentUser(contentUri: String?): User {
+        val uid = Firebase.auth.uid!!
+        val user = userRepositoryImpl.getUser(uid)!!
+        val storageReference = FirebaseStorage.getInstance().reference
+        val ref = storageReference.child("images/$uid")
+        val imageUri = contentUri.let { Uri.parse(it) }
+        return try {
+            ref.putFile(imageUri).await()
+            val uri = ref.downloadUrl.await()
+            user.copy(
+                nickname = _uiState.value?.nickname ?: user.nickname,
+                profileImageWebUrl = uri.toString()
+            )
+        } catch (e: Exception) {
+            user.copy(
+                nickname = _uiState.value?.nickname ?: user.nickname
+            )
+        }
+    }
+
+    private suspend fun updateUser(user: User) {
         userRepositoryImpl.update(user)
     }
 
-    suspend fun updateUserComments(user: User) {
+    private suspend fun updateUserComments(user: User) {
         commentRepositoryImpl.getCommentsByUserId(user.id).map {
             val (id, commentDTO) = it
             val currentComment =
