@@ -52,7 +52,7 @@ class UserViewModel @Inject constructor(
         currentJob?.cancel()
     }
 
-    fun initUser() {
+    private fun initUser() {
         val uid = Firebase.auth.uid!!
         val userInFlow = userRepository.getLocalUserByIdInFlow(uid)
         currentJob?.cancel()

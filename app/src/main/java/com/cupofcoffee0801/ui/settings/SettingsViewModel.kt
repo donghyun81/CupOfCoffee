@@ -7,10 +7,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee0801.data.worker.DeleteUserWorker
 import com.cupofcoffee0801.util.NetworkUtil
@@ -26,8 +22,9 @@ class SettingsViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _dataResult: MutableLiveData<DataResult<SettingsUiState>> = MutableLiveData(loading())
-    val dataResult: LiveData<DataResult<SettingsUiState>> get() = _dataResult
+    private val _uiState: MutableLiveData<SettingsUiState> =
+        MutableLiveData(SettingsUiState(isLoading = true))
+    val uiState: LiveData<SettingsUiState> get() = _uiState
 
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
@@ -39,16 +36,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
-    }
-
     private suspend fun initUiState() {
         preferencesRepository.isAutoLoginFlow.collect { isAutoLogin ->
             try {
-                _dataResult.postValue(success(SettingsUiState(isAutoLogin)))
+                _uiState.value = SettingsUiState(isAutoLogin = isAutoLogin)
             } catch (e: Exception) {
-                _dataResult.postValue(error(e))
+                _uiState.postValue(SettingsUiState(isError = true))
             }
         }
     }
