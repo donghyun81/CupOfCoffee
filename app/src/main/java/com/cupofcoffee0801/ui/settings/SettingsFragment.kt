@@ -4,9 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,12 +36,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.work.WorkManager
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.handle
-import com.cupofcoffee0801.databinding.FragmentSettingsBinding
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
-import com.cupofcoffee0801.ui.showLoading
-import com.cupofcoffee0801.ui.showSnackBar
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
@@ -123,63 +115,58 @@ fun SettingsScreen(
         )
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        if (uiState!!.isLoading)
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        else {
-            Column(
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        data = uiState
+    ) { data ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = "자동 로그인 설정")
-                    Switch(
-                        checked = uiState!!.isAutoLogin,
-                        onCheckedChange = { viewModel.convertIsAutoLogin() }
-                    )
-                }
+                Text(text = stringResource(id = R.string.auto_login_setting))
+                Switch(
+                    checked = data!!.isAutoLogin,
+                    onCheckedChange = { viewModel.convertIsAutoLogin() }
+                )
+            }
 
-                Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-                Button(
-                    onClick = { onLogoutClick() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                ) {
-                    Text(
-                        text = "로그아웃",
-                        textAlign = TextAlign.Center
-                    )
-                }
+            Button(
+                onClick = { onLogoutClick() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.logout),
+                    textAlign = TextAlign.Center
+                )
+            }
 
-                // 회원탈퇴 버튼
-                Button(
-                    onClick = { showDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    colors = ButtonDefaults.buttonColors()
-                ) {
-                    Text(
-                        text = "회원탈퇴",
-                        textAlign = TextAlign.Center,
-                        color = Color.White
-                    )
-                }
+            Button(
+                onClick = { showDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                colors = ButtonDefaults.buttonColors()
+            ) {
+                Text(
+                    text = stringResource(id = R.string.cancel_membership),
+                    textAlign = TextAlign.Center,
+                    color = Color.White
+                )
             }
         }
     }

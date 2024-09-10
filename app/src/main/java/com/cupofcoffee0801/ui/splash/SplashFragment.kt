@@ -76,7 +76,6 @@ fun SplashScreen(
         else moveToLoginFragment()
     }
 
-    // UI for the splash screen
     Box(
         modifier = Modifier
             .fillMaxSize()

@@ -21,6 +21,7 @@
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bnv_home"
+        style="@style/NavigationStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:labelVisibilityMode="unlabeled"

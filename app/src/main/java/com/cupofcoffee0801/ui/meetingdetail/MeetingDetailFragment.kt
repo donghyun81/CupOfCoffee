@@ -4,11 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
@@ -50,15 +50,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
+import com.cupofcoffee0801.ui.component.StateContent
+import com.cupofcoffee0801.ui.component.OptionsMenu
 import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.cupofcoffee0801.ui.toDateFormat
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MeetingDetailFragment : Fragment() {
@@ -143,144 +143,83 @@ fun MeetingDetailScreen(
 ) {
     val uiState by viewModel.meetingDetailUiState.observeAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(12.dp)
-    ) {
-        if (uiState!!.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-            )
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                MeetingOptionsMenu(
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(8.dp),
-                    onEditClick = { onEditClick(uiState!!.meetingUiModel.id) },
-                    onDeleteClick = { onDeleteClick(uiState!!.meetingUiModel.id) }
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                        .padding(8.dp),
-                    text = uiState!!.meetingUiModel.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Start,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Location Section
-                MeetingInfo(
-                    label = stringResource(id = R.string.place_label),
-                    value = uiState!!.meetingUiModel.caption
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                )
-
-                MeetingInfo(
-                    label = stringResource(id = R.string.date_label),
-                    value = uiState!!.meetingUiModel.date
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                )
-
-                MeetingInfo(
-                    label = stringResource(id = R.string.time_label),
-                    value = uiState!!.meetingUiModel.time
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Comments(
-                    comments = uiState!!.comments,
-                    commentClickListener = commentClickListener,
-                    modifier = Modifier.weight(1f)
-                )
-
-                CommentInput(
-                    onMakeCommentClick = { onMakeCommentClick(uiState!!.meetingUiModel.id) },
-                    userProfileUrl = uiState!!.userUiModel.profileUrl
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun MeetingOptionsMenu(
-    modifier: Modifier = Modifier,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    IconButton(
-        onClick = { expanded = true },
-        modifier = modifier
-            .size(36.dp)
-    ) {
-        Icon(
-            painterResource(id = R.drawable.baseline_more_vert_24),
-            contentDescription = "옵션",
-        )
-    }
-
-    if (expanded) {
-        Popup(
-            alignment = Alignment.TopEnd,
-            onDismissRequest = { expanded = false }
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        data = uiState
+    ) { data ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            Column(
-                modifier = modifier
-                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
-                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
-                    .padding(8.dp)
-            ) {
-                Text(
-                    text = "수정",
-                    modifier = Modifier
-                        .clickable {
-                            onEditClick()
-                            expanded = false
-                        }
-                        .padding(8.dp)
-                )
-                Text(
-                    text = "삭제",
-                    modifier = Modifier
-                        .clickable {
-                            onDeleteClick()
-                            expanded = false
-                        }
-                        .padding(8.dp)
-                )
-            }
+            OptionsMenu(
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(8.dp),
+                onEditClick = { onEditClick(data!!.meetingUiModel.id) },
+                onDeleteClick = { onDeleteClick(data!!.meetingUiModel.id) }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .padding(8.dp),
+                text = data!!.meetingUiModel.content,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Start,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            MeetingInfo(
+                label = stringResource(id = R.string.place_label),
+                value = data.meetingUiModel.caption
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            MeetingInfo(
+                label = stringResource(id = R.string.date_label),
+                value = data.meetingUiModel.date
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            MeetingInfo(
+                label = stringResource(id = R.string.time_label),
+                value = data.meetingUiModel.time
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Comments(
+                comments = data.comments,
+                commentClickListener = commentClickListener,
+                modifier = Modifier.weight(1f)
+            )
+
+            CommentInput(
+                onMakeCommentClick = { onMakeCommentClick(data.meetingUiModel.id) },
+                userProfileUrl = data.userUiModel.profileUrl
+            )
         }
     }
 }
@@ -401,8 +340,8 @@ fun CommentItem(
             .background(
                 MaterialTheme.colorScheme.surface,
                 RoundedCornerShape(8.dp)
-            )  // 배경 색상과 모서리 처리 추가
-            .padding(8.dp),  // 내부 패딩 추가
+            )
+            .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         AsyncImage(
@@ -410,7 +349,7 @@ fun CommentItem(
             contentDescription = "사용자 프로필",
             modifier = Modifier
                 .size(40.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
 

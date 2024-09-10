@@ -37,6 +37,7 @@ data class MakeMeetingUiState(
     val date: String = "",
     val time: String = "",
     val isError: Boolean = false,
+    val isLoading: Boolean = false,
     val isComplete: Boolean = false
 )
 
@@ -51,11 +52,8 @@ class MakeMeetingViewModel @Inject constructor(
 
     private val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
     private val _uiState: MutableLiveData<MakeMeetingUiState> =
-        MutableLiveData(MakeMeetingUiState())
+        MutableLiveData(MakeMeetingUiState(isLoading = true))
 
     val uiState: LiveData<MakeMeetingUiState> = _uiState
 
@@ -122,10 +120,6 @@ class MakeMeetingViewModel @Inject constructor(
         _uiState.postValue(
             uiState.value?.copy(time = time)
         )
-    }
-
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()

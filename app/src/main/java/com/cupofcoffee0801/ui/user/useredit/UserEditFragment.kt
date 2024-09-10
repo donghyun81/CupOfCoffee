@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,12 +20,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -40,6 +37,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -92,80 +90,76 @@ fun UserEditScreen(
         }
     }
 
-    Box(
+    StateContent(
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp)
-            .padding(16.dp)
-    ) {
-        if (uiState!!.isLoading) CircularProgressIndicator(
-            modifier = Modifier.align(Alignment.Center),
-            color = MaterialTheme.colorScheme.primary,
-            strokeWidth = 4.dp
-        ) else {
+            .padding(16.dp),
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        isComplete = uiState?.isCompleted ?: false,
+        navigateUp = navigateUp,
+        data = uiState
+    ) { data ->
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            AsyncImage(
+                model = data?.contentUri,
+                contentDescription = "사용자 프로필",
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable {
+                        viewModel.requestAlbumAccessPermission(requestPermissionLauncher)
+                    }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
-                AsyncImage(
-                    model = uiState?.contentUri,
-                    contentDescription = "Profile Image",
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clickable {
-                            viewModel.requestAlbumAccessPermission(requestPermissionLauncher)
-                        }
+                Text(
+                    text = "별명",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "별명",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    TextField(
-                        value = uiState?.nickname ?: "익명",
-                        onValueChange = { viewModel.updateNickname(it) },
-                        placeholder = { Text(text = "이름을 작성해주세요") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                    )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                TextField(
+                    value = data?.nickname ?: "익명",
+                    onValueChange = { viewModel.updateNickname(it) },
+                    placeholder = { Text(text = "이름을 작성해주세요") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp)
-                ) {
-                    Button(
-                        onClick = { navigateUp() },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = stringResource(id = R.string.cancel))
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = { viewModel.editUser() },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = stringResource(id = R.string.save))
-                    }
-                }
+                )
             }
-            LaunchedEffect(uiState!!.isCompleted) {
-                if (uiState!!.isCompleted) navigateUp()
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Button(
+                    onClick = { navigateUp() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = stringResource(id = R.string.cancel))
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = { viewModel.editUser() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = stringResource(id = R.string.save))
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.cupofcoffee0801.ui.login
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,15 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -39,7 +33,7 @@ import androidx.fragment.app.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.ui.graphics.Brown
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.Green
 import com.navercorp.nid.NaverIdLoginSDK
 import com.navercorp.nid.oauth.NidOAuthBehavior
@@ -75,92 +69,66 @@ class LoginFragment : Fragment() {
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
-    moveToHome: () -> Unit
+    onNavigateUp: () -> Unit
 ) {
     val context = LocalContext.current
     val isButtonClicked by viewModel.isButtonClicked.observeAsState(false)
-    val loginState by viewModel.loginState.observeAsState(LoginState.Idle)
-    val snackbarHostState = remember { SnackbarHostState() }
+    val uiState by viewModel.loginUiState.observeAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Brown) // Background color
-            .padding(16.dp)
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        navigateUp = onNavigateUp,
+        data = uiState
     ) {
-        // Central Image (App Logo)
-        Image(
-            painter = painterResource(id = R.drawable.cup_of_coffee),
-            contentDescription = "앱 아이콘",
-            modifier = Modifier
-                .size(200.dp)
-                .align(Alignment.Center)
-        )
+        Box {
+            Image(
+                painter = painterResource(id = R.drawable.cup_of_coffee),
+                contentDescription = "앱 아이콘",
+                modifier = Modifier
+                    .size(200.dp)
+                    .align(Alignment.Center)
+            )
 
-        // Naver Login Button with Naver Logo
-        Button(
-            onClick = {
-                viewModel.switchButtonClicked()
-                NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
-                NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
-                    override fun onSuccess() {
-                        viewModel.loginNaver()
-                    }
+            Button(
+                onClick = {
+                    viewModel.switchButtonClicked()
+                    NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
+                    NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
+                        override fun onSuccess() {
+                            viewModel.loginNaver()
+                        }
 
-                    override fun onFailure(httpStatus: Int, message: String) {
-                        viewModel.switchButtonClicked()
-                    }
+                        override fun onFailure(httpStatus: Int, message: String) {
+                            viewModel.switchButtonClicked()
+                        }
 
-                    override fun onError(errorCode: Int, message: String) {
-                        viewModel.switchButtonClicked()
-                    }
-                })
-            },
-            enabled = !isButtonClicked,
-            colors = ButtonDefaults.buttonColors(Green),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .align(Alignment.BottomCenter)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+                        override fun onError(errorCode: Int, message: String) {
+                            viewModel.switchButtonClicked()
+                        }
+                    })
+                },
+                enabled = !isButtonClicked,
+                colors = ButtonDefaults.buttonColors(Green),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .align(Alignment.BottomCenter)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.naver_logo),
-                    contentDescription = "네이버 로고",
-                    modifier = Modifier
-                        .size(40.dp)
-                        .padding(start = 20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp)) // Space between logo and text
-                Text(text = stringResource(id = R.string.naver_login))
-            }
-        }
-
-        when (loginState) {
-            is LoginState.Error -> {
-                val errorMessage = (loginState as LoginState.Error).message
-                LaunchedEffect(snackbarHostState) {
-                    snackbarHostState.showSnackbar(
-                        message = errorMessage,
-                        duration = SnackbarDuration.Short
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.naver_logo),
+                        contentDescription = "네이버 로고",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(start = 20.dp)
                     )
-                    viewModel.clearError()
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(id = R.string.naver_login))
                 }
             }
-
-            LoginState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-
-            LoginState.Success -> {
-                LaunchedEffect(Unit) {
-                    moveToHome()
-                }
-            }
-
-            LoginState.Idle -> Unit
         }
     }
 }

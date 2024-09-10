@@ -4,5 +4,4 @@ data class SettingsUiState(
     val isAutoLogin: Boolean = false,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
-    val isComplete: Boolean = false
 )

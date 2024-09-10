@@ -37,8 +37,8 @@ class LoginViewModel @Inject constructor(
     private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
     val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
 
-    private val _loginState = MutableLiveData<LoginState>(LoginState.Idle)
-    val loginState: LiveData<LoginState> get() = _loginState
+    private val _loginUiState = MutableLiveData(LoginUiState())
+    val loginUiState: LiveData<LoginUiState> get() = _loginUiState
 
     private val auth = Firebase.auth
 
@@ -49,7 +49,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun loginNaver() {
-        _loginState.value = LoginState.Loading
+        _loginUiState.value = LoginUiState(isLoading = true)
         NidOAuthLogin().callProfileApi(object : NidProfileCallback<NidProfileResponse> {
             override fun onSuccess(result: NidProfileResponse) {
                 val naverUser = result.profile?.run {
@@ -65,11 +65,11 @@ class LoginViewModel @Inject constructor(
             }
 
             override fun onFailure(httpStatus: Int, message: String) {
-                _loginState.value = LoginState.Error(CREATE_USER_ERROR_MESSAGE)
+                _loginUiState.value = LoginUiState(isError = true)
             }
 
             override fun onError(errorCode: Int, message: String) {
-                _loginState.value = LoginState.Error(CREATE_USER_ERROR_MESSAGE)
+                _loginUiState.value = LoginUiState(isError = true)
             }
         })
     }
@@ -83,7 +83,7 @@ class LoginViewModel @Inject constructor(
                         viewModelScope.launch {
                             delay(2000L)
                             loginUser(uid)
-                            _loginState.value = LoginState.Success
+                            _loginUiState.value = LoginUiState(isComplete = true)
                         }
                     } else {
                         createAccount(naverUser)
@@ -101,11 +101,10 @@ class LoginViewModel @Inject constructor(
                         viewModelScope.launch {
                             delay(2000L)
                             insertUser(naverUser.asUser(uid))
-                            _loginState.value = LoginState.Success
+                            _loginUiState.value = LoginUiState(isComplete = true)
                         }
                     } else {
-                        switchButtonClicked()
-                        _loginState.value = LoginState.Error(CREATE_USER_ERROR_MESSAGE)
+                        _loginUiState.value = LoginUiState(isError = true)
                     }
                 }
         }
@@ -114,7 +113,7 @@ class LoginViewModel @Inject constructor(
     private suspend fun insertUser(user: User) {
         with(user) {
             userRepository.insertLocal(asUserEntity())
-            userRepository.insertRemote(id,asUserDTO())
+            userRepository.insertRemote(id, asUserDTO())
         }
     }
 
@@ -144,8 +143,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun clearError() {
-        _isButtonClicked.value = false
-        _loginState.value = LoginState.Idle
+        _loginUiState.value = LoginUiState()
     }
 
     private fun String.toNaverEmail() = "${this.take(NAVER_ID_TO_EMAIL_COUNT)}@naver.com"

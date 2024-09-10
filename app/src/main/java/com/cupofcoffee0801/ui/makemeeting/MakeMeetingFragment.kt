@@ -20,9 +20,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -32,8 +33,8 @@ import androidx.fragment.app.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.ui.graphics.Black
-import com.cupofcoffee0801.ui.graphics.Brown
+import com.cupofcoffee0801.ui.component.StateContent
+import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.cupofcoffee0801.ui.isCurrentDateOver
 import com.cupofcoffee0801.ui.showSnackBar
 import com.cupofcoffee0801.ui.toCurrentTime
@@ -55,12 +56,14 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                MakeMeetingScreen(
-                    viewModel,
-                    ::showMeetingDatePicker,
-                    ::showMeetingTimePicker,
-                    ::navigateUp,
-                )
+                AppTheme {
+                    MakeMeetingScreen(
+                        viewModel,
+                        ::showMeetingDatePicker,
+                        ::showMeetingTimePicker,
+                        ::navigateUp,
+                    )
+                }
             }
         }
     }
@@ -107,106 +110,107 @@ fun MakeMeetingScreen(
     onNavigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.observeAsState()
-    val isButtonClicked by viewModel.isButtonClicked.observeAsState(false)
-    Scaffold(
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues)
-                    .padding(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = uiState!!.content,
-                    onValueChange = { newContent -> viewModel.updateContent(newContent) },
-                    label = { Text(stringResource(R.string.content_hint)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(6.dp)
-                )
+    val isButtonClicked by remember { mutableStateOf(true) }
 
-                Row(
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        isComplete = uiState?.isComplete ?: false,
+        navigateUp = onNavigateUp,
+        data = uiState
+    ) { data ->
+        Scaffold(
+            content = { paddingValues ->
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(paddingValues)
+                        .padding(12.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.place_label),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = uiState!!.placeName,
-                        style = MaterialTheme.typography.bodyMedium,
+                    OutlinedTextField(
+                        value = data!!.content,
+                        onValueChange = { newContent -> viewModel.updateContent(newContent) },
+                        label = { Text(stringResource(R.string.content_hint)) },
                         modifier = Modifier
-                            .weight(2f)
-                            .wrapContentSize(align = Alignment.CenterEnd)
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(6.dp)
                     )
-                }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.date_label),
-                        style = MaterialTheme.typography.titleMedium,
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                    )
-                    Text(
-                        text = uiState!!.date,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .weight(2f)
-                            .wrapContentSize(align = Alignment.CenterEnd)
-                            .clickable { showDatePicker() }
-                    )
-                }
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.place_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = data.placeName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .weight(2f)
+                                .wrapContentSize(align = Alignment.CenterEnd)
+                        )
+                    }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.time_label),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = uiState!!.time,
-                        style = MaterialTheme.typography.bodyMedium,
+                    Row(
                         modifier = Modifier
-                            .weight(2f)
-                            .wrapContentSize(align = Alignment.CenterEnd)
-                            .clickable {
-                                showTimePicker()
-                            }
-                    )
-                }
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = stringResource(R.string.date_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .weight(1f)
+                        )
+                        Text(
+                            text = data.date,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .weight(2f)
+                                .wrapContentSize(align = Alignment.CenterEnd)
+                                .clickable { showDatePicker() }
+                        )
+                    }
 
-                Button(
-                    onClick = { viewModel.saveMeeting(uiState!!) },
-                    enabled = !isButtonClicked,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Brown, // brown color
-                        contentColor = Black
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text(text = stringResource(R.string.save))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = stringResource(R.string.time_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = data.time,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .weight(2f)
+                                .wrapContentSize(align = Alignment.CenterEnd)
+                                .clickable {
+                                    showTimePicker()
+                                }
+                        )
+                    }
+
+                    Button(
+                        onClick = { viewModel.saveMeeting(data) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                    ) {
+                        Text(text = stringResource(R.string.save))
+                    }
                 }
             }
-        }
-    )
-    LaunchedEffect(uiState!!.isComplete) {
-        if (uiState!!.isComplete) onNavigateUp()
+        )
     }
 }

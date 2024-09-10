@@ -3,6 +3,7 @@ package com.cupofcoffee0801.ui.home
 import android.Manifest
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,9 +35,10 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.handle
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.naver.maps.geometry.LatLng
@@ -41,6 +46,7 @@ import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
+import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.util.FusedLocationSource
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -99,7 +105,6 @@ fun HomeScreen(
     onMarkerClick: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val mapView = rememberMapViewWithLifecycle()
     val naverMapState = remember { mutableStateOf<NaverMap?>(null) }
     val permissionsState = rememberMultiplePermissionsState(
@@ -108,52 +113,107 @@ fun HomeScreen(
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
+    val uiState by viewModel.uiState.observeAsState()
 
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        data = uiState
+    ) {
+        HandlePermissions(permissionsState, naverMapState)
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            MapViewWithMarkers(
+                mapView = mapView,
+                naverMapState = naverMapState,
+                fusedLocationSource = fusedLocationSource,
+                uiState = uiState,
+                context = context,
+                onPlaceClick = onPlaceClick,
+                onMarkerClick = onMarkerClick,
+                viewModel = viewModel
+            )
+
+            MyLocationButton(
+                naverMapState = naverMapState,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun HandlePermissions(
+    permissionsState: MultiplePermissionsState,
+    naverMapState: MutableState<NaverMap?>
+) {
     LaunchedEffect(permissionsState.allPermissionsGranted) {
         if (permissionsState.allPermissionsGranted) {
-            val naverMap = naverMapState.value
-            if (naverMap != null) {
-                naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
-            }
+            naverMapState.value?.locationTrackingMode = LocationTrackingMode.NoFollow
         } else {
             permissionsState.launchMultiplePermissionRequest()
         }
     }
+}
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { mapView }
-        ) { mapView ->
-            mapView.getMapAsync { naverMap ->
-                naverMapState.value = naverMap
-                naverMap.locationSource = fusedLocationSource
-                naverMap.uiSettings.isLocationButtonEnabled = false
-
-                showUserLocation(naverMap)
-                initCameraZoom(naverMap)
-                setSymbolClick(naverMap, context, onPlaceClick)
-                initMarkers(naverMap, viewModel, lifecycleOwner, onMarkerClick)
-            }
+@Composable
+private fun MapViewWithMarkers(
+    mapView: MapView,
+    naverMapState: MutableState<NaverMap?>,
+    fusedLocationSource: FusedLocationSource,
+    uiState: HomeUiState?,
+    context: Context,
+    onPlaceClick: (String, LatLng) -> Unit,
+    onMarkerClick: (String) -> Unit,
+    viewModel: HomeViewModel
+) {
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { mapView.apply {
+            onCreate(null)
+            onStart()
+        } }
+    ) { mapView ->
+        mapView.getMapAsync { naverMap ->
+            naverMapState.value = naverMap
+            naverMap.locationSource = fusedLocationSource
+            naverMap.uiSettings.isLocationButtonEnabled = false
+            showUserLocation(naverMap)
+            initCameraZoom(naverMap)
+            setSymbolClick(naverMap, context, onPlaceClick)
+            showMarkers(
+                naverMap = naverMap,
+                markers = uiState?.markers.orEmpty(),
+                showedMarkers = uiState?.showedMarkers.orEmpty(),
+                onMarkerClick = onMarkerClick,
+                updateShowedMarkers = viewModel::updateShowedMarkers
+            )
         }
+    }
+}
 
-        IconButton(
-            onClick = {
-                val naverMap = naverMapState.value!!
+@Composable
+private fun MyLocationButton(
+    naverMapState: MutableState<NaverMap?>,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = {
+            naverMapState.value?.let { naverMap ->
                 val location = naverMap.locationOverlay.position
                 val cameraUpdate = CameraUpdate.scrollTo(location)
                 naverMap.moveCamera(cameraUpdate)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_my_location_24),
-                contentDescription = "본인 위치로 이동",
-                modifier = Modifier.size(48.dp)
-            )
-        }
+            }
+        },
+        modifier = modifier
+            .padding(16.dp)
+            .size(48.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.baseline_my_location_24),
+            contentDescription = "본인 위치로 이동"
+        )
     }
 }
 
@@ -182,33 +242,26 @@ private fun setSymbolClick(
     }
 }
 
-private fun initMarkers(
+private fun showMarkers(
     naverMap: NaverMap,
-    viewModel: HomeViewModel,
-    lifecycleOwner: LifecycleOwner,
-    onMarkerClick: (String) -> Unit
+    markers: List<Marker>,
+    showedMarkers: List<Marker>,
+    onMarkerClick: (String) -> Unit,
+    updateShowedMarkers: (List<Marker>) -> Unit
 ) {
-    viewModel.dataResult.observe(lifecycleOwner) { result ->
-        result.handle(
-            onLoading = {
-            },
-            onSuccess = { state ->
-                state.markers.map { marker ->
-                    if (state.showedMakers.contains(marker).not()) {
-                        marker.map = naverMap
-                        val placeId = marker.tag.toString()
-                        marker.setOnClickListener {
-                            onMarkerClick(placeId)
-                            true
-                        }
-                    }
-                }
-                viewModel.updateShowedMarkers(state.markers)
-            },
-            onError = {
-            }
-        )
+    markers.filterNot { it in showedMarkers }.forEach { marker ->
+        marker.map = naverMap
+        val placeId = marker.tag.toString()
+        marker.setOnClickListener {
+            onMarkerClick(placeId)
+            true
+        }
     }
+
+    showedMarkers.filterNot { it in markers }.forEach { marker ->
+        marker.map = null
+    }
+    updateShowedMarkers(markers)
 }
 
 @Composable

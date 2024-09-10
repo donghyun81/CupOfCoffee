@@ -24,10 +24,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +42,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
@@ -57,6 +58,7 @@ import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
 import com.cupofcoffee0801.ui.component.OptionsMenu
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.cupofcoffee0801.ui.model.MeetingsCategory
 import com.cupofcoffee0801.ui.showSnackBar
@@ -137,28 +139,20 @@ fun UserScreen(
     val pages = MeetingsCategory.tabCategories
     val pagerState = rememberPagerState { pages.size }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-    ) {
-        when {
-            uiState == null || uiState!!.isLoading -> CircularProgressIndicator(
-                modifier = Modifier.align(
-                    Alignment.Center
-                )
-            )
-
-            else -> UserContent(
-                uiState = uiState!!,
-                pagerState = pagerState,
-                pages = pages,
-                onSettingsClick = onSettingsClick,
-                onEditProfileClick = onEditProfileClick,
-                onMeetingClickListener = onMeetingClickListener,
-                coroutineScope = coroutineScope
-            )
-        }
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        data = uiState
+    ) { data ->
+        UserContent(
+            uiState = data!!,
+            pagerState = pagerState,
+            pages = pages,
+            onSettingsClick = onSettingsClick,
+            onEditProfileClick = onEditProfileClick,
+            onMeetingClickListener = onMeetingClickListener,
+            coroutineScope = coroutineScope
+        )
     }
 }
 
@@ -224,7 +218,7 @@ fun UserProfileCard(uiState: UserUiState, onEditProfileClick: () -> Unit) {
                 contentDescription = "사용자 프로필",
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surface),
                 contentScale = ContentScale.Crop
             )

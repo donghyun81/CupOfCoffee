@@ -39,4 +39,10 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <style name="NavigationStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:background">@color/bottomNavBackgroundColor</item>
+        <item name="itemIconTint">@color/bottomNavIconColor</item>
+        <item name="itemTextColor">@color/bottomNavTextColor</item>
+    </style>
+
 </resources>

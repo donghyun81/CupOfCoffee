@@ -8,13 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -26,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.cupofcoffee0801.ui.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -116,53 +114,44 @@ fun PlaceMeetingsScreen(
 ) {
     val uiState by viewModel.uiState.observeAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        if (uiState!!.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .background(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                        shape = CircleShape
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        data = uiState
+    ) { data ->
+        Column(
+            modifier = Modifier
+                .fillMaxHeight(0.8f) // BottomSheetDialog에서 적절한 높이 설정
+                .padding(16.dp)
+        ) {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = data?.placeCaption ?: "",
+                        style = MaterialTheme.typography.titleLarge
                     )
-                    .padding(16.dp)
-            )
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight(0.8f) // BottomSheetDialog에서 적절한 높이 설정
-                    .padding(16.dp)
-            ) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = uiState?.placeCaption ?: "",
-                            style = MaterialTheme.typography.titleLarge
+                },
+                navigationIcon = {
+                    IconButton(onClick = navigateUp) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_cancel_24),
+                            contentDescription = stringResource(R.string.cancel)
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = navigateUp) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_cancel_24),
-                                contentDescription = stringResource(R.string.cancel)
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f) // 화면 여분을 사용하는 데 기여
-                ) {
-                    items(uiState!!.meetingsInPlace) { meetingInPlace ->
-                        MeetingItem(meetingPlaceMeetingUiModel = meetingInPlace, meetingClickListener)
                     }
+                },
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f) // 화면 여분을 사용하는 데 기여
+            ) {
+                items(data!!.meetingsInPlace) { meetingInPlace ->
+                    MeetingItem(
+                        meetingPlaceMeetingUiModel = meetingInPlace,
+                        meetingClickListener
+                    )
                 }
             }
         }
@@ -170,7 +159,10 @@ fun PlaceMeetingsScreen(
 }
 
 @Composable
-fun MeetingItem(meetingPlaceMeetingUiModel: MeetingPlaceMeetingUiModel, meetingClickListener: MeetingClickListener) {
+fun MeetingItem(
+    meetingPlaceMeetingUiModel: MeetingPlaceMeetingUiModel,
+    meetingClickListener: MeetingClickListener
+) {
     Column(
         modifier = Modifier
             .width(280.dp)
@@ -258,7 +250,7 @@ fun UserItem(meetingPlaceUserUiModel: MeetingPlaceUserUiModel) {
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                .border(2.dp, MaterialTheme.colorScheme.onPrimary, CircleShape),
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(4.dp))

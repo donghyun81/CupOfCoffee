@@ -5,9 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +33,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,38 +72,45 @@ fun CommentEditScreen(
     val uiState by viewModel.uiState.observeAsState()
     val content = rememberSaveable { mutableStateOf(uiState!!.comment?.content ?: "") }
 
-    Row(modifier = Modifier.height(100.dp)) {
-        if (uiState!!.isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterVertically))
-        else {
-            AsyncImage(
-                model = uiState!!.user!!.profileImageWebUrl,
-                contentDescription = "사용자 프로필",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .align(Alignment.CenterVertically),
-                contentScale = ContentScale.Crop
-            )
-            TextField(
-                value = content.value,
-                onValueChange = { newContent -> content.value = newContent },
-                label = { Text("내용") },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(6.dp)
-                    .align(Alignment.CenterVertically)
-            )
+    StateContent(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        isComplete = uiState?.isCompleted ?: false,
+        navigateUp = navigateUp,
+        data = uiState
+    ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            if (uiState!!.isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterVertically))
+            else {
+                AsyncImage(
+                    model = uiState!!.user!!.profileImageWebUrl,
+                    contentDescription = "사용자 프로필",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.CenterVertically)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                TextField(
+                    value = content.value,
+                    onValueChange = { newContent -> content.value = newContent },
+                    label = { Text("내용") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(6.dp)
+                        .align(Alignment.CenterVertically)
+                )
 
-            Button(
-                onClick = { viewModel.editComment(content = content.value) },
-                modifier = Modifier.align(Alignment.CenterVertically)
-            ) {
-                Text(text = stringResource(id = R.string.save))
+                Button(
+                    onClick = { viewModel.editComment(content = content.value) },
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Text(text = stringResource(id = R.string.save))
+                }
             }
         }
-    }
-
-    LaunchedEffect(uiState!!.isCompleted) {
-        if (uiState!!.isCompleted) navigateUp()
     }
 }
