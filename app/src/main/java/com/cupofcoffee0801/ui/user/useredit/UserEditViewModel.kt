@@ -32,17 +32,10 @@ class UserEditViewModel @Inject constructor(
         MutableLiveData(UserEditUiState(isLoading = true))
     val uiState: LiveData<UserEditUiState> get() = _uiState
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
-
     init {
         initUiState()
     }
 
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
-    }
 
     private fun initUiState() {
         viewModelScope.launch {

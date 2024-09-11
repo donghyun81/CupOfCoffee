@@ -27,7 +27,7 @@ class CommentEditViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    val args = CommentEditFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    private val args = CommentEditFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
     private val _uiState: MutableLiveData<CommentUiState> =
         MutableLiveData(CommentUiState(isLoading = true))
@@ -55,11 +55,6 @@ class CommentEditViewModel @Inject constructor(
                 _uiState.postValue(CommentUiState(isError = true))
             }
         }
-    }
-
-    fun updateContent(content: String) {
-        val updatedComment = uiState.value!!.comment!!.copy(content = content)
-        _uiState.value = uiState.value!!.copy(comment = updatedComment)
     }
 
     fun editComment(content: String) {

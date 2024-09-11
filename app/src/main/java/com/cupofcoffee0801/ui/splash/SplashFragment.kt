@@ -7,7 +7,11 @@ import android.view.ViewGroup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -76,18 +80,19 @@ fun SplashScreen(
         else moveToLoginFragment()
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brown),
-        contentAlignment = Alignment.Center
+            .background(Brown)
+            .padding(8.dp),
     ) {
+        Spacer(modifier = Modifier.height(150.dp))
         Image(
             painterResource(id = R.drawable.cup_of_coffee),
             contentDescription = "splash 화면 아이콘",
             modifier = Modifier
                 .size(200.dp)
-                .align(Alignment.Center)
+                .align(Alignment.CenterHorizontally)
         )
     }
 }

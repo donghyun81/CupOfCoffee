@@ -9,9 +9,9 @@ import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.ui.model.NaverUser
 import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.ui.model.asMeetingEntity
+import com.cupofcoffee0801.ui.model.asUser
 import com.cupofcoffee0801.ui.model.asUserDTO
 import com.cupofcoffee0801.ui.model.asUserEntity
-import com.cupofcoffee0801.ui.model.asUser
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -140,10 +140,6 @@ class LoginViewModel @Inject constructor(
                 attendMeeting.asMeetingEntity()
             )
         }
-    }
-
-    fun clearError() {
-        _loginUiState.value = LoginUiState()
     }
 
     private fun String.toNaverEmail() = "${this.take(NAVER_ID_TO_EMAIL_COUNT)}@naver.com"

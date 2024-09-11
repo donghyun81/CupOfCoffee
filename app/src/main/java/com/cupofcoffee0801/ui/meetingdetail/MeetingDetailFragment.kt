@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
@@ -54,9 +52,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.component.OptionsMenu
+import com.cupofcoffee0801.ui.component.StateContent
 import com.cupofcoffee0801.ui.graphics.AppTheme
+import com.cupofcoffee0801.ui.showSnackBar
 import com.cupofcoffee0801.ui.toDateFormat
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -128,7 +127,8 @@ class MeetingDetailFragment : Fragment() {
         }
 
         override fun onDeleteClick(commentId: String) {
-            viewModel.deleteComment(commentId)
+            if (viewModel.isNetworkConnected()) viewModel.deleteComment(commentId)
+            else view?.showSnackBar(R.string.delete_meeting_network_message)
         }
     }
 }

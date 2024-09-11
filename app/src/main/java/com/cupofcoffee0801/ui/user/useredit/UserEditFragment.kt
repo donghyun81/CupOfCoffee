@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,11 +22,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,6 +83,7 @@ fun UserEditScreen(
     navigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.observeAsState()
+    var isButtonClicked by remember { mutableStateOf(false) }
 
     val pickImagesLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -90,6 +99,20 @@ fun UserEditScreen(
         }
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSnackbar by remember { mutableStateOf(false) }
+    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
+
+    LaunchedEffect(showSnackbar) {
+        if (showSnackbar) {
+            snackbarHostState.showSnackbar(
+                message = makeNetworkMessage,
+                duration = SnackbarDuration.Short
+            )
+            showSnackbar = false
+        }
+    }
+
     StateContent(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,66 +124,80 @@ fun UserEditScreen(
         navigateUp = navigateUp,
         data = uiState
     ) { data ->
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+        Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            AsyncImage(
-                model = data?.contentUri,
-                contentDescription = "사용자 프로필",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable {
-                        viewModel.requestAlbumAccessPermission(requestPermissionLauncher)
-                    }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             Column(
-                modifier = Modifier.fillMaxWidth()
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxSize()
             ) {
-                Text(
-                    text = "별명",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                AsyncImage(
+                    model = data?.contentUri,
+                    contentDescription = "사용자 프로필",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable {
+                            viewModel.requestAlbumAccessPermission(requestPermissionLauncher)
+                        }
                 )
 
-                TextField(
-                    value = data?.nickname ?: "익명",
-                    onValueChange = { viewModel.updateNickname(it) },
-                    placeholder = { Text(text = "이름을 작성해주세요") },
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "별명",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    TextField(
+                        value = data?.nickname ?: "익명",
+                        onValueChange = { viewModel.updateNickname(it) },
+                        placeholder = { Text(text = "이름을 작성해주세요") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp)
-                )
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-            ) {
-                Button(
-                    onClick = { navigateUp() },
-                    modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = stringResource(id = R.string.cancel))
-                }
+                    Button(
+                        onClick = { navigateUp() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                Button(
-                    onClick = { viewModel.editUser() },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(text = stringResource(id = R.string.save))
+                    Button(
+                        onClick = {
+                            if (viewModel.isNetworkConnected()) {
+                                isButtonClicked = true
+                                viewModel.editUser()
+                            } else showSnackbar = true
+                        },
+                        enabled = !isButtonClicked,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(id = R.string.save))
+                    }
                 }
             }
+            SnackbarHost(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                hostState = snackbarHostState
+            )
         }
     }
 }

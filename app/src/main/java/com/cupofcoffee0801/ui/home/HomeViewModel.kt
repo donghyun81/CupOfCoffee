@@ -17,6 +17,7 @@ import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -45,6 +46,8 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
+        currentJob?.cancel()
+        currentJob = initMarkers()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -55,7 +58,9 @@ class HomeViewModel @Inject constructor(
 
     fun initMarkers() = viewModelScope.launch {
         val placesFlow = placeRepository.getAllPlacesInFlow(networkUtil.isConnected())
-        placesFlow.collect { places ->
+        placesFlow
+            .distinctUntilChanged()
+            .collect { places ->
             try {
                 places.forEach { place ->
                     placeRepository.insertLocal(

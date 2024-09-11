@@ -14,10 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -102,6 +107,19 @@ fun SettingsScreen(
 
     val uiState by viewModel.uiState.observeAsState()
     var showDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSnackbar by remember { mutableStateOf(false) }
+    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
+
+    LaunchedEffect(showSnackbar) {
+        if (showSnackbar) {
+            snackbarHostState.showSnackbar(
+                message = makeNetworkMessage,
+                duration = SnackbarDuration.Short
+            )
+            showSnackbar = false
+        }
+    }
 
     if (showDialog) {
         CancelMembershipDialog(
@@ -115,58 +133,64 @@ fun SettingsScreen(
         )
     }
 
-    StateContent(
-        isError = uiState?.isError ?: false,
-        isLoading = uiState?.isLoading ?: false,
-        data = uiState
-    ) { data ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(id = R.string.auto_login_setting))
-                Switch(
-                    checked = data!!.isAutoLogin,
-                    onCheckedChange = { viewModel.convertIsAutoLogin() }
-                )
-            }
+    Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { padding ->
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = { onLogoutClick() },
+        StateContent(
+            isError = uiState?.isError ?: false,
+            isLoading = uiState?.isLoading ?: false,
+            data = uiState
+        ) { data ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = stringResource(id = R.string.logout),
-                    textAlign = TextAlign.Center
-                )
-            }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(id = R.string.auto_login_setting))
+                    Switch(
+                        checked = data!!.isAutoLogin,
+                        onCheckedChange = { viewModel.convertIsAutoLogin() }
+                    )
+                }
 
-            Button(
-                onClick = { showDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                colors = ButtonDefaults.buttonColors()
-            ) {
-                Text(
-                    text = stringResource(id = R.string.cancel_membership),
-                    textAlign = TextAlign.Center,
-                    color = Color.White
-                )
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = { onLogoutClick() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.logout),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if (viewModel.isNetworkConnected()) showDialog = true
+                        else showSnackbar = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    colors = ButtonDefaults.buttonColors()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.cancel_membership),
+                        textAlign = TextAlign.Center,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -177,10 +201,13 @@ fun CancelMembershipDialog(
     onCancel: () -> Unit,
     onDismiss: () -> Unit
 ) {
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onCancel) {
+            TextButton(onClick = {
+                onCancel()
+            }) {
                 Text(text = stringResource(id = R.string.cancel_membership))
             }
         },

@@ -42,7 +42,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
@@ -246,7 +245,7 @@ fun UserProfileCard(uiState: UserUiState, onEditProfileClick: () -> Unit) {
             IconButton(onClick = onEditProfileClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_edit_24),
-                    contentDescription = "Edit Profile"
+                    contentDescription = "프로필 수정"
                 )
             }
         }

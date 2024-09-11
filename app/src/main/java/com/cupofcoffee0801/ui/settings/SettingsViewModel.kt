@@ -26,10 +26,6 @@ class SettingsViewModel @Inject constructor(
         MutableLiveData(SettingsUiState(isLoading = true))
     val uiState: LiveData<SettingsUiState> get() = _uiState
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
-
     init {
         viewModelScope.launch {
             initUiState()
@@ -52,7 +48,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun isConnected() = networkUtil.isConnected()
+    fun isNetworkConnected() = networkUtil.isConnected()
 
     fun getDeleteUserWorker(): OneTimeWorkRequest {
         val inputData = Data.Builder()

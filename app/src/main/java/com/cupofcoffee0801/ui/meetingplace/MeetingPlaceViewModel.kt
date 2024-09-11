@@ -2,6 +2,7 @@ package com.cupofcoffee0801.ui.meetingplace
 
 import android.net.ConnectivityManager
 import android.net.Network
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -37,9 +38,6 @@ class MeetingPlaceViewModel @Inject constructor(
         MutableLiveData(MeetingPlaceUiState(isLoading = true))
     val uiState: LiveData<MeetingPlaceUiState> get() = _uiState
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
     private var currentJob: Job? = null
 
 
@@ -58,10 +56,6 @@ class MeetingPlaceViewModel @Inject constructor(
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
-    }
-
     fun isNetworkConnected() = networkUtil.isConnected()
 
     fun initUiState() {
@@ -71,7 +65,7 @@ class MeetingPlaceViewModel @Inject constructor(
                 val place =
                     placeRepository.getPlaceById(placeId, networkUtil.isConnected())!!
                 val meetingsInFlow =
-                    meetingRepository.getMeetingsByIdsInFlow(place.meetingIds.keys.toList())
+                    meetingRepository.getMeetingsByIdsInFlow(place.meetingIds.keys.toList(),isNetworkConnected())
                 meetingsInFlow.flatMapLatest { meetings ->
                     addLocalMeetings(meetings)
                     flow { emit(meetings.map { convertMeetingInPlace(it) }) }
@@ -79,13 +73,11 @@ class MeetingPlaceViewModel @Inject constructor(
                     _uiState.value = MeetingPlaceUiState(
                         placeCaption = place.caption,
                         meetingsInPlace = it,
-                        isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = MeetingPlaceUiState(
                     isError = true,
-                    isLoading = false
                 )
             }
         }

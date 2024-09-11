@@ -1,5 +1,6 @@
 package com.cupofcoffee0801.ui.user
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -32,17 +33,10 @@ class UserViewModel @Inject constructor(
         MutableLiveData(UserUiState(isLoading = true))
     val userUiState: LiveData<UserUiState> get() = _userUiState
 
-    var currentJob: Job? = null
-
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
+    private var currentJob: Job? = null
 
     init {
         initUser()
-    }
-
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()
@@ -90,9 +84,9 @@ class UserViewModel @Inject constructor(
     }
 
     private suspend fun getMeetings(meetingIds: Set<String>): List<UserMeeting> {
-        val meetings = meetingRepository.getMeetingsByIds(meetingIds.toList())
+        val meetings = meetingRepository.getMeetingsByIds(meetingIds.toList(),isNetworkConnected())
         return meetings.map {
-            val placeName = placeRepository.getPlaceById(it.placeId)!!.caption
+            val placeName = placeRepository.getPlaceById(it.placeId,isNetworkConnected())!!.caption
             it.asUserMeeting(placeName)
         }
     }

@@ -34,4 +34,5 @@
     <string name="no_cancel_my_meeting">내 모임은 모임 상세에서 삭제 해주세요!</string>
     <string name="meeting_content_label">모임 내용</string>
     <string name="auto_login_setting">자동 로그인 설정</string>
+    <string name="make_network_message">\"모임을 생성하려면 네트워크 연결이 필요합니다!\"</string>
 </resources>

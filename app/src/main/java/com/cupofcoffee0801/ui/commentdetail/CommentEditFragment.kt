@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -21,7 +24,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,6 +76,20 @@ fun CommentEditScreen(
 ) {
     val uiState by viewModel.uiState.observeAsState()
     val content = rememberSaveable { mutableStateOf(uiState!!.comment?.content ?: "") }
+    var isButtonClicked by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSnackbar by remember { mutableStateOf(false) }
+    val editCommentNetworkMessage = stringResource(id = R.string.edit_comment_netwokr_message)
+
+    LaunchedEffect(showSnackbar) {
+        if (showSnackbar) {
+            snackbarHostState.showSnackbar(
+                message = editCommentNetworkMessage,
+                duration = SnackbarDuration.Short
+            )
+            showSnackbar = false
+        }
+    }
 
     StateContent(
         modifier = Modifier
@@ -82,9 +101,11 @@ fun CommentEditScreen(
         navigateUp = navigateUp,
         data = uiState
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            if (uiState!!.isLoading) CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterVertically))
-            else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Row(modifier = Modifier.fillMaxSize()) {
                 AsyncImage(
                     model = uiState!!.user!!.profileImageWebUrl,
                     contentDescription = "사용자 프로필",
@@ -105,12 +126,26 @@ fun CommentEditScreen(
                 )
 
                 Button(
-                    onClick = { viewModel.editComment(content = content.value) },
+                    onClick = {
+                        if (viewModel.isNetworkConnected()) {
+                            isButtonClicked = true
+                            viewModel.editComment(content = content.value)
+                        } else showSnackbar = true
+                    },
+                    enabled = !isButtonClicked,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Text(text = stringResource(id = R.string.save))
                 }
             }
+
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
         }
     }
 }

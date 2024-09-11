@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -121,7 +120,7 @@ fun PlaceMeetingsScreen(
     ) { data ->
         Column(
             modifier = Modifier
-                .fillMaxHeight(0.8f) // BottomSheetDialog에서 적절한 높이 설정
+                .fillMaxHeight(0.8f)
                 .padding(16.dp)
         ) {
             TopAppBar(
@@ -145,7 +144,7 @@ fun PlaceMeetingsScreen(
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f) // 화면 여분을 사용하는 데 기여
+                modifier = Modifier.weight(1f)
             ) {
                 items(data!!.meetingsInPlace) { meetingInPlace ->
                     MeetingItem(
@@ -166,11 +165,10 @@ fun MeetingItem(
     Column(
         modifier = Modifier
             .width(280.dp)
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
             .clickable { meetingClickListener.onDetailClick(meetingId = meetingPlaceMeetingUiModel.id) }
             .padding(8.dp)
             .border(
-                1.dp,
+                2.dp,
                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                 RoundedCornerShape(8.dp)
             )
@@ -179,8 +177,8 @@ fun MeetingItem(
             text = meetingPlaceMeetingUiModel.content,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 3, // 최대 2줄로 표시
-            overflow = TextOverflow.Ellipsis, // 내용이 길면 잘라내기
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .height(100.dp)
                 .padding(bottom = 8.dp)
