@@ -101,12 +101,12 @@ fun UserEditScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     var showSnackbar by remember { mutableStateOf(false) }
-    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
+    val editUserNetworkMessage = stringResource(id = R.string.edit_user_network_message)
 
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
             snackbarHostState.showSnackbar(
-                message = makeNetworkMessage,
+                message = editUserNetworkMessage,
                 duration = SnackbarDuration.Short
             )
             showSnackbar = false

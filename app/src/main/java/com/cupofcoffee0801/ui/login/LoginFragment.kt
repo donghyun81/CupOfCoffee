@@ -88,12 +88,12 @@ fun LoginScreen(
     val uiState by viewModel.loginUiState.observeAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showSnackbar by remember { mutableStateOf(false) }
-    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
+    val loginNetworkMessage = stringResource(id = R.string.login_network_message)
 
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
             snackbarHostState.showSnackbar(
-                message = makeNetworkMessage,
+                message = loginNetworkMessage,
                 duration = SnackbarDuration.Short
             )
             showSnackbar = false

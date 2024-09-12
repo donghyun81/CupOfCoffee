@@ -109,12 +109,12 @@ fun SettingsScreen(
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showSnackbar by remember { mutableStateOf(false) }
-    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
+    val membershipNetworkMessage = stringResource(id = R.string.cancel_membership_network_message)
 
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
             snackbarHostState.showSnackbar(
-                message = makeNetworkMessage,
+                message = membershipNetworkMessage,
                 duration = SnackbarDuration.Short
             )
             showSnackbar = false

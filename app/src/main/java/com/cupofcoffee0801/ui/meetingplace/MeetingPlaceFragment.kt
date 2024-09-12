@@ -86,7 +86,7 @@ class MeetingPlaceFragment : BottomSheetDialogFragment() {
             when {
                 isMyMeeting -> view?.showSnackBar(R.string.no_cancel_my_meeting)
                 viewModel.isNetworkConnected() -> viewModel.cancelMeeting(meetingId)
-                else -> view?.showSnackBar(R.string.attended_network_message)
+                else -> view?.showSnackBar(R.string.cancel_network_message)
             }
         }
 

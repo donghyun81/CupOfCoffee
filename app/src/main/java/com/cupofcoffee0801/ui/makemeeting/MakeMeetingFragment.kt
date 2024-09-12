@@ -155,69 +155,22 @@ fun MakeMeetingScreen(
                                 .padding(6.dp)
                         )
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.place_label),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = data.placeName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .weight(2f)
-                                    .wrapContentSize(align = Alignment.CenterEnd)
-                            )
-                        }
+                        InfoRow(
+                            label = stringResource(R.string.place_label),
+                            content = data.placeName
+                        )
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = stringResource(R.string.date_label),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .weight(1f)
-                            )
-                            Text(
-                                text = data.date,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .weight(2f)
-                                    .wrapContentSize(align = Alignment.CenterEnd)
-                                    .clickable { showDatePicker() }
-                            )
-                        }
+                        InfoRow(
+                            label = stringResource(R.string.date_label),
+                            content = data.date,
+                            onClick = showDatePicker
+                        )
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = stringResource(R.string.time_label),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = data.time,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .weight(2f)
-                                    .wrapContentSize(align = Alignment.CenterEnd)
-                                    .clickable {
-                                        showTimePicker()
-                                    }
-                            )
-                        }
+                        InfoRow(
+                            label = stringResource(R.string.time_label),
+                            content = data.time,
+                            onClick = showTimePicker
+                        )
 
                         Button(
                             onClick = {
@@ -237,5 +190,29 @@ fun MakeMeetingScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun InfoRow(label: String, content: String, onClick: (() -> Unit)? = null) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = content,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .weight(2f)
+                .wrapContentSize(align = Alignment.CenterEnd)
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
+        )
     }
 }
