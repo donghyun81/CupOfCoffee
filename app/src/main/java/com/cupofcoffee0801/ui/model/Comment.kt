@@ -9,6 +9,3 @@ data class Comment(
     var content: String,
     val createdDate: Long
 )
-
-fun Comment.asCommentData() =
-    CommentData(userId, nickname, profileImageWebUrl, meetingId, content, createdDate)

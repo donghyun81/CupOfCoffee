@@ -152,13 +152,14 @@ fun MeetingDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            OptionsMenu(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(8.dp),
-                onEditClick = { onEditClick(data!!.meetingUiModel.id) },
-                onDeleteClick = { onDeleteClick(data!!.meetingUiModel.id) }
-            )
+            if (uiState!!.isMyMeeting)
+                OptionsMenu(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(8.dp),
+                    onEditClick = { onEditClick(data!!.meetingUiModel.id) },
+                    onDeleteClick = { onDeleteClick(data!!.meetingUiModel.id) }
+                )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -389,13 +390,13 @@ fun CommentItem(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-
-        CommentOptionsMenu(
-            commentId = commentUiModel.id,
-            meetingId = commentUiModel.id,
-            commentClickListener = commentClickListener,
-            modifier = Modifier.align(Alignment.CenterVertically)
-        )
+        if (commentUiModel.isMyComment)
+            CommentOptionsMenu(
+                commentId = commentUiModel.id,
+                meetingId = commentUiModel.id,
+                commentClickListener = commentClickListener,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
     }
 }
 
@@ -423,7 +424,7 @@ fun CommentOptionsMenu(
 
     if (expanded) {
         Popup(
-            alignment = Alignment.TopEnd, // Popup alignment
+            alignment = Alignment.TopEnd,
             onDismissRequest = { expanded = false }
         ) {
             Column(

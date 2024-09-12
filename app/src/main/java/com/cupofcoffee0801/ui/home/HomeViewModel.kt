@@ -34,19 +34,16 @@ class HomeViewModel @Inject constructor(
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            currentJob?.cancel()
-            currentJob = initMarkers()
+            initMarkersJob()
         }
 
         override fun onLost(network: Network) {
-            currentJob?.cancel()
-            currentJob = initMarkers()
+            initMarkersJob()
         }
     }
 
     init {
-        currentJob?.cancel()
-        currentJob = initMarkers()
+        initMarkersJob()
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
@@ -55,7 +52,12 @@ class HomeViewModel @Inject constructor(
         currentJob?.cancel()
     }
 
-    fun initMarkers() = viewModelScope.launch {
+    fun initMarkersJob(){
+        currentJob?.cancel()
+        currentJob = initMarkers()
+    }
+
+    private fun initMarkers() = viewModelScope.launch {
         val placesFlow = placeRepository.getAllPlacesInFlow(networkUtil.isConnected())
         placesFlow
             .distinctUntilChanged()

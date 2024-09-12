@@ -23,7 +23,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val CREATE_USER_ERROR_MESSAGE = "회원 가입 오류"
 private const val NAVER_ID_TO_EMAIL_COUNT = 7
 private const val EMPTY_NAME = "익명"
 

@@ -169,10 +169,13 @@ private fun MapViewWithMarkers(
 ) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
-        factory = { mapView.apply {
-            onCreate(null)
-            onStart()
-        } }
+        factory = {
+            mapView.apply {
+                onCreate(null)
+                onStart()
+                viewModel.initMarkersJob()
+            }
+        }
     ) { mapView ->
         mapView.getMapAsync { naverMap ->
             naverMapState.value = naverMap

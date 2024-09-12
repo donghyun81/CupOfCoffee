@@ -305,13 +305,14 @@ fun UserPager(
             MeetingsCategory.MADE_MEETINGS ->
                 MeetingPage(
                     userMeetings = uiState.madeMeetings,
-                    onMeetingClickListener = onMeetingClickListener
+                    onMeetingClickListener = onMeetingClickListener,
+                    isMadeMeeting = true
                 )
 
             MeetingsCategory.ATTENDED_MEETINGS ->
                 MeetingPage(
                     userMeetings = uiState.attendedMeetings,
-                    onMeetingClickListener = onMeetingClickListener
+                    onMeetingClickListener = onMeetingClickListener,
                 )
         }
     }
@@ -320,7 +321,8 @@ fun UserPager(
 @Composable
 fun MeetingPage(
     userMeetings: List<UserMeeting>,
-    onMeetingClickListener: UserMeetingClickListener
+    onMeetingClickListener: UserMeetingClickListener,
+    isMadeMeeting: Boolean = false
 ) {
     Box(
         modifier = Modifier
@@ -340,7 +342,11 @@ fun MeetingPage(
                     .weight(1f)
             ) {
                 items(userMeetings) { meeting ->
-                    MeetingItem(meeting, onMeetingClickListener)
+                    MeetingItem(
+                        meeting,
+                        onMeetingClickListener,
+                        isMadeMeeting = isMadeMeeting
+                    )
                 }
             }
         }
@@ -372,7 +378,8 @@ fun MeetingHeaderText(text: String, modifier: Modifier) {
 @Composable
 fun MeetingItem(
     userMeeting: UserMeeting,
-    onMeetingClickListener: UserMeetingClickListener
+    onMeetingClickListener: UserMeetingClickListener,
+    isMadeMeeting: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -410,12 +417,12 @@ fun MeetingItem(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-
-        OptionsMenu(
-            modifier = Modifier.align(Alignment.CenterVertically),
-            onEditClick = { onMeetingClickListener.onUpdateClick(userMeeting.id) },
-            onDeleteClick = { onMeetingClickListener.onDeleteClick(userMeeting.id) }
-        )
+        if (isMadeMeeting)
+            OptionsMenu(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                onEditClick = { onMeetingClickListener.onUpdateClick(userMeeting.id) },
+                onDeleteClick = { onMeetingClickListener.onDeleteClick(userMeeting.id) }
+            )
     }
 
     HorizontalDivider(

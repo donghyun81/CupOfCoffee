@@ -24,6 +24,7 @@ data class MeetingDetailMeetingUiModel(
 
 data class MeetingDetailCommentUiModel(
     val id: String = "",
+    val isMyComment: Boolean = false,
     val nickname: String? = null,
     val profileImageWebUrl: String? = null,
     var content: String = "",

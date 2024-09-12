@@ -151,6 +151,7 @@ class MeetingDetailViewModel @Inject constructor(
 
     private fun Comment.asCommentUiModel() = MeetingDetailCommentUiModel(
         id,
+        userId == Firebase.auth.uid,
         nickname,
         profileImageWebUrl,
         content,

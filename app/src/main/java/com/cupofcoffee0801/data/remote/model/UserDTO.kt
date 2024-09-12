@@ -2,7 +2,6 @@ package com.cupofcoffee0801.data.remote.model
 
 import com.cupofcoffee0801.data.local.model.UserEntity
 import com.cupofcoffee0801.ui.model.User
-import com.cupofcoffee0801.ui.model.UserData
 import kotlinx.serialization.Serializable
 
 @Serializable
