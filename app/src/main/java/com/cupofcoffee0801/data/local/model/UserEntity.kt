@@ -3,8 +3,7 @@ package com.cupofcoffee0801.data.local.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cupofcoffee0801.data.remote.model.UserDTO
-import com.cupofcoffee0801.ui.model.UserEntry
-import com.cupofcoffee0801.ui.model.UserModel
+import com.cupofcoffee0801.ui.model.User
 
 @Entity("users")
 data class UserEntity(
@@ -18,7 +17,7 @@ data class UserEntity(
 )
 
 fun UserEntity.asUserEntry() =
-    UserEntry(id, UserModel(name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds))
+    User(id,name, nickname, profileImageWebUrl, madeMeetingIds, attendedMeetingIds)
 
 fun UserEntity.asUserDTO() =
     UserDTO(name, nickname, profileImageWebUrl, madeMeetingIds)

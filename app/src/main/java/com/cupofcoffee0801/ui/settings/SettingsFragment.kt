@@ -4,17 +4,45 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.work.WorkManager
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.handle
-import com.cupofcoffee0801.databinding.FragmentSettingsBinding
-import com.cupofcoffee0801.ui.showLoading
-import com.cupofcoffee0801.ui.showSnackBar
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.cupofcoffee0801.ui.component.StateContent
+import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
@@ -25,8 +53,6 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
-    private var _binding: FragmentSettingsBinding? = null
-    private val binding get() = _binding!!
     private val viewModel: SettingsViewModel by viewModels()
 
     override fun onCreateView(
@@ -34,72 +60,23 @@ class SettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentSettingsBinding.inflate(inflater)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setButtonEnable()
-        setLogoutButton()
-        setCancelMembership()
-        setAutoLogin()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun setAutoLogin() {
-        viewModel.uiState.observe(viewLifecycleOwner) { result ->
-            result.handle(
-                onLoading = { binding.cpiLoading.showLoading(result) },
-                onSuccess = { uiState ->
-                    binding.cpiLoading.showLoading(result)
-                    binding.sAutoLogin.isChecked = uiState.isAutoLogin
-                    binding.sAutoLogin.setOnCheckedChangeListener { _, _ ->
-                        viewModel.convertIsAutoLogin()
-                    }
-                },
-                onError = {
-                    binding.cpiLoading.showLoading(result)
-                    view?.showSnackBar(R.string.data_error_message)
+        return ComposeView(requireContext()).apply {
+            setContent {
+                AppTheme {
+                    SettingsScreen(
+                        viewModel = viewModel,
+                        onLogoutClick = ::logout,
+                        onCancelMembershipClick = ::cancelMembership
+                    )
                 }
-            )
+            }
         }
     }
 
-    private fun setButtonEnable() {
-        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
-            binding.tvLogout.isEnabled = !isButtonClicked
-            binding.cancelMembership.isEnabled = !isButtonClicked
-        }
-    }
-
-    private fun setLogoutButton() {
-        binding.tvLogout.setOnClickListener {
-            viewModel.onButtonClicked()
-            NaverIdLoginSDK.logout()
-            Firebase.auth.signOut()
-            moveToLogin()
-        }
-    }
-
-    private fun setCancelMembership() {
-        binding.cancelMembership.setOnClickListener {
-            viewModel.onButtonClicked()
-            if (viewModel.isConnected())
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.cancel_membership))
-                    .setMessage(getString(R.string.cancel_membership_message))
-                    .setNegativeButton(getString(R.string.cancel)) { dialog, _ -> dialog.cancel() }
-                    .setPositiveButton(getString(R.string.cancel_membership)) { _, _ ->
-                        cancelMembership()
-                    }
-                    .show()
-            else requireView().showSnackBar(R.string.cancel_membership_internet)
-        }
+    private fun logout() {
+        NaverIdLoginSDK.logout()
+        Firebase.auth.signOut()
+        moveToLogin()
     }
 
     private fun cancelMembership() {
@@ -108,7 +85,6 @@ class SettingsFragment : Fragment() {
             val deleteUserWorker = viewModel.getDeleteUserWorker()
             NaverIdLoginSDK.logout()
             WorkManager.getInstance(requireContext()).enqueue(deleteUserWorker)
-            binding.cpiLoading.visibility = View.VISIBLE
             delay(2000)
             user.delete().addOnCompleteListener {
                 moveToLogin()
@@ -120,4 +96,131 @@ class SettingsFragment : Fragment() {
         val action = SettingsFragmentDirections.actionSettingsFragmentToLoginFragment()
         findNavController().navigate(action)
     }
+}
+
+@Composable
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onLogoutClick: () -> Unit,
+    onCancelMembershipClick: () -> Unit,
+) {
+
+    val uiState by viewModel.uiState.observeAsState()
+    var showDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSnackbar by remember { mutableStateOf(false) }
+    val membershipNetworkMessage = stringResource(id = R.string.cancel_membership_network_message)
+
+    LaunchedEffect(showSnackbar) {
+        if (showSnackbar) {
+            snackbarHostState.showSnackbar(
+                message = membershipNetworkMessage,
+                duration = SnackbarDuration.Short
+            )
+            showSnackbar = false
+        }
+    }
+
+    if (showDialog) {
+        CancelMembershipDialog(
+            onCancel = {
+                showDialog = false
+                onCancelMembershipClick()
+            },
+            onDismiss = {
+                showDialog = false
+            }
+        )
+    }
+
+    Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { padding ->
+
+        StateContent(
+            isError = uiState?.isError ?: false,
+            isLoading = uiState?.isLoading ?: false,
+            data = uiState
+        ) { data ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(id = R.string.auto_login_setting))
+                    Switch(
+                        checked = data!!.isAutoLogin,
+                        onCheckedChange = { viewModel.convertIsAutoLogin() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = { onLogoutClick() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.logout),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if (viewModel.isNetworkConnected()) showDialog = true
+                        else showSnackbar = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    colors = ButtonDefaults.buttonColors()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.cancel_membership),
+                        textAlign = TextAlign.Center,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CancelMembershipDialog(
+    onCancel: () -> Unit,
+    onDismiss: () -> Unit
+) {
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onCancel()
+            }) {
+                Text(text = stringResource(id = R.string.cancel_membership))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(id = R.string.cancel))
+            }
+        },
+        title = {
+            Text(text = stringResource(id = R.string.cancel_membership))
+        },
+        text = {
+            Text(text = stringResource(id = R.string.cancel_membership_message))
+        }
+    )
 }

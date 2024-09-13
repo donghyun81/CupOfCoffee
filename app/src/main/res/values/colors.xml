@@ -5,4 +5,19 @@
     <color name="white">#FFFFFFFF</color>
     <color name="green">#03C75A</color>
     <color name="brown">#ddb892</color>
+    <!-- Primary Color -->
+    <color name="primaryColor">#75593A</color>
+    <color name="onPrimaryColor">#FFFFFF</color>
+    <color name="primaryColorVariant">#E6C09A</color>
+    <color name="onPrimaryColorVariant">#493115</color>
+
+    <!-- Background and Surface Colors -->
+    <color name="backgroundColor">#FFF8F4</color>
+    <color name="surfaceColor">#FFF8F4</color>
+    <color name="onSurfaceColor">#1E1B18</color>
+
+    <!-- Bottom Navigation Colors -->
+    <color name="bottomNavBackgroundColor">#75593A</color>
+    <color name="bottomNavIconColor">#FFFFFF</color>
+    <color name="bottomNavTextColor">#FFFFFF</color>
 </resources>

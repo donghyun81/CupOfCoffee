@@ -1,9 +1,19 @@
 package com.cupofcoffee0801.ui.user
 
-import com.cupofcoffee0801.ui.model.UserEntry
-
 data class UserUiState(
-    val user: UserEntry? = null,
-    val attendedMeetingsCount: Int = 0,
-    val madeMeetingsCount: Int = 0
+    val userId: String = "",
+    val nickName: String? = "",
+    val profileUrl: String? = null,
+    val isLoading: Boolean = false,
+    val isError: Boolean = false,
+    val attendedMeetings: List<UserMeeting> = emptyList(),
+    val madeMeetings: List<UserMeeting> = emptyList(),
+)
+
+data class UserMeeting(
+    val id: String,
+    val date: String,
+    val time: String,
+    val place: String,
+    val content: String
 )

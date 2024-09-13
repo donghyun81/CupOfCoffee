@@ -5,34 +5,51 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.fragment.findNavController
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.handle
-import com.cupofcoffee0801.databinding.FragmentMakeMeetingBinding
+import com.cupofcoffee0801.ui.component.StateContent
+import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.cupofcoffee0801.ui.isCurrentDateOver
-import com.cupofcoffee0801.ui.model.MeetingModel
-import com.cupofcoffee0801.ui.model.PlaceModel
-import com.cupofcoffee0801.ui.showLoading
 import com.cupofcoffee0801.ui.showSnackBar
-import com.cupofcoffee0801.ui.toCurrentDate
 import com.cupofcoffee0801.ui.toCurrentTime
 import com.cupofcoffee0801.ui.toDateFormat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.Date
 
 @AndroidEntryPoint
 class MakeMeetingFragment : BottomSheetDialogFragment() {
-
-    private var _binding: FragmentMakeMeetingBinding? = null
-    private val binding get() = _binding!!
 
     private val viewModel: MakeMeetingViewModel by viewModels()
 
@@ -41,58 +58,17 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentMakeMeetingBinding.inflate(inflater)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setButtonEnable()
-        setUi()
-        setMeetingTime()
-        setMeetingDate()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _binding = null
-    }
-
-    private fun setButtonEnable() {
-        viewModel.isButtonClicked.observe(viewLifecycleOwner) { isButtonClicked ->
-            binding.btnSave.isEnabled = !isButtonClicked
-        }
-    }
-
-    private fun setUi() {
-        viewModel.uiState.observe(viewLifecycleOwner) { result ->
-            result.handle(
-                onLoading = { binding.cpiLoading.showLoading(result) },
-                onSuccess = { uiState ->
-                    binding.cpiLoading.showLoading(result)
-                    if (uiState.meetingEntry != null) {
-                        binding.tvPlace.text = uiState.placeName
-                        binding.tvTime.text = uiState.meetingEntry.meetingModel.time
-                        binding.tvDate.text = uiState.meetingEntry.meetingModel.date
-                        binding.tvContent.setText(uiState.meetingEntry.meetingModel.content)
-                    } else binding.tvPlace.text = uiState.placeName
-                    setSaveButton(uiState.placeName, uiState.lat, uiState.lng)
-                },
-                onError = {
-                    binding.cpiLoading.showLoading(result)
-                    view?.showSnackBar(R.string.data_error_message)
+        return ComposeView(requireContext()).apply {
+            setContent {
+                AppTheme {
+                    MakeMeetingScreen(
+                        viewModel,
+                        ::showMeetingDatePicker,
+                        ::showMeetingTimePicker,
+                        ::navigateUp,
+                    )
                 }
-            )
-
-        }
-        binding.tvPlace.text = viewModel.args.placeName
-    }
-
-    private fun setMeetingDate() {
-        val calendar = Calendar.getInstance()
-        binding.tvDate.text = calendar.toCurrentDate()
-        binding.tvDate.setOnClickListener {
-            showMeetingDatePicker()
+            }
         }
     }
 
@@ -103,25 +79,18 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build()
         datePicker.show(parentFragmentManager, getString(R.string.meeting_date_picker_tag))
         datePicker.addOnPositiveButtonClickListener { selectedDateInMillis ->
-            if (selectedDateInMillis.isCurrentDateOver()) binding.tvDate.text =
-                selectedDateInMillis.toDateFormat()
+            if (selectedDateInMillis.isCurrentDateOver())
+                viewModel.updateDate(selectedDateInMillis.toDateFormat())
             else view?.showSnackBar(R.string.select_previous_date)
         }
     }
 
-    private fun setMeetingTime() {
+    private fun showMeetingTimePicker() {
         val calendar = Calendar.getInstance()
-        binding.tvTime.text = calendar.toCurrentTime()
-        binding.tvTime.setOnClickListener {
-            showMeetingTimePicker(calendar)
-        }
-    }
-
-    private fun showMeetingTimePicker(calendar: Calendar) {
         val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
-            binding.tvTime.text = calendar.toCurrentTime()
+            viewModel.updateTime(calendar.toCurrentTime())
         }
         TimePickerDialog(
             requireContext(),
@@ -132,35 +101,118 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
         ).show()
     }
 
-    private fun setSaveButton(placeName: String, lat: Double, lng: Double) {
-        binding.btnSave.setOnClickListener {
-            viewModel.onButtonClicked()
-            val uid = Firebase.auth.uid!!
-            with(binding) {
-                val meeting = MeetingModel(
-                    caption = placeName,
-                    lat = lat,
-                    lng = lng,
-                    managerId = uid,
-                    personIds = mutableMapOf(uid to true),
-                    placeId = viewModel.convertPlaceId(lat, lng),
-                    date = tvDate.text.toString(),
-                    time = tvTime.text.toString(),
-                    createDate = Date().time,
-                    content = tvContent.text.toString()
-                )
-                val placeModel = PlaceModel(
-                    caption = placeName,
-                    lat = lat,
-                    lng = lng,
-                )
-                if (viewModel.isNetworkConnected()) {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        viewModel.saveMeeting(meeting, placeModel)
-                        findNavController().navigateUp()
-                    }
-                } else view?.showSnackBar(R.string.disconnect_network_message)
-            }
+    private fun navigateUp() {
+        findNavController().navigateUp()
+    }
+}
+
+@Composable
+fun MakeMeetingScreen(
+    viewModel: MakeMeetingViewModel = hiltViewModel(),
+    showDatePicker: () -> Unit,
+    showTimePicker: () -> Unit,
+    onNavigateUp: () -> Unit
+) {
+    val uiState by viewModel.uiState.observeAsState()
+    var isButtonClicked by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSnackbar by remember { mutableStateOf(false) }
+    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
+
+    LaunchedEffect(showSnackbar) {
+        if (showSnackbar) {
+            snackbarHostState.showSnackbar(
+                message = makeNetworkMessage,
+                duration = SnackbarDuration.Short
+            )
+            showSnackbar = false
         }
+    }
+    Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { padding ->
+
+        StateContent(
+            isError = uiState?.isError ?: false,
+            isLoading = uiState?.isLoading ?: false,
+            isComplete = uiState?.isComplete ?: false,
+            navigateUp = onNavigateUp,
+            data = uiState
+        ) { data ->
+            Scaffold(
+                content = { paddingValues ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(paddingValues)
+                            .padding(12.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = data!!.content,
+                            onValueChange = { newContent -> viewModel.updateContent(newContent) },
+                            label = { Text(stringResource(R.string.content_hint)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .padding(6.dp)
+                        )
+
+                        InfoRow(
+                            label = stringResource(R.string.place_label),
+                            content = data.placeName
+                        )
+
+                        InfoRow(
+                            label = stringResource(R.string.date_label),
+                            content = data.date,
+                            onClick = showDatePicker
+                        )
+
+                        InfoRow(
+                            label = stringResource(R.string.time_label),
+                            content = data.time,
+                            onClick = showTimePicker
+                        )
+
+                        Button(
+                            onClick = {
+                                if (viewModel.isNetworkConnected()) {
+                                    isButtonClicked = true
+                                    viewModel.saveMeeting(data)
+                                } else showSnackbar = true
+                            },
+                            enabled = !isButtonClicked,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                        ) {
+                            Text(text = stringResource(R.string.save))
+                        }
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun InfoRow(label: String, content: String, onClick: (() -> Unit)? = null) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = content,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .weight(2f)
+                .wrapContentSize(align = Alignment.CenterEnd)
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
+        )
     }
 }

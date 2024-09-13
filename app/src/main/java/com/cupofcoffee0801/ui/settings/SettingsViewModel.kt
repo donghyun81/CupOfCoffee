@@ -7,10 +7,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.PreferencesRepositoryImpl
 import com.cupofcoffee0801.data.worker.DeleteUserWorker
 import com.cupofcoffee0801.util.NetworkUtil
@@ -26,12 +22,9 @@ class SettingsViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<DataResult<SettingsUiState>> = MutableLiveData(loading())
-    val uiState: LiveData<DataResult<SettingsUiState>> get() = _uiState
-
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
+    private val _uiState: MutableLiveData<SettingsUiState> =
+        MutableLiveData(SettingsUiState(isLoading = true))
+    val uiState: LiveData<SettingsUiState> get() = _uiState
 
     init {
         viewModelScope.launch {
@@ -39,16 +32,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
-    }
-
     private suspend fun initUiState() {
         preferencesRepository.isAutoLoginFlow.collect { isAutoLogin ->
             try {
-                _uiState.postValue(success(SettingsUiState(isAutoLogin)))
+                _uiState.value = SettingsUiState(isAutoLogin = isAutoLogin)
             } catch (e: Exception) {
-                _uiState.postValue(error(e))
+                _uiState.postValue(SettingsUiState(isError = true))
             }
         }
     }
@@ -59,7 +48,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun isConnected() = networkUtil.isConnected()
+    fun isNetworkConnected() = networkUtil.isConnected()
 
     fun getDeleteUserWorker(): OneTimeWorkRequest {
         val inputData = Data.Builder()

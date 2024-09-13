@@ -3,8 +3,7 @@ package com.cupofcoffee0801.data.local.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cupofcoffee0801.data.remote.model.MeetingDTO
-import com.cupofcoffee0801.ui.model.MeetingEntry
-import com.cupofcoffee0801.ui.model.MeetingModel
+import com.cupofcoffee0801.ui.model.Meeting
 
 @Entity("meetings")
 data class MeetingEntity(
@@ -23,9 +22,9 @@ data class MeetingEntity(
     val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
-fun MeetingEntity.asMeetingEntry() = MeetingEntry(
+fun MeetingEntity.asMeetingEntry() = Meeting(
     id,
-    MeetingModel(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
+    caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content
 )
 
 fun MeetingEntity.asMeetingDTO() =

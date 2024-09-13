@@ -1,7 +1,6 @@
 package com.cupofcoffee0801.data.remote.model
 
-import com.cupofcoffee0801.ui.model.CommentEntry
-import com.cupofcoffee0801.ui.model.CommentModel
+import com.cupofcoffee0801.ui.model.Comment
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,4 +14,4 @@ data class CommentDTO(
 )
 
 fun CommentDTO.asCommentEntry(id: String) =
-    CommentEntry(id, CommentModel(userId, nickname, profileImageWebUrl, meetingId, content,createdDate))
+    Comment(id,userId, nickname, profileImageWebUrl, meetingId, content,createdDate)

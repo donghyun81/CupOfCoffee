@@ -1,34 +1,45 @@
 package com.cupofcoffee0801.ui.makemeeting
 
-import android.net.ConnectivityManager
-import android.net.Network
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.DataResult
-import com.cupofcoffee0801.data.DataResult.Companion.error
-import com.cupofcoffee0801.data.DataResult.Companion.loading
-import com.cupofcoffee0801.data.DataResult.Companion.success
 import com.cupofcoffee0801.data.repository.MeetingRepository
 import com.cupofcoffee0801.data.repository.PlaceRepository
 import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.MeetingEntry
-import com.cupofcoffee0801.ui.model.MeetingModel
-import com.cupofcoffee0801.ui.model.PlaceEntry
-import com.cupofcoffee0801.ui.model.PlaceModel
-import com.cupofcoffee0801.ui.model.UserEntry
+import com.cupofcoffee0801.ui.model.MeetingData
+import com.cupofcoffee0801.ui.model.Place
+import com.cupofcoffee0801.ui.model.PlaceData
+import com.cupofcoffee0801.ui.model.User
+import com.cupofcoffee0801.ui.model.asMeeting
 import com.cupofcoffee0801.ui.model.asMeetingDTO
 import com.cupofcoffee0801.ui.model.asMeetingEntity
+import com.cupofcoffee0801.ui.model.asPlace
+import com.cupofcoffee0801.ui.toCurrentDate
+import com.cupofcoffee0801.ui.toCurrentTime
 import com.cupofcoffee0801.util.NetworkUtil
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Date
 import javax.inject.Inject
 
 const val POSITION_COUNT = 10
+
+data class MakeMeetingUiState(
+    val placeName: String = "",
+    val lat: Double = 0.0,
+    val lng: Double = 0.0,
+    val content: String = "",
+    val date: String = "",
+    val time: String = "",
+    val isError: Boolean = false,
+    val isLoading: Boolean = false,
+    val isComplete: Boolean = false
+)
 
 @HiltViewModel
 class MakeMeetingViewModel @Inject constructor(
@@ -39,80 +50,121 @@ class MakeMeetingViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    private val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _uiState: MutableLiveData<DataResult<MakeMeetingUiState>> =
-        MutableLiveData(loading())
-    val uiState: LiveData<DataResult<MakeMeetingUiState>> get() = _uiState
+    private val _uiState: MutableLiveData<MakeMeetingUiState> =
+        MutableLiveData(MakeMeetingUiState(isLoading = true))
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
-
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            initUiState()
-        }
-
-        override fun onLost(network: Network) {
-            initUiState()
-        }
-    }
+    val uiState: LiveData<MakeMeetingUiState> = _uiState
 
     init {
-        networkUtil.registerNetworkCallback(networkCallback)
-    }
-
-    fun onButtonClicked() {
-        _isButtonClicked.value = true
+        initUiState()
     }
 
     private fun initUiState() {
         viewModelScope.launch {
-            try {
-                val isNewMeeting = args.meetingId == null
-                if (isNewMeeting) _uiState.postValue(
-                    success(
-                        MakeMeetingUiState(
-                            args.placeName!!,
-                            args.placePosition!!.latitude,
-                            args.placePosition!!.longitude,
-                            meetingEntry = null
-                        )
-                    )
-                )
-                else {
-                    val meeting = meetingRepository.getMeeting(args.meetingId!!)
-                    _uiState.postValue(
-                        success(
-                            MakeMeetingUiState(
-                                placeName = meeting.meetingModel.caption,
-                                lat = meeting.meetingModel.lat,
-                                lng = meeting.meetingModel.lng,
-                                meetingEntry = meeting
-                            )
-                        )
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.postValue(error(e))
-            }
+            val meetingId = args.meetingId
+            if (meetingId == null) createMeeting()
+            else loadMeeting(meetingId)
         }
+    }
 
+    private fun createMeeting() {
+        val calendar = Calendar.getInstance()
+        _uiState.postValue(
+            MakeMeetingUiState(
+                args.placeName!!,
+                args.placePosition!!.latitude,
+                args.placePosition!!.longitude,
+                date = calendar.toCurrentDate(),
+                time = calendar.toCurrentTime()
+            )
+        )
+    }
+
+    private suspend fun loadMeeting(meetingId: String) {
+        try {
+            val meeting = meetingRepository.getMeeting(meetingId)
+            _uiState.postValue(
+                MakeMeetingUiState(
+                    placeName = meeting.caption,
+                    lat = meeting.lat,
+                    lng = meeting.lng,
+                    content = meeting.content,
+                    date = meeting.date,
+                    time = meeting.time
+                )
+            )
+        } catch (e: Exception) {
+            _uiState.postValue(
+                MakeMeetingUiState(
+                    isError = true
+                )
+            )
+        }
+    }
+
+    fun updateContent(content: String) {
+        _uiState.postValue(
+            uiState.value?.copy(content = content)
+        )
+    }
+
+    fun updateDate(date: String) {
+        _uiState.postValue(
+            uiState.value?.copy(date = date)
+        )
+    }
+
+    fun updateTime(time: String) {
+        _uiState.postValue(
+            uiState.value?.copy(time = time)
+        )
     }
 
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    suspend fun saveMeeting(meetingModel: MeetingModel, placeModel: PlaceModel) {
-        if (args.meetingId == null) {
-            val meetingId = meetingRepository.insertRemote(meetingModel.asMeetingDTO()).id
-            meetingRepository.insertLocal(meetingModel.asMeetingEntity(meetingId))
-            savePlace(meetingId, placeModel)
-            updateUserMeeting(meetingId)
-        } else {
-            meetingRepository.update(MeetingEntry(args.meetingId!!, meetingModel))
+    fun saveMeeting(uiState: MakeMeetingUiState) {
+        val meetingData = getMeeting(uiState)
+        val place = getPlace(uiState)
+        viewModelScope.launch {
+            val meetingId = args.meetingId
+            if (meetingId == null) {
+                val newMeetingId = meetingRepository.insertRemote(meetingData.asMeetingDTO()).id
+                meetingRepository.insertLocal(meetingData.asMeetingEntity(newMeetingId))
+                savePlace(newMeetingId, place)
+                updateUserMeeting(newMeetingId)
+            } else meetingRepository.update(meetingData.asMeeting(meetingId))
+            _uiState.postValue(
+                uiState.copy(isComplete = true)
+            )
         }
     }
+
+    fun getMeeting(uiState: MakeMeetingUiState): MeetingData {
+        val uid = Firebase.auth.uid!!
+        return MeetingData(
+            caption = uiState.placeName,
+            lat = uiState.lat,
+            lng = uiState.lng,
+            managerId = uid,
+            personIds = mutableMapOf(uid to true),
+            placeId = convertPlaceId(
+                uiState.lat,
+                uiState.lng
+            ),
+            date = uiState.date,
+            time = uiState.time,
+            createDate = Date().time,
+            content = uiState.content
+        )
+    }
+
+    private fun getPlace(uiState: MakeMeetingUiState) = PlaceData(
+        caption = uiState.placeName,
+        lat = uiState.lat,
+        lng = uiState.lng
+    )
 
     private suspend fun updateUserMeeting(meetingId: String) {
         val uid = Firebase.auth.uid ?: return
@@ -120,31 +172,31 @@ class MakeMeetingViewModel @Inject constructor(
         addUserMadeMeeting(userEntry, meetingId)
     }
 
-    private suspend fun addUserMadeMeeting(userEntry: UserEntry, meetingId: String) {
-        userEntry.userModel.madeMeetingIds[meetingId] = true
-        userRepository.update(userEntry)
+    private suspend fun addUserMadeMeeting(user: User, meetingId: String) {
+        user.madeMeetingIds[meetingId] = true
+        userRepository.update(user)
     }
 
-    private suspend fun savePlace(meetingId: String, placeModel: PlaceModel) {
-        val placeId = convertPlaceId(placeModel.lat, placeModel.lng)
+    private suspend fun savePlace(meetingId: String, placeData: PlaceData) {
+        val placeId = convertPlaceId(placeData.lat, placeData.lng)
         val prvPlaceEntry = placeRepository.getPlaceById(placeId)
         if (prvPlaceEntry != null) updatePlace(meetingId, prvPlaceEntry)
-        else createPlace(meetingId, PlaceEntry(placeId, placeModel))
+        else createPlace(meetingId, placeData.asPlace(placeId))
     }
 
-    fun convertPlaceId(lat: Double, lng: Double): String {
+    private fun convertPlaceId(lat: Double, lng: Double): String {
         return (lat.toString().take(POSITION_COUNT) + lng.toString()
             .take(POSITION_COUNT)).filter { it != '.' }
     }
 
 
-    private suspend fun createPlace(meetingId: String, placeEntry: PlaceEntry) {
-        placeEntry.placeModel.meetingIds[meetingId] = true
-        placeRepository.insert(placeEntry)
+    private suspend fun createPlace(meetingId: String, place: Place) {
+        place.meetingIds[meetingId] = true
+        placeRepository.insert(place)
     }
 
-    private suspend fun updatePlace(meetingId: String, prvPlaceEntry: PlaceEntry) {
-        prvPlaceEntry.placeModel.meetingIds[meetingId] = true
-        placeRepository.update(prvPlaceEntry)
+    private suspend fun updatePlace(meetingId: String, prvPlace: Place) {
+        prvPlace.meetingIds[meetingId] = true
+        placeRepository.update(prvPlace)
     }
 }

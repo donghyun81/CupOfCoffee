@@ -2,17 +2,14 @@
 
     <style name="Base.Theme.CupOfCoffee" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:timePickerStyle">@style/MyTimePickerStyle</item>
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryVariant">@color/primaryColorVariant</item>
+        <item name="colorOnPrimary">@color/onPrimaryColor</item>
+        <item name="backgroundColor">@color/backgroundColor</item>
+        <item name="colorSurface">@color/surfaceColor</item>
+        <item name="colorOnSurface">@color/onSurfaceColor</item>
+        <item name="android:windowIsTranslucent">true</item>
     </style>
 
-    <style name="Theme.CupOfCoffee" parent="Base.Theme.CupOfCoffee" />
-
-<!--    <style name="Theme.App.Starting" parent="Theme.SplashScreen">-->
-
-<!--        <item name="windowSplashScreenBackground">@color/white</item>-->
-<!--        <item name="windowSplashScreenAnimatedIcon">@mipmap/cup_of_coffee</item>-->
-<!--        <item name="windowSplashScreenAnimationDuration">200</item>-->
-
-<!--        <item name="postSplashScreenTheme">@style/Base.Theme.CupOfCoffee</item>-->
-<!--    </style>-->
 </resources>
 

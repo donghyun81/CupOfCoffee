@@ -1,164 +1,457 @@
 package com.cupofcoffee0801.ui.meetingdetail
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupMenu
-import androidx.core.view.isVisible
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.work.WorkManager
-import com.bumptech.glide.Glide
+import coil.compose.AsyncImage
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.handle
-import com.cupofcoffee0801.databinding.FragmentMeetingDetailBinding
-import com.cupofcoffee0801.ui.model.CommentEntry
-import com.cupofcoffee0801.ui.model.MeetingEntry
-import com.cupofcoffee0801.ui.showLoading
+import com.cupofcoffee0801.ui.component.OptionsMenu
+import com.cupofcoffee0801.ui.component.StateContent
+import com.cupofcoffee0801.ui.graphics.AppTheme
 import com.cupofcoffee0801.ui.showSnackBar
+import com.cupofcoffee0801.ui.toDateFormat
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MeetingDetailFragment : Fragment() {
 
-    private var _binding: FragmentMeetingDetailBinding? = null
-    private val binding get() = _binding!!
-
     private val viewModel: MeetingDetailViewModel by viewModels()
-
-    private val adapter: MeetingDetailAdapter = MeetingDetailAdapter(getCommentClickListener())
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentMeetingDetailBinding.inflate(inflater)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initUi()
-        setCommentClick()
+        return ComposeView(requireContext()).apply {
+            setContent {
+                AppTheme {
+                    MeetingDetailScreen(
+                        viewModel = viewModel,
+                        onEditClick = ::moveToMakeMeeting,
+                        onDeleteClick = ::deleteMeeting,
+                        onMakeCommentClick = ::moveToMakeComment,
+                        commentClickListener = getCommentClickListener()
+                    )
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         viewModel.currentJob?.cancel()
-        _binding = null
     }
 
-    private fun initUi() {
-        viewModel.meetingDetailUiState.observe(viewLifecycleOwner) { result ->
-            result.handle(
-                onLoading = {
-                    binding.cpiLoading.showLoading(result)
-                },
-                onSuccess = { uiState ->
-                    Log.d("123456", uiState.toString())
-                    binding.cpiLoading.showLoading(result)
-                    setEdit(uiState.isMyMeeting, uiState.meeting)
-                    setMeeting(uiState.meeting)
-                    setCommentAdapter(uiState.comments)
-                    setUserProfile(uiState.userEntry.userModel.profileImageWebUrl)
-                },
-                onError = {
-                    binding.cpiLoading.showLoading(result)
-                    view?.showSnackBar(R.string.data_error_message)
-                }
+    private fun moveToMakeMeeting(id: String) {
+        val action =
+            MeetingDetailFragmentDirections.actionMeetingDetailFragmentToMakeMeetingFragment(
+                null,
+                null,
+                id
             )
-        }
+        findNavController().navigate(action)
     }
 
-    private fun setMeeting(meetingEntry: MeetingEntry) {
-        with(binding) {
-            tvContent.text = meetingEntry.meetingModel.content
-            tvDate.text = meetingEntry.meetingModel.date
-            tvPlace.text = meetingEntry.meetingModel.caption
-            tvTime.text = meetingEntry.meetingModel.time
-            tvAddComment.visibility
-        }
+    private fun moveToMakeComment(meetingId: String) {
+        val action =
+            MeetingDetailFragmentDirections.actionMeetingDetailFragmentToCommentEditFragment(
+                null,
+                meetingId
+            )
+        findNavController().navigate(action)
     }
 
-    private fun setEdit(isMyMeeting: Boolean, meetingEntry: MeetingEntry) {
-        binding.ivMoreMenu.isVisible = isMyMeeting
-        binding.ivMoreMenu.setOnClickListener {
-            showPopupMenu(meetingEntry)
-        }
+    private fun deleteMeeting(meetingId: String) {
+        val deleteMeetingWorker = viewModel.getDeleteMeetingWorker(meetingId)
+        WorkManager.getInstance(requireContext()).enqueue(deleteMeetingWorker)
+        findNavController().navigateUp()
     }
 
-    private fun showPopupMenu(meetingEntry: MeetingEntry) {
-        val popupMenu = PopupMenu(requireContext(), binding.ivMoreMenu)
-        popupMenu.menuInflater.inflate(R.menu.edit_menu, popupMenu.menu)
-
-        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
-            when (menuItem.itemId) {
-                R.id.edit -> {
-                    val action =
-                        MeetingDetailFragmentDirections.actionMeetingDetailFragmentToMakeMeetingFragment(
-                            null,
-                            null,
-                            meetingEntry.id
-                        )
-                    findNavController().navigate(action)
-                    true
-                }
-
-                R.id.delete -> {
-                    val deleteMeetingWorker = viewModel.getDeleteMeetingWorker(meetingEntry)
-                    WorkManager.getInstance(requireContext()).enqueue(deleteMeetingWorker)
-                    findNavController().navigateUp()
-                    true
-                }
-
-                else -> false
-            }
-        }
-        popupMenu.show()
-    }
-
-    private fun setCommentClick() {
-        binding.tvAddComment.setOnClickListener {
-            val action =
-                MeetingDetailFragmentDirections.actionMeetingDetailFragmentToCommentEditFragment(
-                    null,
-                    viewModel.meetingId
-                )
-            findNavController().navigate(action)
-        }
-    }
-
-    private fun setCommentAdapter(comments: List<CommentEntry>) {
-        binding.rvComments.adapter = adapter
-        adapter.submitList(comments)
-    }
-
-    private fun setUserProfile(profileImageWebUrl: String?) {
-        Glide.with(binding.root.context)
-            .load(profileImageWebUrl)
-            .centerCrop()
-            .into(binding.ivUserProfile)
-    }
 
     private fun getCommentClickListener() = object : CommentClickListener {
 
-        override fun onUpdateClick(commentEntry: CommentEntry) {
+        override fun onUpdateClick(commentId: String, meetingId: String) {
             val action =
                 MeetingDetailFragmentDirections.actionMeetingDetailFragmentToCommentEditFragment(
-                    commentEntry.id,
-                    viewModel.meetingId
+                    commentId,
+                    meetingId
                 )
             findNavController().navigate(action)
         }
 
         override fun onDeleteClick(commentId: String) {
-            viewModel.deleteComment(commentId)
+            if (viewModel.isNetworkConnected()) viewModel.deleteComment(commentId)
+            else view?.showSnackBar(R.string.delete_meeting_network_message)
         }
+    }
+}
 
+@Composable
+fun MeetingDetailScreen(
+    viewModel: MeetingDetailViewModel,
+    onEditClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onMakeCommentClick: (String) -> Unit,
+    commentClickListener: CommentClickListener
+) {
+    val uiState by viewModel.meetingDetailUiState.observeAsState()
+
+    StateContent(
+        isError = uiState?.isError ?: false,
+        isLoading = uiState?.isLoading ?: false,
+        data = uiState
+    ) { data ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            if (uiState!!.isMyMeeting)
+                OptionsMenu(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(8.dp),
+                    onEditClick = { onEditClick(data!!.meetingUiModel.id) },
+                    onDeleteClick = { onDeleteClick(data!!.meetingUiModel.id) }
+                )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .padding(8.dp),
+                text = data!!.meetingUiModel.content,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Start,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            MeetingInfo(
+                label = stringResource(id = R.string.place_label),
+                value = data.meetingUiModel.caption
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            MeetingInfo(
+                label = stringResource(id = R.string.date_label),
+                value = data.meetingUiModel.date
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            MeetingInfo(
+                label = stringResource(id = R.string.time_label),
+                value = data.meetingUiModel.time
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Comments(
+                comments = data.comments,
+                commentClickListener = commentClickListener,
+                modifier = Modifier.weight(1f)
+            )
+
+            CommentInput(
+                onMakeCommentClick = { onMakeCommentClick(data.meetingUiModel.id) },
+                userProfileUrl = data.userUiModel.profileUrl
+            )
+        }
+    }
+}
+
+@Composable
+fun MeetingInfo(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun Comments(
+    comments: List<MeetingDetailCommentUiModel>,
+    commentClickListener: CommentClickListener,
+    modifier: Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+    ) {
+        Text(
+            text = "댓글",
+            fontSize = 26.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = 8.dp)
+        ) {
+            items(comments) { comment ->
+                CommentItem(commentUiModel = comment, commentClickListener)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun CommentInput(
+    onMakeCommentClick: () -> Unit,
+    userProfileUrl: String?
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                RoundedCornerShape(8.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = userProfileUrl,
+            contentDescription = "User profile image",
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), CircleShape),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = "댓글 작성",
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
+                .clickable { onMakeCommentClick() }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun CommentItem(
+    commentUiModel: MeetingDetailCommentUiModel,
+    commentClickListener: CommentClickListener,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(8.dp)
+            )
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        AsyncImage(
+            model = commentUiModel.profileImageWebUrl,
+            contentDescription = "사용자 프로필",
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = commentUiModel.nickname ?: "익명",
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .wrapContentSize(align = Alignment.CenterStart),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Text(
+                    text = commentUiModel.createdDate.toDateFormat(),
+                    modifier = Modifier
+                        .wrapContentWidth(Alignment.End)
+                        .padding(end = 8.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+
+            Text(
+                text = commentUiModel.content,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        if (commentUiModel.isMyComment)
+            CommentOptionsMenu(
+                commentId = commentUiModel.id,
+                meetingId = commentUiModel.id,
+                commentClickListener = commentClickListener,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+    }
+}
+
+@Composable
+fun CommentOptionsMenu(
+    commentId: String,
+    meetingId: String,
+    commentClickListener: CommentClickListener,
+    modifier: Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    IconButton(
+        onClick = { expanded = true },
+        modifier = modifier
+            .size(24.dp)
+            .background(MaterialTheme.colorScheme.surface, CircleShape)
+    ) {
+        Icon(
+            painterResource(id = R.drawable.baseline_more_vert_24),
+            contentDescription = "More options",
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+    }
+
+    if (expanded) {
+        Popup(
+            alignment = Alignment.TopEnd,
+            onDismissRequest = { expanded = false }
+        ) {
+            Column(
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "수정",
+                    modifier = Modifier
+                        .clickable {
+                            commentClickListener.onUpdateClick(commentId, meetingId)
+                            expanded = false
+                        }
+                        .padding(8.dp)
+                )
+                Text(
+                    text = "삭제",
+                    modifier = Modifier
+                        .clickable {
+                            commentClickListener.onDeleteClick(commentId)
+                            expanded = false
+                        }
+                        .padding(8.dp)
+                )
+            }
+        }
     }
 }

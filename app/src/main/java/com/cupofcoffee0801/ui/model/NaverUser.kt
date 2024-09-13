@@ -7,6 +7,4 @@ data class NaverUser(
     val profileImageWebUrl: String? = null
 )
 
-fun NaverUser.tasUserModel() = UserModel(name, nickname, profileImageWebUrl)
-
-fun NaverUser.asUserEntry(id: String) = UserEntry(id, tasUserModel())
+fun NaverUser.asUser(id: String) = User(id, name, nickname, profileImageWebUrl)

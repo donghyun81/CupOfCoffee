@@ -5,8 +5,8 @@ import com.cupofcoffee0801.data.local.model.PlaceEntity
 import com.cupofcoffee0801.data.local.model.asMeetingEntry
 import com.cupofcoffee0801.data.remote.datasource.PlaceRemoteDataSource
 import com.cupofcoffee0801.data.remote.model.PlaceDTO
-import com.cupofcoffee0801.data.remote.model.asPlaceEntry
-import com.cupofcoffee0801.ui.model.PlaceEntry
+import com.cupofcoffee0801.data.remote.model.asPlace
+import com.cupofcoffee0801.ui.model.Place
 import com.cupofcoffee0801.ui.model.asPlaceDTO
 import com.cupofcoffee0801.ui.model.asPlaceEntity
 import kotlinx.coroutines.flow.Flow
@@ -24,28 +24,28 @@ class PlaceRepositoryImpl @Inject constructor(
     override suspend fun insertRemote(id: String, placeDTO: PlaceDTO) =
         placeRemoteDataSource.insert(id, placeDTO)
 
-    override suspend fun insert(placeEntry: PlaceEntry) {
-        placeEntry.apply {
-            placeLocalDataSource.insert(placeModel.asPlaceEntity(id))
-            placeRemoteDataSource.insert(id, placeModel.asPlaceDTO())
+    override suspend fun insert(place: Place) {
+        place.apply {
+            placeLocalDataSource.insert(asPlaceEntity())
+            placeRemoteDataSource.insert(id, asPlaceDTO())
         }
     }
 
     override suspend fun getPlaceById(id: String, isNetworkConnected: Boolean) =
-        if (isNetworkConnected) placeRemoteDataSource.getPlaceById(id)?.asPlaceEntry(id)
+        if (isNetworkConnected) placeRemoteDataSource.getPlaceById(id)?.asPlace(id)
         else placeLocalDataSource.getPlaceById(id).asMeetingEntry()
 
-    override suspend fun update(placeEntry: PlaceEntry) {
-        placeEntry.apply {
-            placeRemoteDataSource.update(id, placeModel.asPlaceDTO())
-            placeLocalDataSource.update(placeModel.asPlaceEntity(id))
+    override suspend fun update(place: Place) {
+        place.apply {
+            placeLocalDataSource.update(asPlaceEntity())
+            placeRemoteDataSource.update(id,asPlaceDTO())
         }
     }
 
-    override suspend fun delete(placeEntry: PlaceEntry) {
-        placeEntry.apply {
+    override suspend fun delete(place: Place) {
+        place.apply {
             placeRemoteDataSource.delete(id)
-            placeLocalDataSource.delete(placeModel.asPlaceEntity(id))
+            placeLocalDataSource.delete(asPlaceEntity())
         }
     }
 
@@ -55,7 +55,7 @@ class PlaceRepositoryImpl @Inject constructor(
 
     override suspend fun getAllRemotePlaces() = placeRemoteDataSource.getAllPlaces()
 
-    override suspend fun getAllPlacesInFlow(isNetworkConnected: Boolean): Flow<List<PlaceEntry>> {
+    override suspend fun getAllPlacesInFlow(isNetworkConnected: Boolean): Flow<List<Place>> {
         return if (isNetworkConnected) {
             placeRemoteDataSource.getAllPlacesInFlow().map { places ->
                 places.convertPlaceEntries()
@@ -70,7 +70,7 @@ class PlaceRepositoryImpl @Inject constructor(
     private fun Map<String, PlaceDTO>.convertPlaceEntries() =
         map { entry ->
             val (id, placeDTO) = entry
-            placeDTO.asPlaceEntry(id)
+            placeDTO.asPlace(id)
         }
 
     private fun List<PlaceEntity>.convertPlaceEntries() =
