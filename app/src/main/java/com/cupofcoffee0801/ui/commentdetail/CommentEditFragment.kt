@@ -1,6 +1,7 @@
 package com.cupofcoffee0801.ui.commentdetail
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -75,11 +76,15 @@ fun CommentEditScreen(
     navigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.observeAsState()
-    val content = rememberSaveable { mutableStateOf(uiState!!.comment?.content ?: "") }
+    var content = remember { mutableStateOf(uiState!!.comment?.content ?: "") }
     var isButtonClicked by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showSnackbar by remember { mutableStateOf(false) }
     val editCommentNetworkMessage = stringResource(id = R.string.edit_comment_netwokr_message)
+
+    LaunchedEffect(uiState!!.comment?.content) {
+        content.value = uiState!!.comment?.content ?: ""
+    }
 
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
@@ -116,7 +121,7 @@ fun CommentEditScreen(
                     contentScale = ContentScale.Crop
                 )
                 TextField(
-                    value = content.value,
+                    value = content.value ,
                     onValueChange = { newContent -> content.value = newContent },
                     label = { Text("내용") },
                     modifier = Modifier
