@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -139,53 +140,65 @@ fun MakeMeetingScreen(
         ) { data ->
             Scaffold(
                 content = { paddingValues ->
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(paddingValues)
-                            .padding(12.dp)
                     ) {
-                        OutlinedTextField(
-                            value = data!!.content,
-                            onValueChange = { newContent -> viewModel.updateContent(newContent) },
-                            label = { Text(stringResource(R.string.content_hint)) },
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(6.dp)
-                        )
-
-                        InfoRow(
-                            label = stringResource(R.string.place_label),
-                            content = data.placeName
-                        )
-
-                        InfoRow(
-                            label = stringResource(R.string.date_label),
-                            content = data.date,
-                            onClick = showDatePicker
-                        )
-
-                        InfoRow(
-                            label = stringResource(R.string.time_label),
-                            content = data.time,
-                            onClick = showTimePicker
-                        )
-
-                        Button(
-                            onClick = {
-                                if (viewModel.isNetworkConnected()) {
-                                    isButtonClicked = true
-                                    viewModel.saveMeeting(data)
-                                } else showSnackbar = true
-                            },
-                            enabled = !isButtonClicked,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp)
+                                .padding(paddingValues)
+                                .padding(12.dp)
                         ) {
-                            Text(text = stringResource(R.string.save))
+                            OutlinedTextField(
+                                value = data!!.content,
+                                onValueChange = { newContent -> viewModel.updateContent(newContent) },
+                                label = { Text(stringResource(R.string.content_hint)) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .padding(6.dp)
+                            )
+
+                            InfoRow(
+                                label = stringResource(R.string.place_label),
+                                content = data.placeName
+                            )
+
+                            InfoRow(
+                                label = stringResource(R.string.date_label),
+                                content = data.date,
+                                onClick = showDatePicker
+                            )
+
+                            InfoRow(
+                                label = stringResource(R.string.time_label),
+                                content = data.time,
+                                onClick = showTimePicker
+                            )
+
+                            Button(
+                                onClick = {
+                                    if (viewModel.isNetworkConnected()) {
+                                        isButtonClicked = true
+                                        viewModel.saveMeeting(data)
+                                    } else showSnackbar = true
+                                },
+                                enabled = !isButtonClicked,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp)
+                            ) {
+                                Text(text = stringResource(R.string.save))
+                            }
                         }
+                        SnackbarHost(
+                            hostState = snackbarHostState,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
                     }
                 }
             )

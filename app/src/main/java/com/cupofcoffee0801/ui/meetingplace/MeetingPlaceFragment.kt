@@ -181,7 +181,7 @@ fun MeetingItem(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .height(100.dp)
-                .padding(bottom = 8.dp)
+                .padding(4.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
