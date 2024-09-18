@@ -84,7 +84,7 @@ class MakeMeetingViewModel @Inject constructor(
 
     private suspend fun loadMeeting(meetingId: String) {
         try {
-            val meeting = meetingRepository.getMeeting(meetingId)
+            val meeting = meetingRepository.getMeeting(meetingId, isNetworkConnected())
             _uiState.postValue(
                 MakeMeetingUiState(
                     placeName = meeting.caption,
