@@ -16,3 +16,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "CupOfCoffee"
 include(":app")
+include(":core")
+include(":core:database")
+include(":core:data")
+include(":core:network")
+include(":sync")
+include(":sync:work")
+include(":core:common")
+include(":core:datastore")

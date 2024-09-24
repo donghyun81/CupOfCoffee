@@ -7,10 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cupofcoffee0801.R
-import com.cupofcoffee0801.data.repository.PlaceRepository
-import com.cupofcoffee0801.ui.model.Place
-import com.cupofcoffee0801.ui.model.asPlaceEntity
 import com.cupofcoffee0801.util.NetworkUtil
+import com.example.data.model.Place
+import com.example.data.model.asPlaceEntity
+import com.example.data.repository.PlaceRepository
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
@@ -30,7 +30,7 @@ class HomeViewModel @Inject constructor(
         MutableLiveData(HomeUiState(isLoading = true))
     val uiState: LiveData<HomeUiState> get() = _uiState
 
-    var currentJob: Job? = null
+    private var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {

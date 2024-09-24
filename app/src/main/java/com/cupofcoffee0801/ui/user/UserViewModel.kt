@@ -7,12 +7,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
-import com.cupofcoffee0801.data.repository.MeetingRepository
-import com.cupofcoffee0801.data.repository.PlaceRepository
-import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.data.worker.DeleteMeetingWorker
-import com.cupofcoffee0801.ui.model.Meeting
 import com.cupofcoffee0801.util.NetworkUtil
+import com.example.data.model.Meeting
+import com.example.data.repository.MeetingRepository
+import com.example.data.repository.PlaceRepository
+import com.example.data.repository.UserRepository
+import com.example.work.DeleteMeetingWorker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel

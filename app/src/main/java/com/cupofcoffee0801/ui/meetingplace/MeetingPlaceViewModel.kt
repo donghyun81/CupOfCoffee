@@ -7,12 +7,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.repository.MeetingRepository
-import com.cupofcoffee0801.data.repository.PlaceRepository
-import com.cupofcoffee0801.data.repository.UserRepository
-import com.cupofcoffee0801.ui.model.Meeting
-import com.cupofcoffee0801.ui.model.asMeetingEntity
 import com.cupofcoffee0801.util.NetworkUtil
+import com.example.data.model.Meeting
+import com.example.data.model.asMeetingEntity
+import com.example.data.repository.MeetingRepository
+import com.example.data.repository.PlaceRepository
+import com.example.data.repository.UserRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel

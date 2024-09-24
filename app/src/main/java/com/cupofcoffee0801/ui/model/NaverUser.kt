@@ -1,5 +1,7 @@
 package com.cupofcoffee0801.ui.model
 
+import com.example.data.model.User
+
 data class NaverUser(
     val id: String,
     val name: String,

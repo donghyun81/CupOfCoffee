@@ -1,15 +1,15 @@
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("androidx.navigation.safeargs")
-    id("com.google.gms.google-services")
-    id("kotlin-parcelize")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.androidx.navigation.safeargs)
+    alias(libs.plugins.kotlin.plugin.serialization)
+    alias(libs.plugins.compose)
     id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
+    id("kotlin-parcelize")
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -88,6 +88,12 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.2")
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation(project(":core:data"))
+    implementation(project(":sync:work"))
+    implementation(project(":core:datastore"))
+    implementation(project(":core:network"))
+    implementation(project(":core:database"))
+    implementation(project(":core:common"))
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
@@ -123,8 +129,8 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:2.49")
     kapt("com.google.dagger:hilt-android-compiler:2.48")
-    implementation("androidx.hilt:hilt-work:1.2.0")
-    kapt("androidx.hilt:hilt-compiler:1.2.0")
+    implementation(libs.hilt.work)
+    kapt(libs.hilt.compiler)
 
     // compose
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")

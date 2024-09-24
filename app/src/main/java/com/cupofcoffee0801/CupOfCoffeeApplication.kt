@@ -7,8 +7,8 @@ import androidx.work.Constraints
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.cupofcoffee0801.data.module.AuthTokenManager
-import com.cupofcoffee0801.data.worker.SyncLocalWorker
+import com.example.common.di.AuthTokenManager
+import com.example.work.SyncLocalWorker
 import com.navercorp.nid.NaverIdLoginSDK
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject

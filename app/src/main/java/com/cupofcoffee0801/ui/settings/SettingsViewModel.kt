@@ -7,9 +7,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
-import com.cupofcoffee0801.data.repository.PreferencesRepositoryImpl
-import com.cupofcoffee0801.data.worker.DeleteUserWorker
 import com.cupofcoffee0801.util.NetworkUtil
+import com.example.datastore.PreferencesRepositoryImpl
+import com.example.work.DeleteUserWorker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel

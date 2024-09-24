@@ -2,9 +2,9 @@ package com.cupofcoffee0801.ui.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
-import com.cupofcoffee0801.data.repository.PreferencesRepositoryImpl
-import com.cupofcoffee0801.data.repository.UserRepository
 import com.cupofcoffee0801.util.NetworkUtil
+import com.example.data.repository.UserRepository
+import com.example.datastore.PreferencesRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel

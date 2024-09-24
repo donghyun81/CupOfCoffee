@@ -7,10 +7,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cupofcoffee0801.data.repository.CommentRepositoryImpl
-import com.cupofcoffee0801.data.repository.UserRepositoryImpl
-import com.cupofcoffee0801.ui.model.User
 import com.cupofcoffee0801.util.NetworkUtil
+import com.example.data.model.User
+import com.example.data.repository.CommentRepositoryImpl
+import com.example.data.repository.UserRepositoryImpl
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
