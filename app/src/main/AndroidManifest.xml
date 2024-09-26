@@ -35,7 +35,42 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="splash"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="login"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="home"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="user"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="make_meeting"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="meeting_detail"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="meeting_place"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="settings"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="user_edit"
+                    android:scheme="cupofcoffee" />
+                <data
+                    android:host="comment_edit"
+                    android:scheme="cupofcoffee" />
             </intent-filter>
         </activity>
     </application>

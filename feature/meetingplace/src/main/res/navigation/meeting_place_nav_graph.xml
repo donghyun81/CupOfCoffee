@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/meeting_place_nav_graph"
+    app:startDestination="@id/meetingPlaceFragment">
+
+    <dialog
+        android:id="@+id/meetingPlaceFragment"
+        android:name="com.example.meetingplace.MeetingPlaceFragment"
+        android:label="MeetingPlaceFragment">
+        <argument
+            android:name="placeId"
+            app:argType="string" />
+        <deepLink app:uri="cupofcoffee://meeting_place?placeId={placeId}" />
+    </dialog>
+</navigation>

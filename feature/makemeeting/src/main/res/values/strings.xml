@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="date_picker_title">모임 날짜 선택</string>
+    <string name="meeting_date_picker_tag">meeting_date</string>
+    <string name="select_previous_date">최근 날짜 이후로 모임을 생성할 수 있습니다.</string>
+    <string name="make_network_message">모임을 생성을 위해서 네트워크 연결이 필요합니다!</string>
+    <string name="content_hint">모임 상세</string>
+    <string name="place_label">장소</string>
+    <string name="date_label">날짜</string>
+    <string name="time_label">시간</string>
+    <string name="save">저장</string>
+</resources>

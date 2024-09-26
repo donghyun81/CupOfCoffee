@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/comment_edit_nav_graph"
+    app:startDestination="@id/commentEditFragment">
+
+    <dialog
+        android:id="@+id/commentEditFragment"
+        android:name="com.example.commentdetail.CommentEditFragment"
+        android:label="CommentEditFragment">
+        <argument
+            android:name="commentId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="meetingId"
+            app:argType="string" />
+        <deepLink app:uri="cupofcoffee://comment_edit?commentId={commentId}&amp;meetingId={meetingId}" />
+    </dialog>
+</navigation>

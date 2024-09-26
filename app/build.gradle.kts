@@ -1,15 +1,15 @@
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("androidx.navigation.safeargs")
-    id("com.google.gms.google-services")
-    id("kotlin-parcelize")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.androidx.navigation.safeargs)
+    alias(libs.plugins.kotlin.plugin.serialization)
+    alias(libs.plugins.compose)
     id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
+    id("kotlin-parcelize")
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -85,29 +85,42 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    implementation("androidx.fragment:fragment-ktx:1.8.2")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation(libs.fragment.ktx)
+    implementation(libs.navigation.fragment.ktx)
+    implementation(libs.navigation.ui.ktx)
+    implementation(project(":feature:home"))
+    implementation(project(":feature:commentdetail"))
+    implementation(project(":feature:login"))
+    implementation(project(":feature:splash"))
+    implementation(project(":feature:makemeeting"))
+    implementation(project(":feature:meetingdetail"))
+    implementation(project(":feature:meetingplace"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:user"))
+    implementation(project(":feature:useredit"))
+    implementation(project(":sync:work"))
+    implementation(project(":core:common"))
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    implementation("com.naver.maps:map-sdk:3.19.1")
-    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation(libs.map.sdk)
+    implementation(libs.play.services.location)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
-    implementation("com.google.firebase:firebase-database-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation ("com.google.firebase:firebase-storage-ktx:21.0.0")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.auth.ktx)
+    implementation (libs.firebase.storage.ktx)
 
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.4")
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.livedata.ktx)
 
-    implementation("com.navercorp.nid:oauth:5.9.1")
+    implementation(libs.oauth)
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
@@ -119,41 +132,29 @@ dependencies {
 
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation(libs.datastore.preferences)
 
-    implementation("com.google.dagger:hilt-android:2.49")
-    kapt("com.google.dagger:hilt-android-compiler:2.48")
-    implementation("androidx.hilt:hilt-work:1.2.0")
-    kapt("androidx.hilt:hilt-compiler:1.2.0")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.hilt.work)
+    kapt(libs.hilt.compiler)
 
-    // compose
-    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
+    implementation(platform(libs.compose.bom))
 
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.ui:ui")
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.ui)
 
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
 
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
-
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.material3:material3-window-size-class")
-
-    implementation("androidx.activity:activity-compose:1.9.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
-    implementation("androidx.compose.runtime:runtime-livedata")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation ("com.google.accompanist:accompanist-permissions:0.35.1-alpha")
-    implementation ("com.android.volley:volley:1.2.1")
-    implementation ("io.coil-kt:coil-compose:2.7.0")
+    implementation(libs.activity.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.compose.runtime.livedata)
+    implementation (libs.accompanist.permissions)
+    implementation (libs.volley)
+    implementation (libs.coil.compose)
 }
 
 kapt {
