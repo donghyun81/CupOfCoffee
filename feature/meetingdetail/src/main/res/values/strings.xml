@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_meeting_network_message">모임을 삭제하기 위해서 네트워크 연결이 필요합니다!</string>
+    <string name="place_label">장소</string>
+    <string name="date_label">날짜</string>
+    <string name="time_label">시간</string>
+</resources>

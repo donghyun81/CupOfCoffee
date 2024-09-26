@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/make_meeting_nav_graph"
+    app:startDestination="@id/makeMeetingFragment">
+
+    <dialog
+        android:id="@+id/makeMeetingFragment"
+        android:name="com.example.makemeeting.MakeMeetingFragment"
+        android:label="MakeMeetingFragment">
+
+        <argument
+            android:name="placeName"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="lat"
+            app:argType="string"
+            app:nullable="true" />
+
+        <argument
+            android:name="lng"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="meetingId"
+            app:argType="string"
+            app:nullable="true" />
+
+        <deepLink app:uri="cupofcoffee://make_meeting?placeName={placeName}&amp;lat={lat}&amp;lng={lng}&amp;meetingId={meetingId}" />
+    </dialog>
+</navigation>
