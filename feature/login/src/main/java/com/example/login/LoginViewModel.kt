@@ -4,8 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.model.NaverUser
-import com.example.model.asUser
 import com.example.common.util.NetworkUtil
 import com.example.data.model.User
 import com.example.data.model.asMeetingEntity
@@ -13,13 +11,17 @@ import com.example.data.model.asUserDTO
 import com.example.data.model.asUserEntity
 import com.example.data.repository.MeetingRepository
 import com.example.data.repository.UserRepository
+import com.example.model.NaverUser
+import com.example.model.asUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,18 +35,33 @@ class LoginViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
     private val _loginUiState = MutableLiveData(LoginUiState())
     val loginUiState: LiveData<LoginUiState> get() = _loginUiState
 
     private val auth = Firebase.auth
 
+    private val _snackbarEvent = Channel<String>()
+    val snackbarEvent = _snackbarEvent.receiveAsFlow()
+
+    fun showSnackBar(message: String) {
+        viewModelScope.launch {
+            _snackbarEvent.send(message)
+        }
+    }
+
+
+    fun handleIntent(intent: LoginIntent) {
+        when (intent) {
+            is LoginIntent.LoginButtonClicked -> {
+                    _loginUiState.value = _loginUiState.value!!.copy(isLoginButtonEnable = false)
+            }
+        }
+    }
+
     fun isNetworkConnected() = networkUtil.isConnected()
 
-    fun switchButtonClicked() {
-        _isButtonClicked.value = _isButtonClicked.value?.not()
+    fun disableLoginButton() {
+        _loginUiState.value = _loginUiState.value!!.copy(isLoginButtonEnable = true)
     }
 
     fun loginNaver() {
