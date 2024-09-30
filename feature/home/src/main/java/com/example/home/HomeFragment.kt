@@ -80,7 +80,8 @@ class HomeFragment : Fragment() {
     private fun moveToSaveMeeting(placeName: String, position: LatLng) {
         val lat = position.latitude.toString().take(POSITION_COUNT)
         val lng = position.longitude.toString().take(POSITION_COUNT)
-        val uri = Uri.parse("cupofcoffee://make_meeting?placeName=${placeName}&lat=${lat}&lng=${lng}&meetingId=${null}")
+        val uri =
+            Uri.parse("cupofcoffee://make_meeting?placeName=${placeName}&lat=${lat}&lng=${lng}&meetingId=${null}")
         findNavController().navigate(uri)
     }
 
@@ -95,8 +96,8 @@ class HomeFragment : Fragment() {
 fun HomeScreen(
     viewModel: HomeViewModel,
     fusedLocationSource: FusedLocationSource,
-    onPlaceClick: (String, LatLng) -> Unit,
-    onMarkerClick: (String) -> Unit
+    moveToSaveMeeting: (String, LatLng) -> Unit,
+    moveToPlaceMeetings: (String) -> Unit
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
@@ -123,8 +124,8 @@ fun HomeScreen(
                 fusedLocationSource = fusedLocationSource,
                 uiState = uiState,
                 context = context,
-                onPlaceClick = onPlaceClick,
-                onMarkerClick = onMarkerClick,
+                moveToSaveMeeting = moveToSaveMeeting,
+                moveToPlaceMeetings = moveToPlaceMeetings,
                 viewModel = viewModel
             )
 
@@ -158,8 +159,8 @@ private fun MapViewWithMarkers(
     fusedLocationSource: FusedLocationSource,
     uiState: HomeUiState?,
     context: Context,
-    onPlaceClick: (String, LatLng) -> Unit,
-    onMarkerClick: (String) -> Unit,
+    moveToSaveMeeting: (String, LatLng) -> Unit,
+    moveToPlaceMeetings: (String) -> Unit,
     viewModel: HomeViewModel
 ) {
     AndroidView(
@@ -178,12 +179,12 @@ private fun MapViewWithMarkers(
             naverMap.uiSettings.isLocationButtonEnabled = false
             showUserLocation(naverMap)
             initCameraZoom(naverMap)
-            setSymbolClick(naverMap, context, onPlaceClick)
+            setSymbolClick(naverMap, context, moveToSaveMeeting)
             showMarkers(
                 naverMap = naverMap,
                 markers = uiState?.markers.orEmpty(),
                 showedMarkers = uiState?.showedMarkers.orEmpty(),
-                onMarkerClick = onMarkerClick,
+                onMarkerClick = moveToPlaceMeetings,
                 updateShowedMarkers = viewModel::updateShowedMarkers
             )
         }

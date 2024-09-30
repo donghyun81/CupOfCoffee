@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -79,7 +80,7 @@ class LoginFragment : Fragment() {
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
-    onNavigateUp: () -> Unit
+    onNavigate: () -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.loginUiState.observeAsState()
@@ -102,7 +103,7 @@ fun LoginScreen(
             isError = uiState?.isError ?: false,
             isLoading = uiState?.isLoading ?: false,
             isComplete = uiState?.isComplete ?: false,
-            navigateUp = onNavigateUp,
+            navigateUp = onNavigate,
             data = uiState
         ) {
             Column(

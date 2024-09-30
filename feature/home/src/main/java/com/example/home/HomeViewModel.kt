@@ -2,6 +2,7 @@ package com.example.home
 
 import android.net.ConnectivityManager
 import android.net.Network
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
