@@ -7,9 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Meeting(
     val id: String,
-    val caption: String,
-    val lat: Double,
-    val lng: Double,
+    val placeName: String,
     val managerId: String,
     val personIds: MutableMap<String, Boolean> = mutableMapOf(),
     val placeId: String,
@@ -20,11 +18,22 @@ data class Meeting(
     val commentIds: MutableMap<String, Boolean> = mutableMapOf()
 )
 
+fun Meeting.asMeetingData() =
+    MeetingData(
+        placeName,
+        managerId,
+        personIds,
+        placeId,
+        date,
+        time,
+        createDate,
+        content,
+        commentIds
+    )
+
 fun Meeting.asMeetingEntity() = MeetingEntity(
     id,
-    caption,
-    lat,
-    lng,
+    placeName,
     managerId,
     personIds,
     placeId,
@@ -37,9 +46,7 @@ fun Meeting.asMeetingEntity() = MeetingEntity(
 
 fun Meeting.asMeetingDTO() =
     MeetingDTO(
-        caption,
-        lat,
-        lng,
+        placeName,
         managerId,
         personIds,
         placeId,
@@ -53,9 +60,7 @@ fun Meeting.asMeetingDTO() =
 fun MeetingDTO.asPlace(id: String) =
     Meeting(
         id,
-        caption,
-        lat,
-        lng,
+        placeName,
         managerId,
         personIds,
         placeId,
@@ -68,9 +73,7 @@ fun MeetingDTO.asPlace(id: String) =
 
 fun MeetingDTO.asMeetingEntity(id: String) = MeetingEntity(
     id,
-    caption,
-    lat,
-    lng,
+    placeName,
     managerId,
     personIds,
     placeId,
@@ -83,8 +86,8 @@ fun MeetingDTO.asMeetingEntity(id: String) = MeetingEntity(
 
 fun MeetingEntity.asPlace() = Meeting(
     id,
-    caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content
+    caption, managerId, personIds, placeId, date, time, createDate, content
 )
 
 fun MeetingEntity.asMeetingDTO() =
-    MeetingDTO(caption, lat, lng, managerId, personIds, placeId, date, time, createDate, content)
+    MeetingDTO(caption,managerId, personIds, placeId, date, time, createDate, content)

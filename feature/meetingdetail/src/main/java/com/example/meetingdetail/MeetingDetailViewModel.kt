@@ -144,7 +144,7 @@ class MeetingDetailViewModel @Inject constructor(
     private fun Meeting.asMeetingUiModel() = MeetingDetailMeetingUiModel(
         id,
         content,
-        caption,
+        placeName,
         date,
         time
     )
