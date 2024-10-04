@@ -2,7 +2,6 @@ package com.example.makemeeting
 
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -115,7 +114,6 @@ fun MakeMeetingScreen(
     onNavigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val meetingData by viewModel.meetingData
     val snackbarHostState = remember { SnackbarHostState() }
     viewModel.handleIntent(MakeMeetingIntent.InitData)
 
@@ -153,7 +151,7 @@ fun MakeMeetingScreen(
                             .padding(12.dp)
                     ) {
                         OutlinedTextField(
-                            value = meetingData.content,
+                            value = uiState.meetingData.content,
                             onValueChange = { newContent ->
                                 viewModel.handleIntent(
                                     intent = MakeMeetingIntent.EnterContent(
@@ -170,18 +168,18 @@ fun MakeMeetingScreen(
 
                         InfoRow(
                             label = stringResource(R.string.place_label),
-                            content = meetingData.placeName
+                            content = uiState.meetingData.placeName
                         )
 
                         InfoRow(
                             label = stringResource(R.string.date_label),
-                            content = meetingData.date,
+                            content = uiState.meetingData.date,
                             onClick = showDatePicker
                         )
 
                         InfoRow(
                             label = stringResource(R.string.time_label),
-                            content = meetingData.time,
+                            content = uiState.meetingData.time,
                             onClick = showTimePicker
                         )
 
