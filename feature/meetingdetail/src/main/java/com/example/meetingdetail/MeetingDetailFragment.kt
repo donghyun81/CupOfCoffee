@@ -114,9 +114,8 @@ fun MeetingDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    viewModel.handleIntent(MeetingDetailIntent.HandleInitData)
-
     LaunchedEffect(Unit) {
+        viewModel.handleIntent(MeetingDetailIntent.HandleInitData)
         viewModel.sideEffect.collect { effect ->
             when (effect) {
                 is MeetingDetailSideEffect.NavigateToCommentEdit -> {

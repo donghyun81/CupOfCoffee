@@ -115,9 +115,9 @@ fun MakeMeetingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    viewModel.handleIntent(MakeMeetingIntent.InitData)
 
-    LaunchedEffect(viewModel.sideEffect) {
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(MakeMeetingIntent.InitData)
         viewModel.sideEffect.collect { effect ->
             when (effect) {
                 is MakeMeetingSideEffect.NavigateUp -> {
