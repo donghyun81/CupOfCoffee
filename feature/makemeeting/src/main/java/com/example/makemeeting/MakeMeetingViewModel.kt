@@ -39,7 +39,6 @@ const val MAKE_NETWORK_MESSAGE = "모임을 생성을 위해서 네트워크 연
 data class MakeMeetingUiState(
     val isError: Boolean = false,
     val isLoading: Boolean = false,
-    val snackBarMessage: String = MAKE_NETWORK_MESSAGE,
     val meetingData: MeetingData = MeetingData(),
     val placeData: PlaceData = PlaceData(),
     val isSaveButtonEnable: Boolean = true
@@ -56,7 +55,8 @@ class MakeMeetingViewModel @Inject constructor(
 
     private val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _uiState: MutableStateFlow<MakeMeetingUiState> = MutableStateFlow(MakeMeetingUiState(isLoading = true))
+    private val _uiState: MutableStateFlow<MakeMeetingUiState> =
+        MutableStateFlow(MakeMeetingUiState(isLoading = true))
     val uiState: StateFlow<MakeMeetingUiState> = _uiState.asStateFlow()
 
     private val _sideEffect = MutableSharedFlow<MakeMeetingSideEffect>(replay = 1)
@@ -64,35 +64,37 @@ class MakeMeetingViewModel @Inject constructor(
 
     fun handleIntent(intent: MakeMeetingIntent) {
         when (intent) {
-            MakeMeetingIntent.InitData -> handleInitData()
-            is MakeMeetingIntent.MakeMeeting -> handleMakeMeeting()
+            MakeMeetingIntent.InitData -> {
+                viewModelScope.launch {
+                    handleInitData()
+                    _uiState.value = uiState.value.copy(isLoading = false)
+                }
+            }
+
+            is MakeMeetingIntent.MakeMeeting -> {
+                _uiState.value = uiState.value.copy(isSaveButtonEnable = false)
+                handleMakeMeeting()
+            }
             is MakeMeetingIntent.EnterContent -> updateContent(intent.content)
             is MakeMeetingIntent.EditDate -> updateDate(intent.date)
             is MakeMeetingIntent.EditTime -> updateTime(intent.time)
-            is MakeMeetingIntent.ShowSnackBar -> showSnackBar(intent.message)
         }
     }
 
-    private fun handleInitData() {
-        viewModelScope.launch {
-            _uiState.value = uiState.value.copy(isLoading = true)
-            val meetingId = args.meetingId
-            if (meetingId == null) initMeeting() else loadMeeting(meetingId)
-            initPlace()
-            _uiState.value = uiState.value.copy(isLoading = false)
-        }
+    private suspend fun handleInitData() {
+        val meetingId = args.meetingId
+        if (meetingId == null) initMeeting() else loadMeeting(meetingId)
+        initPlace()
     }
 
     private fun handleMakeMeeting() {
-        _uiState.value = uiState.value.copy(isSaveButtonEnable = false)
-
         if (networkUtil.isConnected()) {
             viewModelScope.launch {
                 saveMeeting()
                 _sideEffect.tryEmit(MakeMeetingSideEffect.NavigateUp)
             }
         } else {
-            showSnackBar(uiState.value.snackBarMessage)
+            showSnackBar(MAKE_NETWORK_MESSAGE)
             _uiState.value = uiState.value.copy(isSaveButtonEnable = true)
         }
     }
@@ -188,7 +190,8 @@ class MakeMeetingViewModel @Inject constructor(
     }
 
     private fun convertPlaceId(lat: Double, lng: Double): String {
-        return (lat.toString().take(POSITION_COUNT) + lng.toString().take(POSITION_COUNT)).filter { it != '.' }
+        return (lat.toString().take(POSITION_COUNT) + lng.toString()
+            .take(POSITION_COUNT)).filter { it != '.' }
     }
 
     private suspend fun createPlace(meetingId: String, place: Place) {

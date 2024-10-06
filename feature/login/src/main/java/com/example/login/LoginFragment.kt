@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -85,14 +84,18 @@ fun LoginScreen(
     val context = LocalContext.current
     val uiState by viewModel.loginUiState.observeAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val loginNetworkMessage = stringResource(R.string.login_network_message)
 
     LaunchedEffect(Unit) {
-        viewModel.snackbarEvent.collect { message ->
-            snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Short
-            )
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                LoginSideEffect.NavigateHome -> onNavigate()
+                is LoginSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         }
     }
 
@@ -102,8 +105,6 @@ fun LoginScreen(
         StateContent(
             isError = uiState?.isError ?: false,
             isLoading = uiState?.isLoading ?: false,
-            isComplete = uiState?.isComplete ?: false,
-            navigateUp = onNavigate,
             data = uiState
         ) {
             Column(
@@ -127,10 +128,7 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        if (viewModel.isNetworkConnected()) {
-                            authenticateNaver(context, viewModel)
-                            viewModel.handleIntent(LoginIntent.LoginButtonClicked)
-                        } else viewModel.showSnackBar(loginNetworkMessage)
+                        authenticateNaver(context, viewModel)
                     },
                     enabled = uiState!!.isLoginButtonEnable,
                     colors = ButtonDefaults.buttonColors(Green),
@@ -159,18 +157,22 @@ fun LoginScreen(
 }
 
 private fun authenticateNaver(context: Context, viewModel: LoginViewModel) {
-    NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
-    NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
-        override fun onSuccess() {
-            viewModel.loginNaver()
-        }
+    if (viewModel.isNetworkConnected()) {
+        NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
+        NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
+            override fun onSuccess() {
+                viewModel.handleIntent(LoginIntent.LoginButtonClicked)
+            }
 
-        override fun onFailure(httpStatus: Int, message: String) {
-            viewModel.disableLoginButton()
-        }
+            override fun onFailure(httpStatus: Int, message: String) {
+                viewModel.disableLoginButton()
+            }
 
-        override fun onError(errorCode: Int, message: String) {
-            viewModel.disableLoginButton()
-        }
-    })
+            override fun onError(errorCode: Int, message: String) {
+                viewModel.disableLoginButton()
+            }
+        })
+    } else {
+        viewModel.showSnackBar()
+    }
 }

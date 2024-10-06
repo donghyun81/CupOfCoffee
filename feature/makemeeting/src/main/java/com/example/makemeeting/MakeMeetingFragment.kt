@@ -125,7 +125,7 @@ fun MakeMeetingScreen(
                 }
                 is MakeMeetingSideEffect.ShowSnackBar ->
                     snackbarHostState.showSnackbar(
-                        message = uiState.snackBarMessage,
+                        message = effect.message,
                         duration = SnackbarDuration.Short
                     )
             }

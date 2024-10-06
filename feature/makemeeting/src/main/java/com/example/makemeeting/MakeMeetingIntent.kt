@@ -10,6 +10,4 @@ sealed class MakeMeetingIntent {
     data class EditTime(val time: String) : MakeMeetingIntent()
 
     data object MakeMeeting : MakeMeetingIntent()
-
-    data class ShowSnackBar(val message: String) : MakeMeetingIntent()
 }
