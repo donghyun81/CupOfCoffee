@@ -2,9 +2,6 @@ package com.example.meetingplace
 
 import android.net.ConnectivityManager
 import android.net.Network
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,10 +16,19 @@ import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+const val APPLY_MESSAGE = "모임 참가를 위해서 네트워크 연결이 필요합니다!"
+const val NO_CANCEL_MY_MEETING = "내 모임은 모임 상세에서 삭제 해주세요!"
+const val CANCEL_NETWORK_MESSAGE = "모임을 취소하기 위해서 네트워크 연결이 필요합니다!"
+
 
 @HiltViewModel
 class MeetingPlaceViewModel @Inject constructor(
@@ -35,9 +41,12 @@ class MeetingPlaceViewModel @Inject constructor(
 
     private val placeId = MeetingPlaceFragmentArgs.fromSavedStateHandle(savedStateHandle).placeId
 
-    private val _uiState: MutableLiveData<MeetingPlaceUiState> =
-        MutableLiveData(MeetingPlaceUiState(isLoading = true))
-    val uiState: LiveData<MeetingPlaceUiState> get() = _uiState
+    private val _uiState: MutableStateFlow<MeetingPlaceUiState> =
+        MutableStateFlow(MeetingPlaceUiState(isLoading = true))
+    val uiState: MutableStateFlow<MeetingPlaceUiState> get() = _uiState
+
+    private val _sideEffect = MutableSharedFlow<MeetingPlaceSideEffect>(replay = 1)
+    val sideEffect: SharedFlow<MeetingPlaceSideEffect> = _sideEffect.asSharedFlow()
 
     private var currentJob: Job? = null
 
@@ -57,16 +66,37 @@ class MeetingPlaceViewModel @Inject constructor(
         networkUtil.registerNetworkCallback(networkCallback)
     }
 
-    fun isNetworkConnected() = networkUtil.isConnected()
+    private fun isNetworkConnected() = networkUtil.isConnected()
+
+    fun handleIntent(intent: MeetingPlaceIntent) {
+        when (intent) {
+            is MeetingPlaceIntent.AttendedCancelClick -> {
+                if (networkUtil.isConnected()) {
+                    cancelMeeting(intent.meetingId)
+                }
+                val snackBarMessage =
+                    if (intent.isMyMeeting) NO_CANCEL_MY_MEETING else CANCEL_NETWORK_MESSAGE
+                _uiState.value = uiState.value.copy(snackBarMessage = snackBarMessage)
+                _sideEffect.tryEmit(MeetingPlaceSideEffect.ShowSnackBar(uiState.value.snackBarMessage))
+            }
+
+            is MeetingPlaceIntent.MeetingApplyClick -> {
+                _uiState.value = uiState.value.copy(snackBarMessage = APPLY_MESSAGE)
+                applyMeeting(intent.meetingId)
+            }
+
+            is MeetingPlaceIntent.MeetingDetailClick -> {
+                _sideEffect.tryEmit(MeetingPlaceSideEffect.NavigateMeetingDetail(intent.meetingId))
+            }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun initUiState() {
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             try {
-                Log.d("12345", placeId)
-                val place =
-                    placeRepository.getPlaceById(placeId, networkUtil.isConnected())!!
+                val place = placeRepository.getPlaceById(placeId, networkUtil.isConnected())!!
                 val meetingsInFlow =
                     meetingRepository.getMeetingsByIdsInFlow(
                         place.meetingIds.keys.toList(),
@@ -145,7 +175,7 @@ class MeetingPlaceViewModel @Inject constructor(
         userRepository.update(user)
     }
 
-    fun cancelMeeting(meetingId: String) {
+    private fun cancelMeeting(meetingId: String) {
         viewModelScope.launch {
             deleteUserToMeeting(meetingId)
             deleteAttendedMeetingToUser(meetingId)
