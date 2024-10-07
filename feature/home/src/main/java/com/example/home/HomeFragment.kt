@@ -80,7 +80,8 @@ class HomeFragment : Fragment() {
     private fun moveToSaveMeeting(placeName: String, position: LatLng) {
         val lat = position.latitude.toString().take(POSITION_COUNT)
         val lng = position.longitude.toString().take(POSITION_COUNT)
-        val uri = Uri.parse("cupofcoffee://make_meeting?placeName=${placeName}&lat=${lat}&lng=${lng}&meetingId=${null}")
+        val uri =
+            Uri.parse("cupofcoffee://make_meeting?placeName=${placeName}&lat=${lat}&lng=${lng}&meetingId=${null}")
         findNavController().navigate(uri)
     }
 
@@ -95,8 +96,8 @@ class HomeFragment : Fragment() {
 fun HomeScreen(
     viewModel: HomeViewModel,
     fusedLocationSource: FusedLocationSource,
-    onPlaceClick: (String, LatLng) -> Unit,
-    onMarkerClick: (String) -> Unit
+    moveToSaveMeeting: (String, LatLng) -> Unit,
+    moveToPlaceMeetings: (String) -> Unit
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
@@ -108,6 +109,21 @@ fun HomeScreen(
         )
     )
     val uiState by viewModel.uiState.observeAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(HomeIntent.InitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is HomeSideEffect.NavigateMakeMeeting -> {
+                    moveToSaveMeeting(effect.caption, effect.latLng)
+                }
+
+                is HomeSideEffect.NavigateMeetingPlace -> {
+                    moveToPlaceMeetings(effect.placeId)
+                }
+            }
+        }
+    }
 
     StateContent(
         isError = uiState?.isError ?: false,
@@ -123,8 +139,6 @@ fun HomeScreen(
                 fusedLocationSource = fusedLocationSource,
                 uiState = uiState,
                 context = context,
-                onPlaceClick = onPlaceClick,
-                onMarkerClick = onMarkerClick,
                 viewModel = viewModel
             )
 
@@ -158,8 +172,6 @@ private fun MapViewWithMarkers(
     fusedLocationSource: FusedLocationSource,
     uiState: HomeUiState?,
     context: Context,
-    onPlaceClick: (String, LatLng) -> Unit,
-    onMarkerClick: (String) -> Unit,
     viewModel: HomeViewModel
 ) {
     AndroidView(
@@ -178,12 +190,12 @@ private fun MapViewWithMarkers(
             naverMap.uiSettings.isLocationButtonEnabled = false
             showUserLocation(naverMap)
             initCameraZoom(naverMap)
-            setSymbolClick(naverMap, context, onPlaceClick)
+            setSymbolClick(naverMap, context, viewModel)
             showMarkers(
                 naverMap = naverMap,
                 markers = uiState?.markers.orEmpty(),
                 showedMarkers = uiState?.showedMarkers.orEmpty(),
-                onMarkerClick = onMarkerClick,
+                viewModel = viewModel,
                 updateShowedMarkers = viewModel::updateShowedMarkers
             )
         }
@@ -223,7 +235,7 @@ private fun initCameraZoom(naverMap: NaverMap) {
 }
 
 private fun setSymbolClick(
-    naverMap: NaverMap, context: Context, onPlaceClick: (String, LatLng) -> Unit
+    naverMap: NaverMap, context: Context, viewModel: HomeViewModel
 ) {
     naverMap.setOnSymbolClickListener { symbol ->
         val placeName = symbol.caption.split("\n").last()
@@ -232,7 +244,7 @@ private fun setSymbolClick(
             .setMessage(placeName)
             .setNegativeButton(context.getString(R.string.cancel)) { dialog, _ -> dialog.cancel() }
             .setPositiveButton(context.getString(R.string.save_create)) { _, _ ->
-                onPlaceClick(placeName, symbol.position)
+                viewModel.handleIntent(HomeIntent.SymbolClick(placeName, symbol.position))
             }
             .show()
         true
@@ -243,14 +255,14 @@ private fun showMarkers(
     naverMap: NaverMap,
     markers: List<Marker>,
     showedMarkers: List<Marker>,
-    onMarkerClick: (String) -> Unit,
+    viewModel: HomeViewModel,
     updateShowedMarkers: (List<Marker>) -> Unit
 ) {
     markers.filterNot { it in showedMarkers }.forEach { marker ->
         marker.map = naverMap
         val placeId = marker.tag.toString()
         marker.setOnClickListener {
-            onMarkerClick(placeId)
+            viewModel.handleIntent(HomeIntent.MarkerClick(placeId))
             true
         }
     }

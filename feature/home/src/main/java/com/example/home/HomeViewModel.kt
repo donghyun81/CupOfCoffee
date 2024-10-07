@@ -15,6 +15,8 @@ import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,6 +31,9 @@ class HomeViewModel @Inject constructor(
         MutableLiveData(HomeUiState(isLoading = true))
     val uiState: LiveData<HomeUiState> get() = _uiState
 
+    private val _sideEffect = MutableSharedFlow<HomeSideEffect>(replay = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
+
     private var currentJob: Job? = null
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
@@ -41,9 +46,30 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    init {
-        initMarkersJob()
-        networkUtil.registerNetworkCallback(networkCallback)
+    fun handleIntent(intent: HomeIntent) {
+        when (intent) {
+            HomeIntent.InitData -> {
+                initMarkersJob()
+                networkUtil.registerNetworkCallback(networkCallback)
+            }
+
+            is HomeIntent.MarkerClick -> {
+                _sideEffect.tryEmit(
+                    HomeSideEffect.NavigateMeetingPlace(
+                        intent.placeId
+                    )
+                )
+            }
+
+            is HomeIntent.SymbolClick -> {
+                _sideEffect.tryEmit(
+                    HomeSideEffect.NavigateMakeMeeting(
+                        intent.caption,
+                        intent.latLng
+                    )
+                )
+            }
+        }
     }
 
     override fun onCleared() {
@@ -51,7 +77,7 @@ class HomeViewModel @Inject constructor(
         currentJob?.cancel()
     }
 
-    fun initMarkersJob(){
+    fun initMarkersJob() {
         currentJob?.cancel()
         currentJob = initMarkers()
     }
@@ -61,19 +87,19 @@ class HomeViewModel @Inject constructor(
         placesFlow
             .distinctUntilChanged()
             .collect { places ->
-            try {
-                places.forEach { place ->
-                    placeRepository.insertLocal(
-                        place.asPlaceEntity()
+                try {
+                    places.forEach { place ->
+                        placeRepository.insertLocal(
+                            place.asPlaceEntity()
+                        )
+                    }
+                    _uiState.postValue(
+                        HomeUiState(places.map { it.toMarker() })
                     )
+                } catch (e: Exception) {
+                    _uiState.postValue(HomeUiState(isError = true))
                 }
-                _uiState.postValue(
-                    HomeUiState(places.map { it.toMarker() })
-                )
-            } catch (e: Exception) {
-                _uiState.postValue(HomeUiState(isError = true))
             }
-        }
     }
 
     fun updateShowedMarkers(markers: List<Marker>) {

@@ -1,5 +1,6 @@
 package com.example.login
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -27,9 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -80,32 +79,32 @@ class LoginFragment : Fragment() {
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
-    onNavigateUp: () -> Unit
+    onNavigate: () -> Unit
 ) {
     val context = LocalContext.current
-    val isButtonClicked by viewModel.isButtonClicked.observeAsState(false)
     val uiState by viewModel.loginUiState.observeAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSnackbar by remember { mutableStateOf(false) }
-    val loginNetworkMessage = stringResource(id = R.string.login_network_message)
 
-    LaunchedEffect(showSnackbar) {
-        if (showSnackbar) {
-            snackbarHostState.showSnackbar(
-                message = loginNetworkMessage,
-                duration = SnackbarDuration.Short
-            )
-            showSnackbar = false
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                LoginSideEffect.NavigateHome -> onNavigate()
+                is LoginSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         }
     }
+
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         StateContent(
             isError = uiState?.isError ?: false,
             isLoading = uiState?.isLoading ?: false,
-            isComplete = uiState?.isComplete ?: false,
-            navigateUp = onNavigateUp,
             data = uiState
         ) {
             Column(
@@ -129,25 +128,9 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        if (viewModel.isNetworkConnected()) {
-                            viewModel.switchButtonClicked()
-                            NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
-                            NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
-                                override fun onSuccess() {
-                                    viewModel.loginNaver()
-                                }
-
-                                override fun onFailure(httpStatus: Int, message: String) {
-                                    viewModel.switchButtonClicked()
-                                }
-
-                                override fun onError(errorCode: Int, message: String) {
-                                    viewModel.switchButtonClicked()
-                                }
-                            })
-                        } else showSnackbar = true
+                        authenticateNaver(context, viewModel)
                     },
-                    enabled = !isButtonClicked,
+                    enabled = uiState!!.isLoginButtonEnable,
                     colors = ButtonDefaults.buttonColors(Green),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -170,5 +153,26 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
+
+private fun authenticateNaver(context: Context, viewModel: LoginViewModel) {
+    if (viewModel.isNetworkConnected()) {
+        NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP
+        NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
+            override fun onSuccess() {
+                viewModel.handleIntent(LoginIntent.LoginButtonClicked)
+            }
+
+            override fun onFailure(httpStatus: Int, message: String) {
+                viewModel.disableLoginButton()
+            }
+
+            override fun onError(errorCode: Int, message: String) {
+                viewModel.disableLoginButton()
+            }
+        })
+    } else {
+        viewModel.showSnackBar()
     }
 }

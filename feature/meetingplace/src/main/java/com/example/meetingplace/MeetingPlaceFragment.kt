@@ -28,11 +28,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +53,6 @@ import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
 import com.example.common.component.StateContent
 import com.example.common.graphics.AppTheme
-import com.example.common.showSnackBar
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -66,7 +71,7 @@ class MeetingPlaceFragment : BottomSheetDialogFragment() {
                 AppTheme {
                     PlaceMeetingsScreen(
                         viewModel,
-                        applyOnclick(),
+                        ::navigateMeetingDetail,
                         ::navigateUp
                     )
                 }
@@ -74,25 +79,9 @@ class MeetingPlaceFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun applyOnclick() = object : MeetingClickListener {
-
-        override fun onApplyClick(meetingId: String) {
-            if (viewModel.isNetworkConnected()) viewModel.applyMeeting(meetingId)
-            else view?.showSnackBar(R.string.attended_network_message)
-        }
-
-        override fun onCancelClick(isMyMeeting: Boolean, meetingId: String) {
-            when {
-                isMyMeeting -> view?.showSnackBar(R.string.no_cancel_my_meeting)
-                viewModel.isNetworkConnected() -> viewModel.cancelMeeting(meetingId)
-                else -> view?.showSnackBar(R.string.cancel_network_message)
-            }
-        }
-
-        override fun onDetailClick(meetingId: String) {
-            val uri = Uri.parse("cupofcoffee://meeting_detail?meetingId=${meetingId}")
-            findNavController().navigate(uri)
-        }
+    private fun navigateMeetingDetail(meetingId: String) {
+        val uri = Uri.parse("cupofcoffee://meeting_detail?meetingId=${meetingId}")
+        findNavController().navigate(uri)
     }
 
     private fun navigateUp() {
@@ -104,64 +93,98 @@ class MeetingPlaceFragment : BottomSheetDialogFragment() {
 @Composable
 fun PlaceMeetingsScreen(
     viewModel: MeetingPlaceViewModel,
-    meetingClickListener: MeetingClickListener,
+    navigateMeetingDetail: (String) -> Unit,
     navigateUp: () -> Unit
 ) {
-    val uiState by viewModel.uiState.observeAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    StateContent(
-        isError = uiState?.isError ?: false,
-        isLoading = uiState?.isLoading ?: false,
-        data = uiState
-    ) { data ->
-        Column(
-            modifier = Modifier
-                .fillMaxHeight(0.8f)
-                .padding(16.dp)
-        ) {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = data?.placeCaption ?: "",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_cancel_24),
-                            contentDescription = stringResource(R.string.cancel)
-                        )
-                    }
-                },
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is MeetingPlaceSideEffect.NavigateMeetingDetail -> {
+                    navigateMeetingDetail(effect.meetingId)
+                }
 
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(data!!.meetingsInPlace) { meetingInPlace ->
-                    MeetingItem(
-                        meetingPlaceMeetingUiModel = meetingInPlace,
-                        meetingClickListener
+                is MeetingPlaceSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = uiState.snackBarMessage,
+                        duration = SnackbarDuration.Short
                     )
+                }
+
+                MeetingPlaceSideEffect.NavigateUp -> {
+                    navigateUp()
                 }
             }
         }
+    }
+
+    StateContent(
+        isError = uiState.isError,
+        isLoading = uiState.isLoading,
+        data = uiState
+    ) { uiState ->
+        Scaffold(
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight(0.8f)
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = uiState.placeCaption,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = navigateUp) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_cancel_24),
+                                    contentDescription = stringResource(R.string.cancel)
+                                )
+                            }
+                        },
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(uiState.meetingsInPlace) { meetingInPlace ->
+                            MeetingItem(
+                                meetingPlaceMeetingUiModel = meetingInPlace,
+                                viewModel::handleIntent
+                            )
+                        }
+                    }
+                }
+            }
+        )
     }
 }
 
 @Composable
 fun MeetingItem(
     meetingPlaceMeetingUiModel: MeetingPlaceMeetingUiModel,
-    meetingClickListener: MeetingClickListener
+    handleIntent: (MeetingPlaceIntent) -> Unit
 ) {
     Column(
         modifier = Modifier
             .width(280.dp)
-            .clickable { meetingClickListener.onDetailClick(meetingId = meetingPlaceMeetingUiModel.id) }
+            .clickable {
+                handleIntent(
+                    MeetingPlaceIntent.MeetingDetailClick(
+                        meetingPlaceMeetingUiModel.id
+                    )
+                )
+            }
             .padding(8.dp)
             .border(
                 2.dp,
@@ -203,18 +226,25 @@ fun MeetingItem(
             contentPadding = PaddingValues(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(meetingPlaceMeetingUiModel.meetingPlaceUserUiModel) { userInMeeting ->
+            items(meetingPlaceMeetingUiModel.attendees) { userInMeeting ->
                 UserItem(meetingPlaceUserUiModel = userInMeeting)
             }
         }
 
         Button(
             onClick = {
-                if (meetingPlaceMeetingUiModel.isAttendedMeeting) meetingClickListener.onCancelClick(
-                    meetingPlaceMeetingUiModel.isMyMeeting,
-                    meetingPlaceMeetingUiModel.id
+                if (meetingPlaceMeetingUiModel.isAttendedMeeting)
+                    handleIntent(
+                        MeetingPlaceIntent.AttendedCancelClick(
+                            meetingPlaceMeetingUiModel.isMyMeeting,
+                            meetingPlaceMeetingUiModel.id
+                        )
+                    )
+                else handleIntent(
+                    MeetingPlaceIntent.MeetingApplyClick(
+                        meetingPlaceMeetingUiModel.id
+                    )
                 )
-                else meetingClickListener.onApplyClick(meetingId = meetingPlaceMeetingUiModel.id)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,

@@ -1,6 +1,7 @@
 package com.example.commentdetail
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,18 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,24 +69,23 @@ fun CommentEditScreen(
     viewModel: CommentEditViewModel,
     navigateUp: () -> Unit
 ) {
-    val uiState by viewModel.uiState.observeAsState()
-    var content = remember { mutableStateOf(uiState!!.comment?.content ?: "") }
-    var isButtonClicked by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSnackbar by remember { mutableStateOf(false) }
-    val editCommentNetworkMessage = stringResource(id = R.string.edit_comment_netwokr_message)
 
-    LaunchedEffect(uiState!!.comment?.content) {
-        content.value = uiState!!.comment?.content ?: ""
-    }
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(CommentEditIntent.InitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                CommentEditSideEffect.NavigateUp -> {
+                    navigateUp()
+                }
 
-    LaunchedEffect(showSnackbar) {
-        if (showSnackbar) {
-            snackbarHostState.showSnackbar(
-                message = editCommentNetworkMessage,
-                duration = SnackbarDuration.Short
-            )
-            showSnackbar = false
+                is CommentEditSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                    )
+                }
+            }
         }
     }
 
@@ -96,10 +93,8 @@ fun CommentEditScreen(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),
-        isError = uiState?.isError ?: false,
-        isLoading = uiState?.isLoading ?: false,
-        isComplete = uiState?.isCompleted ?: false,
-        navigateUp = navigateUp,
+        isError = uiState.isError,
+        isLoading = uiState.isLoading,
         data = uiState
     ) {
         Box(
@@ -108,7 +103,7 @@ fun CommentEditScreen(
         ) {
             Row(modifier = Modifier.fillMaxSize()) {
                 AsyncImage(
-                    model = uiState!!.user!!.profileImageWebUrl,
+                    model = uiState.user.profileImageWebUrl,
                     contentDescription = "사용자 프로필",
                     modifier = Modifier
                         .size(40.dp)
@@ -117,8 +112,14 @@ fun CommentEditScreen(
                     contentScale = ContentScale.Crop
                 )
                 TextField(
-                    value = content.value ,
-                    onValueChange = { newContent -> content.value = newContent },
+                    value = uiState.content,
+                    onValueChange = { newContent ->
+                        viewModel.handleIntent(
+                            CommentEditIntent.EnterContent(
+                                newContent
+                            )
+                        )
+                    },
                     label = { Text("내용") },
                     modifier = Modifier
                         .weight(1f)
@@ -128,12 +129,8 @@ fun CommentEditScreen(
 
                 Button(
                     onClick = {
-                        if (viewModel.isNetworkConnected()) {
-                            isButtonClicked = true
-                            viewModel.editComment(content = content.value)
-                        } else showSnackbar = true
+                        viewModel.handleIntent(CommentEditIntent.EditComment)
                     },
-                    enabled = !isButtonClicked,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Text(text = stringResource(id = R.string.save))

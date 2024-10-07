@@ -24,11 +24,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -78,8 +76,11 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds()).build()
         datePicker.show(parentFragmentManager, getString(R.string.meeting_date_picker_tag))
         datePicker.addOnPositiveButtonClickListener { selectedDateInMillis ->
-            if (selectedDateInMillis.isCurrentDateOver())
-                viewModel.updateDate(selectedDateInMillis.toDateFormat())
+            if (selectedDateInMillis.isCurrentDateOver()) viewModel.handleIntent(
+                MakeMeetingIntent.EditDate(
+                    selectedDateInMillis.toDateFormat()
+                )
+            )
             else view?.showSnackBar(R.string.select_previous_date)
         }
     }
@@ -89,7 +90,7 @@ class MakeMeetingFragment : BottomSheetDialogFragment() {
         val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
-            viewModel.updateTime(calendar.toCurrentTime())
+            viewModel.handleIntent(MakeMeetingIntent.EditTime(calendar.toCurrentTime()))
         }
         TimePickerDialog(
             requireContext(),
@@ -112,95 +113,89 @@ fun MakeMeetingScreen(
     showTimePicker: () -> Unit,
     onNavigateUp: () -> Unit
 ) {
-    val uiState by viewModel.uiState.observeAsState()
-    var isButtonClicked by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSnackbar by remember { mutableStateOf(false) }
-    val makeNetworkMessage = stringResource(id = R.string.make_network_message)
 
-    LaunchedEffect(showSnackbar) {
-        if (showSnackbar) {
-            snackbarHostState.showSnackbar(
-                message = makeNetworkMessage,
-                duration = SnackbarDuration.Short
-            )
-            showSnackbar = false
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(MakeMeetingIntent.InitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is MakeMeetingSideEffect.NavigateUp -> {
+                    onNavigateUp()
+                }
+                is MakeMeetingSideEffect.ShowSnackBar ->
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+            }
         }
     }
-    Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { padding ->
-
-        StateContent(
-            isError = uiState?.isError ?: false,
-            isLoading = uiState?.isLoading ?: false,
-            isComplete = uiState?.isComplete ?: false,
-            navigateUp = onNavigateUp,
-            data = uiState
-        ) { data ->
-            Scaffold(
-                content = { paddingValues ->
-                    Box(
+    StateContent(
+        isError = uiState.isError,
+        isLoading = uiState.isLoading,
+        navigateUp = onNavigateUp,
+        data = uiState
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            content = { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(paddingValues)
+                            .padding(12.dp)
                     ) {
-                        Column(
+                        OutlinedTextField(
+                            value = uiState.meetingData.content,
+                            onValueChange = { newContent ->
+                                viewModel.handleIntent(
+                                    intent = MakeMeetingIntent.EnterContent(
+                                        newContent
+                                    )
+                                )
+                            },
+                            label = { Text(stringResource(R.string.content_hint)) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(paddingValues)
-                                .padding(12.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = data!!.content,
-                                onValueChange = { newContent -> viewModel.updateContent(newContent) },
-                                label = { Text(stringResource(R.string.content_hint)) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .padding(6.dp)
-                            )
-
-                            InfoRow(
-                                label = stringResource(R.string.place_label),
-                                content = data.placeName
-                            )
-
-                            InfoRow(
-                                label = stringResource(R.string.date_label),
-                                content = data.date,
-                                onClick = showDatePicker
-                            )
-
-                            InfoRow(
-                                label = stringResource(R.string.time_label),
-                                content = data.time,
-                                onClick = showTimePicker
-                            )
-
-                            Button(
-                                onClick = {
-                                    if (viewModel.isNetworkConnected()) {
-                                        isButtonClicked = true
-                                        viewModel.saveMeeting(data)
-                                    } else showSnackbar = true
-                                },
-                                enabled = !isButtonClicked,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp)
-                            ) {
-                                Text(text = stringResource(R.string.save))
-                            }
-                        }
-                        SnackbarHost(
-                            hostState = snackbarHostState,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth()
-                                .padding(16.dp)
+                                .height(200.dp)
+                                .padding(6.dp)
                         )
+
+                        InfoRow(
+                            label = stringResource(R.string.place_label),
+                            content = uiState.meetingData.placeName
+                        )
+
+                        InfoRow(
+                            label = stringResource(R.string.date_label),
+                            content = uiState.meetingData.date,
+                            onClick = showDatePicker
+                        )
+
+                        InfoRow(
+                            label = stringResource(R.string.time_label),
+                            content = uiState.meetingData.time,
+                            onClick = showTimePicker
+                        )
+
+                        Button(
+                            onClick = { viewModel.handleIntent(MakeMeetingIntent.MakeMeeting) },
+                            enabled = uiState.isSaveButtonEnable,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                        ) {
+                            Text(text = stringResource(R.string.save))
+                        }
                     }
                 }
-            )
-        }
+            }
+        )
     }
 }
 

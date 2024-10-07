@@ -4,9 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class MeetingDTO(
-    val caption: String,
-    val lat: Double,
-    val lng: Double,
+    val placeName: String,
     val managerId: String,
     val personIds: MutableMap<String, Boolean> = mutableMapOf(),
     val placeId: String,

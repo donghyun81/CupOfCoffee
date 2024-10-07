@@ -65,34 +65,14 @@ class SettingsFragment : Fragment() {
                 AppTheme {
                     SettingsScreen(
                         viewModel = viewModel,
-                        onLogoutClick = ::logout,
-                        onCancelMembershipClick = ::cancelMembership
+                        navigateLogin = ::navigateLogin
                     )
                 }
             }
         }
     }
 
-    private fun logout() {
-        NaverIdLoginSDK.logout()
-        Firebase.auth.signOut()
-        moveToLogin()
-    }
-
-    private fun cancelMembership() {
-        val user = Firebase.auth.currentUser!!
-        viewLifecycleOwner.lifecycleScope.launch {
-            val deleteUserWorker = viewModel.getDeleteUserWorker()
-            NaverIdLoginSDK.logout()
-            WorkManager.getInstance(requireContext()).enqueue(deleteUserWorker)
-            delay(2000)
-            user.delete().addOnCompleteListener {
-                moveToLogin()
-            }
-        }
-    }
-
-    private fun moveToLogin() {
+    private fun navigateLogin() {
         val uri = Uri.parse("cupofcoffee://login")
         findNavController().navigate(uri)
     }
@@ -101,23 +81,28 @@ class SettingsFragment : Fragment() {
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onLogoutClick: () -> Unit,
-    onCancelMembershipClick: () -> Unit,
+    navigateLogin: () -> Unit,
 ) {
 
     val uiState by viewModel.uiState.observeAsState()
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSnackbar by remember { mutableStateOf(false) }
-    val membershipNetworkMessage = stringResource(id = R.string.cancel_membership_network_message)
 
-    LaunchedEffect(showSnackbar) {
-        if (showSnackbar) {
-            snackbarHostState.showSnackbar(
-                message = membershipNetworkMessage,
-                duration = SnackbarDuration.Short
-            )
-            showSnackbar = false
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(SettingsIntent.InitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                SettingsSideEffect.NavigateLogin -> {
+                    navigateLogin()
+                }
+
+                is SettingsSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         }
     }
 
@@ -125,7 +110,7 @@ fun SettingsScreen(
         CancelMembershipDialog(
             onCancel = {
                 showDialog = false
-                onCancelMembershipClick()
+                viewModel.handleIntent(SettingsIntent.CancelMembership)
             },
             onDismiss = {
                 showDialog = false
@@ -157,14 +142,14 @@ fun SettingsScreen(
                     Text(text = stringResource(id = R.string.auto_login_setting))
                     Switch(
                         checked = data!!.isAutoLogin,
-                        onCheckedChange = { viewModel.convertIsAutoLogin() }
+                        onCheckedChange = { viewModel.handleIntent(SettingsIntent.SwitchAutoLogin) }
                     )
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
-                    onClick = { onLogoutClick() },
+                    onClick = { viewModel.handleIntent(SettingsIntent.Logout) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp)
@@ -177,8 +162,7 @@ fun SettingsScreen(
 
                 Button(
                     onClick = {
-                        if (viewModel.isNetworkConnected()) showDialog = true
-                        else showSnackbar = true
+                        showDialog = true
                     },
                     modifier = Modifier
                         .fillMaxWidth()
