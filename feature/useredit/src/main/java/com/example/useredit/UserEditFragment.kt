@@ -29,11 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,13 +80,12 @@ fun UserEditScreen(
     viewModel: UserEditViewModel,
     navigateUp: () -> Unit
 ) {
-    val uiState by viewModel.uiState.observeAsState()
-    var isButtonClicked by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
 
     val pickImagesLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
-        viewModel.handleImagePickerResult(uri)
+        viewModel.handleIntent(UserEditIntent.EditUserProfile(uri))
     }
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -100,16 +97,22 @@ fun UserEditScreen(
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSnackbar by remember { mutableStateOf(false) }
-    val editUserNetworkMessage = stringResource(id = R.string.edit_user_network_message)
 
-    LaunchedEffect(showSnackbar) {
-        if (showSnackbar) {
-            snackbarHostState.showSnackbar(
-                message = editUserNetworkMessage,
-                duration = SnackbarDuration.Short
-            )
-            showSnackbar = false
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(UserEditIntent.InitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                UserEditSideEffect.NavigateUp -> {
+                    navigateUp()
+                }
+
+                is UserEditSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         }
     }
 
@@ -118,9 +121,9 @@ fun UserEditScreen(
             .fillMaxWidth()
             .height(280.dp)
             .padding(16.dp),
-        isError = uiState?.isError ?: false,
-        isLoading = uiState?.isLoading ?: false,
-        isComplete = uiState?.isCompleted ?: false,
+        isError = uiState.isError,
+        isLoading = uiState.isLoading,
+        isComplete = uiState.isCompleted,
         navigateUp = navigateUp,
         data = uiState
     ) { data ->
@@ -133,14 +136,18 @@ fun UserEditScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 AsyncImage(
-                    model = data?.contentUri,
+                    model = data.contentUri,
                     contentDescription = "사용자 프로필",
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surface)
                         .clickable {
-                            viewModel.requestAlbumAccessPermission(requestPermissionLauncher)
+                            viewModel.handleIntent(
+                                UserEditIntent.RequestAlbumAccessPermission(
+                                    requestPermissionLauncher
+                                )
+                            )
                         }
                 )
 
@@ -156,7 +163,7 @@ fun UserEditScreen(
                     )
 
                     TextField(
-                        value = data?.nickname ?: "익명",
+                        value = data.nickname ?: "익명",
                         onValueChange = { viewModel.updateNickname(it) },
                         placeholder = { Text(text = "이름을 작성해주세요") },
                         modifier = Modifier
@@ -182,12 +189,8 @@ fun UserEditScreen(
 
                     Button(
                         onClick = {
-                            if (viewModel.isNetworkConnected()) {
-                                isButtonClicked = true
-                                viewModel.editUser()
-                            } else showSnackbar = true
+                            viewModel.handleIntent(UserEditIntent.UserEdit)
                         },
-                        enabled = !isButtonClicked,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(text = stringResource(id = R.string.save))

@@ -142,7 +142,7 @@ class MeetingPlaceViewModel @Inject constructor(
             val users =
                 userRepository.getRemoteUsersByIds(meeting.personIds.keys.toList())
             val meetingPlaceUserUiModel =
-                users.values.map { MeetingPlaceUserUiModel(it.name, it.profileImageWebUrl) }
+                users.values.map { MeetingPlaceUserUiModel(it.nickname, it.profileImageWebUrl) }
             return MeetingPlaceMeetingUiModel(
                 meeting.id,
                 meeting.content,
@@ -155,7 +155,7 @@ class MeetingPlaceViewModel @Inject constructor(
         }
     }
 
-    fun applyMeeting(meetingId: String) {
+    private fun applyMeeting(meetingId: String) {
         viewModelScope.launch {
             addUserToMeeting(meetingId)
             addAttendedMeetingToUser(meetingId)
