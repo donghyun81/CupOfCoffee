@@ -1,14 +1,13 @@
 package com.example.user
 
+import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Data
-import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.common.util.NetworkUtil
 import com.example.data.model.Meeting
 import com.example.data.repository.MeetingRepository
@@ -18,7 +17,12 @@ import com.example.work.DeleteMeetingWorker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,12 +31,15 @@ class UserViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val meetingRepository: MeetingRepository,
     private val placeRepository: PlaceRepository,
-    private val networkUtil: NetworkUtil
+    private val networkUtil: NetworkUtil,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    private val _userUiState: MutableLiveData<UserUiState> =
-        MutableLiveData(UserUiState(isLoading = true))
-    val userUiState: LiveData<UserUiState> get() = _userUiState
+    private val _uiState = MutableStateFlow(UserUiState(isLoading = true))
+    val uiState = _uiState.asStateFlow()
+
+    private val _sideEffect = Channel<UserSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     private var currentJob: Job? = null
 
@@ -46,12 +53,44 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun isNetworkConnected() = networkUtil.isConnected()
+    fun handleIntent(intent: UserIntent) {
+        when (intent) {
+            is UserIntent.DeleteMeetingClick -> {
+                deleteMeeting(intent.meetingId)
+            }
 
-    init {
-        if (isNetworkConnected().not()) initUiState()
-        networkUtil.registerNetworkCallback(networkCallback)
+            is UserIntent.DetailMeetingClick -> {
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateMeetingDetail(intent.meetingId))
+                }
+            }
+
+            is UserIntent.UpdateMeetingClick -> {
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateMakeMeeting(intent.meetingId))
+                }
+            }
+
+            UserIntent.InitData -> {
+                if (isNetworkConnected().not()) initUiState()
+                networkUtil.registerNetworkCallback(networkCallback)
+            }
+
+            UserIntent.SettingClick -> {
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateSettings)
+                }
+            }
+
+            UserIntent.UserEditClick -> {
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateUserEdit)
+                }
+            }
+        }
     }
+
+    private fun isNetworkConnected() = networkUtil.isConnected()
 
     override fun onCleared() {
         super.onCleared()
@@ -61,6 +100,7 @@ class UserViewModel @Inject constructor(
     private fun initUiState() {
         val uid = Firebase.auth.uid!!
         val userInFlow = userRepository.getLocalUserByIdInFlow(uid)
+
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             userInFlow.collect { user ->
@@ -69,7 +109,7 @@ class UserViewModel @Inject constructor(
                     user ?: return@collect
                     val attendedMeetings = getMeetings(user.attendedMeetingIds.keys)
                     val madeMeetings = getMeetings(user.madeMeetingIds.keys)
-                    _userUiState.value =
+                    _uiState.value =
                         UserUiState(
                             userId = user.id,
                             nickName = user.nickname,
@@ -78,7 +118,7 @@ class UserViewModel @Inject constructor(
                             madeMeetings = madeMeetings
                         )
                 } catch (e: Exception) {
-                    _userUiState.value =
+                    _uiState.value =
                         UserUiState(
                             isError = true
                         )
@@ -87,20 +127,23 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun getDeleteMeetingWorker(meetingId: String): OneTimeWorkRequest {
+    private fun deleteMeeting(meetingId: String) {
         val inputData = Data.Builder()
             .putString("meetingId", meetingId)
             .build()
 
-        return OneTimeWorkRequestBuilder<DeleteMeetingWorker>()
+        val deleteMeetingWorker = OneTimeWorkRequestBuilder<DeleteMeetingWorker>()
             .setInputData(inputData)
             .build()
+        WorkManager.getInstance(context).enqueue(deleteMeetingWorker)
     }
 
     private suspend fun getMeetings(meetingIds: Set<String>): List<UserMeeting> {
-        val meetings = meetingRepository.getMeetingsByIds(meetingIds.toList(), isNetworkConnected())
+        val meetings =
+            meetingRepository.getMeetingsByIds(meetingIds.toList(), networkUtil.isConnected())
         return meetings.map {
-            val placeName = placeRepository.getPlaceById(it.placeId, isNetworkConnected())!!.caption
+            val placeName =
+                placeRepository.getPlaceById(it.placeId, networkUtil.isConnected())!!.caption
             it.asUserMeeting(placeName)
         }
     }

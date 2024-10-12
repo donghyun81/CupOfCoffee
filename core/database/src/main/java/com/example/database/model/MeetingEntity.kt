@@ -8,8 +8,6 @@ data class MeetingEntity(
     @PrimaryKey
     val id: String,
     val caption: String,
-    val lat: Double,
-    val lng: Double,
     val managerId: String,
     val personIds: MutableMap<String, Boolean> = mutableMapOf(),
     val placeId: String,

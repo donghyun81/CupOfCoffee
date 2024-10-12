@@ -28,10 +28,13 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,12 +53,10 @@ import androidx.compose.ui.window.Popup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.example.common.component.OptionsMenu
 import com.example.common.component.StateContent
 import com.example.common.graphics.AppTheme
-import com.example.common.showSnackBar
 import com.example.common.toDateFormat
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -74,10 +75,7 @@ class MeetingDetailFragment : Fragment() {
                 AppTheme {
                     MeetingDetailScreen(
                         viewModel = viewModel,
-                        onEditClick = ::moveToMakeMeeting,
-                        onDeleteClick = ::deleteMeeting,
-                        onMakeCommentClick = ::moveToMakeComment,
-                        commentClickListener = getCommentClickListener()
+                        meetingDetailNavigate = getMeetingDetailNavigate()
                     )
                 }
             }
@@ -89,35 +87,21 @@ class MeetingDetailFragment : Fragment() {
         viewModel.currentJob?.cancel()
     }
 
-    private fun moveToMakeMeeting(meetindId: String) {
-        val uri = Uri.parse("cupofcoffee://make_meeting?placeName=${null}&lat=${null}&lng=${null}&meetingId=${meetindId}")
-        findNavController().navigate(uri)
-    }
+    private fun getMeetingDetailNavigate() = object : MeetingDetailNavigate {
+        override fun navigateMakeMeeting(meetindId: String) {
+            val uri =
+                Uri.parse("cupofcoffee://make_meeting?placeName=${null}&lat=${null}&lng=${null}&meetingId=${meetindId}")
+            findNavController().navigate(uri)
+        }
 
-    private fun moveToMakeComment(meetingId: String) {
-        val uri = Uri.parse("cupofcoffee://comment_edit?commentId=${null}&meetingId=${meetingId}")
-        findNavController().navigate(uri)
-    }
-
-    private fun deleteMeeting(meetingId: String) {
-        val deleteMeetingWorker = viewModel.getDeleteMeetingWorker(meetingId)
-        WorkManager.getInstance(requireContext()).enqueue(deleteMeetingWorker)
-        findNavController().navigateUp()
-    }
-
-
-    private fun getCommentClickListener() = object : CommentClickListener {
-
-        override fun onUpdateClick(commentId: String, meetingId: String) {
-
+        override fun navigateCommentEdit(commentId: String?, meetingId: String) {
             val uri =
                 Uri.parse("cupofcoffee://comment_edit?commentId=${commentId}&meetingId=${meetingId}")
             findNavController().navigate(uri)
         }
 
-        override fun onDeleteClick(commentId: String) {
-            if (viewModel.isNetworkConnected()) viewModel.deleteComment(commentId)
-            else view?.showSnackBar(R.string.delete_meeting_network_message)
+        override fun navigateUp() {
+            findNavController().navigateUp()
         }
     }
 }
@@ -125,29 +109,49 @@ class MeetingDetailFragment : Fragment() {
 @Composable
 fun MeetingDetailScreen(
     viewModel: MeetingDetailViewModel,
-    onEditClick: (String) -> Unit,
-    onDeleteClick: (String) -> Unit,
-    onMakeCommentClick: (String) -> Unit,
-    commentClickListener: CommentClickListener
+    meetingDetailNavigate: MeetingDetailNavigate
 ) {
-    val uiState by viewModel.meetingDetailUiState.observeAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(MeetingDetailIntent.HandleInitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is MeetingDetailSideEffect.NavigateToCommentEdit -> {
+                    meetingDetailNavigate.navigateCommentEdit(effect.commentId, effect.meetingId)
+                }
+
+                is MeetingDetailSideEffect.NavigateToMakeMeeting -> {
+                    meetingDetailNavigate.navigateMakeMeeting(effect.meetingId)
+                }
+
+                is MeetingDetailSideEffect.ShowSnackBar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+    }
 
     StateContent(
-        isError = uiState?.isError ?: false,
-        isLoading = uiState?.isLoading ?: false,
+        isError = uiState.isError,
+        isLoading = uiState.isLoading,
         data = uiState
     ) { data ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (uiState!!.isMyMeeting)
+            if (uiState.isMyMeeting)
                 OptionsMenu(
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(8.dp),
-                    onEditClick = { onEditClick(data!!.meetingUiModel.id) },
-                    onDeleteClick = { onDeleteClick(data!!.meetingUiModel.id) }
+                    onEditClick = { viewModel.handleIntent(MeetingDetailIntent.EditMeeting(data.meetingUiModel.id)) },
+                    onDeleteClick = { viewModel.handleIntent(MeetingDetailIntent.DeleteMeeting) }
                 )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -157,7 +161,7 @@ fun MeetingDetailScreen(
                     .fillMaxWidth()
                     .height(160.dp)
                     .padding(8.dp),
-                text = data!!.meetingUiModel.content,
+                text = data.meetingUiModel.content,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Start,
                 color = MaterialTheme.colorScheme.onSurface
@@ -202,12 +206,14 @@ fun MeetingDetailScreen(
 
             Comments(
                 comments = data.comments,
-                commentClickListener = commentClickListener,
-                modifier = Modifier.weight(1f)
+                navigate = meetingDetailNavigate,
+                modifier = Modifier.weight(1f),
+                viewModel = viewModel
             )
 
             CommentInput(
-                onMakeCommentClick = { onMakeCommentClick(data.meetingUiModel.id) },
+                navigate = meetingDetailNavigate,
+                meetingId = data.meetingUiModel.id,
                 userProfileUrl = data.userUiModel.profileUrl
             )
         }
@@ -242,7 +248,8 @@ fun MeetingInfo(
 @Composable
 fun Comments(
     comments: List<MeetingDetailCommentUiModel>,
-    commentClickListener: CommentClickListener,
+    navigate: MeetingDetailNavigate,
+    viewModel: MeetingDetailViewModel,
     modifier: Modifier
 ) {
     Column(
@@ -266,7 +273,7 @@ fun Comments(
                 .padding(horizontal = 8.dp)
         ) {
             items(comments) { comment ->
-                CommentItem(commentUiModel = comment, commentClickListener)
+                CommentItem(commentUiModel = comment, viewModel = viewModel, navigate = navigate)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -275,7 +282,8 @@ fun Comments(
 
 @Composable
 fun CommentInput(
-    onMakeCommentClick: () -> Unit,
+    navigate: MeetingDetailNavigate,
+    meetingId: String,
     userProfileUrl: String?
 ) {
     Row(
@@ -308,7 +316,7 @@ fun CommentInput(
             modifier = Modifier
                 .weight(1f)
                 .height(50.dp)
-                .clickable { onMakeCommentClick() }
+                .clickable { navigate.navigateCommentEdit(null, meetingId = meetingId) }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
@@ -320,7 +328,8 @@ fun CommentInput(
 @Composable
 fun CommentItem(
     commentUiModel: MeetingDetailCommentUiModel,
-    commentClickListener: CommentClickListener,
+    viewModel: MeetingDetailViewModel,
+    navigate: MeetingDetailNavigate,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -383,7 +392,8 @@ fun CommentItem(
             CommentOptionsMenu(
                 commentId = commentUiModel.id,
                 meetingId = commentUiModel.id,
-                commentClickListener = commentClickListener,
+                navigate = navigate,
+                viewModel = viewModel,
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
     }
@@ -393,7 +403,8 @@ fun CommentItem(
 fun CommentOptionsMenu(
     commentId: String,
     meetingId: String,
-    commentClickListener: CommentClickListener,
+    viewModel: MeetingDetailViewModel,
+    navigate: MeetingDetailNavigate,
     modifier: Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -426,7 +437,7 @@ fun CommentOptionsMenu(
                     text = "수정",
                     modifier = Modifier
                         .clickable {
-                            commentClickListener.onUpdateClick(commentId, meetingId)
+                            navigate.navigateCommentEdit(commentId, meetingId)
                             expanded = false
                         }
                         .padding(8.dp)
@@ -435,7 +446,7 @@ fun CommentOptionsMenu(
                     text = "삭제",
                     modifier = Modifier
                         .clickable {
-                            commentClickListener.onDeleteClick(commentId)
+                            viewModel.handleIntent(MeetingDetailIntent.DeleteComment(commentId))
                             expanded = false
                         }
                         .padding(8.dp)

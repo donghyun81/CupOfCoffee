@@ -1,7 +1,5 @@
 package com.example.makemeeting
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +12,7 @@ import com.example.data.model.PlaceData
 import com.example.data.model.User
 import com.example.data.model.asMeeting
 import com.example.data.model.asMeetingDTO
+import com.example.data.model.asMeetingData
 import com.example.data.model.asMeetingEntity
 import com.example.data.model.asPlace
 import com.example.data.repository.MeetingRepository
@@ -22,23 +21,26 @@ import com.example.data.repository.UserRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 
 const val POSITION_COUNT = 10
+const val MAKE_NETWORK_MESSAGE = "모임을 생성을 위해서 네트워크 연결이 필요합니다!"
+
 
 data class MakeMeetingUiState(
-    val placeName: String = "",
-    val lat: Double = 0.0,
-    val lng: Double = 0.0,
-    val content: String = "",
-    val date: String = "",
-    val time: String = "",
     val isError: Boolean = false,
     val isLoading: Boolean = false,
-    val isComplete: Boolean = false
+    val meetingData: MeetingData = MeetingData(),
+    val placeData: PlaceData = PlaceData(),
+    val isSaveButtonEnable: Boolean = true
 )
 
 @HiltViewModel
@@ -52,124 +54,124 @@ class MakeMeetingViewModel @Inject constructor(
 
     private val args = MakeMeetingFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _uiState: MutableLiveData<MakeMeetingUiState> =
-        MutableLiveData(MakeMeetingUiState(isLoading = true))
+    private val _uiState: MutableStateFlow<MakeMeetingUiState> =
+        MutableStateFlow(MakeMeetingUiState(isLoading = true))
+    val uiState: StateFlow<MakeMeetingUiState> = _uiState.asStateFlow()
 
-    val uiState: LiveData<MakeMeetingUiState> = _uiState
+    private val _sideEffect = Channel<MakeMeetingSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
-    init {
-        initUiState()
-    }
+    fun handleIntent(intent: MakeMeetingIntent) {
+        when (intent) {
+            MakeMeetingIntent.InitData -> {
+                viewModelScope.launch {
+                    handleInitData()
+                    _uiState.value = uiState.value.copy(isLoading = false)
+                }
+            }
 
-    private fun initUiState() {
-        viewModelScope.launch {
-            val meetingId = args.meetingId
-            if (meetingId == null) createMeeting()
-            else loadMeeting(meetingId)
+            is MakeMeetingIntent.MakeMeeting -> {
+                _uiState.value = uiState.value.copy(isSaveButtonEnable = false)
+                handleMakeMeeting()
+            }
+
+            is MakeMeetingIntent.EnterContent -> updateContent(intent.content)
+            is MakeMeetingIntent.EditDate -> updateDate(intent.date)
+            is MakeMeetingIntent.EditTime -> updateTime(intent.time)
         }
     }
 
-    private fun createMeeting() {
+    private suspend fun handleInitData() {
+        val meetingId = args.meetingId
+        if (meetingId == null) initMeeting() else loadMeeting(meetingId)
+        initPlace()
+    }
+
+    private fun handleMakeMeeting() {
+        viewModelScope.launch {
+            if (networkUtil.isConnected()) {
+                saveMeeting()
+                _sideEffect.send(MakeMeetingSideEffect.NavigateUp)
+            } else {
+                showSnackBar(MAKE_NETWORK_MESSAGE)
+                _uiState.value = uiState.value.copy(isSaveButtonEnable = true)
+            }
+        }
+    }
+
+    private fun initMeeting() {
         val calendar = Calendar.getInstance()
-        _uiState.postValue(
-            MakeMeetingUiState(
-                args.placeName!!,
-                args.lat!!.toDouble(),
-                args.lng!!.toDouble(),
+        val uid = Firebase.auth.uid ?: return
+        _uiState.value = uiState.value.copy(
+            meetingData = MeetingData(
+                placeName = args.placeName ?: "",
+                managerId = uid,
+                personIds = mutableMapOf(uid to true),
+                placeId = convertPlaceId(args.lat!!.toDouble(), args.lng!!.toDouble()),
                 date = calendar.toCurrentDate(),
-                time = calendar.toCurrentTime()
+                time = calendar.toCurrentTime(),
             )
         )
     }
 
     private suspend fun loadMeeting(meetingId: String) {
         try {
-            val meeting = meetingRepository.getMeeting(meetingId, isNetworkConnected())
-            _uiState.postValue(
-                MakeMeetingUiState(
-                    placeName = meeting.caption,
-                    lat = meeting.lat,
-                    lng = meeting.lng,
-                    content = meeting.content,
-                    date = meeting.date,
-                    time = meeting.time
-                )
-            )
+            val meeting = meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
+            _uiState.value = uiState.value.copy(meetingData = meeting.asMeetingData())
         } catch (e: Exception) {
-            _uiState.postValue(
-                MakeMeetingUiState(
-                    isError = true
-                )
-            )
+            _uiState.value = uiState.value.copy(isError = true, isLoading = false)
         }
     }
 
-    fun updateContent(content: String) {
-        _uiState.postValue(
-            uiState.value?.copy(content = content)
-        )
-    }
-
-    fun updateDate(date: String) {
-        _uiState.postValue(
-            uiState.value?.copy(date = date)
-        )
-    }
-
-    fun updateTime(time: String) {
-        _uiState.postValue(
-            uiState.value?.copy(time = time)
-        )
-    }
-
-    fun isNetworkConnected() = networkUtil.isConnected()
-
-    fun saveMeeting(uiState: MakeMeetingUiState) {
-        val meetingData = getMeeting(uiState)
-        val place = getPlace(uiState)
-        viewModelScope.launch {
-            val meetingId = args.meetingId
-            if (meetingId == null) {
-                val newMeetingId = meetingRepository.insertRemote(meetingData.asMeetingDTO()).id
-                meetingRepository.insertLocal(meetingData.asMeetingEntity(newMeetingId))
-                savePlace(newMeetingId, place)
-                updateUserMeeting(newMeetingId)
-            } else meetingRepository.update(meetingData.asMeeting(meetingId))
-            _uiState.postValue(
-                uiState.copy(isComplete = true)
+    private fun initPlace() {
+        _uiState.value = uiState.value.copy(
+            placeData = PlaceData(
+                placeName = args.placeName ?: "",
+                lat = args.lat?.toDouble() ?: 0.0,
+                lng = args.lng?.toDouble() ?: 0.0
             )
+        )
+    }
+
+    private fun updateTime(time: String) {
+        updateMeetingData { it.copy(time = time) }
+    }
+
+    private fun updateDate(date: String) {
+        updateMeetingData { it.copy(date = date) }
+    }
+
+    private fun updateContent(content: String) {
+        updateMeetingData { it.copy(content = content) }
+    }
+
+    private fun updateMeetingData(update: (MeetingData) -> MeetingData) {
+        val curMeeting = update(uiState.value.meetingData)
+        _uiState.value = uiState.value.copy(meetingData = curMeeting)
+    }
+
+    private suspend fun saveMeeting() {
+        val curMeeting = _uiState.value.meetingData.copy(createDate = Date().time)
+        val meetingId = args.meetingId
+        if (meetingId == null) {
+            saveNewMeeting(curMeeting)
+        } else {
+            meetingRepository.update(curMeeting.asMeeting(meetingId))
         }
     }
 
-    private fun getMeeting(uiState: MakeMeetingUiState): MeetingData {
-        val uid = Firebase.auth.uid!!
-        return MeetingData(
-            caption = uiState.placeName,
-            lat = uiState.lat,
-            lng = uiState.lng,
-            managerId = uid,
-            personIds = mutableMapOf(uid to true),
-            placeId = convertPlaceId(
-                uiState.lat,
-                uiState.lng
-            ),
-            date = uiState.date,
-            time = uiState.time,
-            createDate = Date().time,
-            content = uiState.content
-        )
+    private suspend fun saveNewMeeting(meeting: MeetingData) {
+        val newMeetingId = meetingRepository.insertRemote(meeting.asMeetingDTO()).id
+        meetingRepository.insertLocal(meeting.asMeetingEntity(newMeetingId))
+        savePlace(newMeetingId, _uiState.value.placeData)
+        updateUserMeeting(newMeetingId)
     }
-
-    private fun getPlace(uiState: MakeMeetingUiState) = PlaceData(
-        caption = uiState.placeName,
-        lat = uiState.lat,
-        lng = uiState.lng
-    )
 
     private suspend fun updateUserMeeting(meetingId: String) {
         val uid = Firebase.auth.uid ?: return
-        val userEntry = userRepository.getLocalUserById(uid)!!
-        addUserMadeMeeting(userEntry, meetingId)
+        userRepository.getLocalUserById(uid)?.let { user ->
+            addUserMadeMeeting(user, meetingId)
+        }
     }
 
     private suspend fun addUserMadeMeeting(user: User, meetingId: String) {
@@ -180,15 +182,17 @@ class MakeMeetingViewModel @Inject constructor(
     private suspend fun savePlace(meetingId: String, placeData: PlaceData) {
         val placeId = convertPlaceId(placeData.lat, placeData.lng)
         val prvPlaceEntry = placeRepository.getPlaceById(placeId)
-        if (prvPlaceEntry != null) updatePlace(meetingId, prvPlaceEntry)
-        else createPlace(meetingId, placeData.asPlace(placeId))
+        if (prvPlaceEntry != null) {
+            updatePlace(meetingId, prvPlaceEntry)
+        } else {
+            createPlace(meetingId, placeData.asPlace(placeId))
+        }
     }
 
     private fun convertPlaceId(lat: Double, lng: Double): String {
         return (lat.toString().take(POSITION_COUNT) + lng.toString()
             .take(POSITION_COUNT)).filter { it != '.' }
     }
-
 
     private suspend fun createPlace(meetingId: String, place: Place) {
         place.meetingIds[meetingId] = true
@@ -198,5 +202,9 @@ class MakeMeetingViewModel @Inject constructor(
     private suspend fun updatePlace(meetingId: String, prvPlace: Place) {
         prvPlace.meetingIds[meetingId] = true
         placeRepository.update(prvPlace)
+    }
+
+    private suspend fun showSnackBar(message: String) {
+        _sideEffect.send(MakeMeetingSideEffect.ShowSnackBar(message))
     }
 }

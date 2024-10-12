@@ -3,8 +3,6 @@ package com.example.useredit
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.common.util.NetworkUtil
@@ -15,10 +13,16 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+
+const val EDIT_USER_NETWORK_MESSAGE = "사용자 정보를 수정하기 위해서 네트워크 연결이 필요합니다!"
 
 @HiltViewModel
 class UserEditViewModel @Inject constructor(
@@ -27,14 +31,46 @@ class UserEditViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _uiState: MutableLiveData<UserEditUiState> =
-        MutableLiveData(UserEditUiState(isLoading = true))
-    val uiState: LiveData<UserEditUiState> get() = _uiState
+    private val _uiState = MutableStateFlow(UserEditUiState(isLoading = true))
+    val uiState = _uiState.asStateFlow()
 
-    init {
-        initUiState()
+    private val _sideEffect = Channel<UserEditSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
+
+    fun handleIntent(intent: UserEditIntent) {
+        when (intent) {
+            is UserEditIntent.EditUserProfile -> {
+                handleImagePickerResult(intent.profileImageUri)
+            }
+
+            is UserEditIntent.EnterNickName -> {
+                updateContentUri(intent.name)
+            }
+
+            UserEditIntent.InitData -> {
+                initUiState()
+            }
+
+            is UserEditIntent.RequestAlbumAccessPermission -> {
+                requestAlbumAccessPermission(intent.permissionLauncher)
+            }
+
+            UserEditIntent.UserEdit -> {
+                viewModelScope.launch {
+                    if (networkUtil.isConnected()) {
+                        viewModelScope.launch {
+                            editUser()
+                            _sideEffect.send(UserEditSideEffect.NavigateUp)
+                        }
+                    } else _sideEffect.send(
+                        UserEditSideEffect.ShowSnackBar(
+                            EDIT_USER_NETWORK_MESSAGE
+                        )
+                    )
+                }
+            }
+        }
     }
-
 
     private fun initUiState() {
         viewModelScope.launch {
@@ -53,13 +89,11 @@ class UserEditViewModel @Inject constructor(
         }
     }
 
-    fun isNetworkConnected() = networkUtil.isConnected()
-
     fun updateNickname(nickname: String) {
-        _uiState.value = uiState.value!!.copy(nickname = nickname)
+        _uiState.value = uiState.value.copy(nickname = nickname)
     }
 
-    fun requestAlbumAccessPermission(permissionLauncher: ManagedActivityResultLauncher<String, Boolean>) {
+    private fun requestAlbumAccessPermission(permissionLauncher: ManagedActivityResultLauncher<String, Boolean>) {
         val permissionId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             android.Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -68,25 +102,23 @@ class UserEditViewModel @Inject constructor(
         permissionLauncher.launch(permissionId)
     }
 
-    fun handleImagePickerResult(uri: Uri?) {
+    private fun handleImagePickerResult(uri: Uri?) {
         uri?.let {
             updateContentUri(it.toString())
         }
     }
 
     private fun updateContentUri(contentUri: String?) {
-        _uiState.value = uiState.value!!.copy(contentUri = contentUri)
+        _uiState.value = uiState.value.copy(contentUri = contentUri)
     }
 
-    fun editUser() {
-        viewModelScope.launch {
-            val contentUri = uiState.value!!.contentUri
-            val currentUserEntry = getCurrentUser(contentUri)
-            delay(2000L)
-            updateUser(currentUserEntry)
-            updateUserComments(currentUserEntry)
-            _uiState.value = uiState.value!!.copy(isCompleted = true)
-        }
+    private suspend fun editUser() {
+        val contentUri = uiState.value.contentUri
+        val currentUserEntry = getCurrentUser(contentUri)
+        delay(2000L)
+        updateUser(currentUserEntry)
+        updateUserComments(currentUserEntry)
+        _uiState.value = uiState.value.copy(isCompleted = true)
     }
 
     private suspend fun getCurrentUser(contentUri: String?): User {
@@ -99,12 +131,12 @@ class UserEditViewModel @Inject constructor(
             ref.putFile(imageUri).await()
             val uri = ref.downloadUrl.await()
             user.copy(
-                nickname = _uiState.value?.nickname ?: user.nickname,
+                nickname = _uiState.value.nickname ?: user.nickname,
                 profileImageWebUrl = uri.toString()
             )
         } catch (e: Exception) {
             user.copy(
-                nickname = _uiState.value?.nickname ?: user.nickname
+                nickname = _uiState.value.nickname ?: user.nickname
             )
         }
     }

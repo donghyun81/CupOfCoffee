@@ -4,8 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.model.NaverUser
-import com.example.model.asUser
 import com.example.common.util.NetworkUtil
 import com.example.data.model.User
 import com.example.data.model.asMeetingEntity
@@ -13,18 +11,25 @@ import com.example.data.model.asUserDTO
 import com.example.data.model.asUserEntity
 import com.example.data.repository.MeetingRepository
 import com.example.data.repository.UserRepository
+import com.example.model.NaverUser
+import com.example.model.asUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.profile.NidProfileCallback
 import com.navercorp.nid.profile.data.NidProfileResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val NAVER_ID_TO_EMAIL_COUNT = 7
 private const val EMPTY_NAME = "익명"
+private const val LOGIN_NETWORK_MESSAGE = "로그인을 위해서 네트워크 연결이 필요합니다!"
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -33,21 +38,30 @@ class LoginViewModel @Inject constructor(
     private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
-    private val _isButtonClicked: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isButtonClicked: LiveData<Boolean> get() = _isButtonClicked
-
     private val _loginUiState = MutableLiveData(LoginUiState())
     val loginUiState: LiveData<LoginUiState> get() = _loginUiState
 
     private val auth = Firebase.auth
 
-    fun isNetworkConnected() = networkUtil.isConnected()
+    private val _sideEffect = MutableSharedFlow<LoginSideEffect>(replay = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
-    fun switchButtonClicked() {
-        _isButtonClicked.value = _isButtonClicked.value?.not()
+    fun handleIntent(intent: LoginIntent) {
+        when (intent) {
+            is LoginIntent.LoginButtonClicked -> {
+                _loginUiState.value = _loginUiState.value!!.copy(isLoginButtonEnable = false)
+                loginNaver()
+            }
+        }
     }
 
-    fun loginNaver() {
+    fun isNetworkConnected() = networkUtil.isConnected()
+
+    fun disableLoginButton() {
+        _loginUiState.value = _loginUiState.value!!.copy(isLoginButtonEnable = true)
+    }
+
+    private fun loginNaver() {
         _loginUiState.value = LoginUiState(isLoading = true)
         NidOAuthLogin().callProfileApi(object : NidProfileCallback<NidProfileResponse> {
             override fun onSuccess(result: NidProfileResponse) {
@@ -82,7 +96,7 @@ class LoginViewModel @Inject constructor(
                         viewModelScope.launch {
                             delay(2000L)
                             loginUser(uid)
-                            _loginUiState.value = LoginUiState(isComplete = true)
+                            _sideEffect.tryEmit(LoginSideEffect.NavigateHome)
                         }
                     } else {
                         createAccount(naverUser)
@@ -100,7 +114,7 @@ class LoginViewModel @Inject constructor(
                         viewModelScope.launch {
                             delay(2000L)
                             insertUser(naverUser.asUser(uid))
-                            _loginUiState.value = LoginUiState(isComplete = true)
+                            _sideEffect.tryEmit(LoginSideEffect.NavigateHome)
                         }
                     } else {
                         _loginUiState.value = LoginUiState(isError = true)
@@ -118,9 +132,7 @@ class LoginViewModel @Inject constructor(
 
     private suspend fun loginUser(id: String) {
         val userEntry = userRepository.getRemoteUserById(id)!!
-        if (isNetworkConnected()) {
-            insertUserMeetings(userEntry)
-        }
+        insertUserMeetings(userEntry)
         userRepository.insertLocal(userEntry.asUserEntity())
     }
 
@@ -142,4 +154,8 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun String.toNaverEmail() = "${this.take(NAVER_ID_TO_EMAIL_COUNT)}@naver.com"
+
+    fun showSnackBar() {
+        _sideEffect.tryEmit(LoginSideEffect.ShowSnackBar(LOGIN_NETWORK_MESSAGE))
+    }
 }

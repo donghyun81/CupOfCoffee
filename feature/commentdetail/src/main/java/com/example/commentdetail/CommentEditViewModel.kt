@@ -1,7 +1,5 @@
 package com.example.commentdetail
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,9 +12,15 @@ import com.example.data.repository.UserRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
+
+const val EDIT_COMMENT_NETWORK_MESSAGE = "댓글을 추가하거나 수정하기 위해서 네트워크 연결이 필요합니다!"
 
 @HiltViewModel
 class CommentEditViewModel @Inject constructor(
@@ -29,14 +33,30 @@ class CommentEditViewModel @Inject constructor(
 
     private val args = CommentEditFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
-    private val _uiState: MutableLiveData<CommentUiState> =
-        MutableLiveData(CommentUiState(isLoading = true))
-    val uiState: LiveData<CommentUiState> get() = _uiState
+    private val _uiState = MutableStateFlow(CommentUiState(isLoading = true))
+    val uiState = _uiState.asStateFlow()
 
-    fun isNetworkConnected() = networkUtil.isConnected()
+    private val _sideEffect = Channel<CommentEditSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
+    fun handleIntent(intent: CommentEditIntent) {
+        when (intent) {
+            is CommentEditIntent.EditComment -> {
+                viewModelScope.launch {
+                    editComment(uiState.value.content)
+                    _sideEffect.send(CommentEditSideEffect.NavigateUp)
+                }
+            }
 
-    init {
-        initUiState()
+            CommentEditIntent.InitData -> {
+                initUiState()
+            }
+
+            is CommentEditIntent.EnterContent -> {
+                _uiState.value = uiState.value.copy(
+                    content = intent.content
+                )
+            }
+        }
     }
 
     private fun initUiState() {
@@ -48,30 +68,33 @@ class CommentEditViewModel @Inject constructor(
                 val commentId = args.commentId
                 if (commentId != null) {
                     val comment = commentRepository.getComment(commentId)
-                    _uiState.postValue(CommentUiState(commentEditUser, comment))
+                    _uiState.value = CommentUiState(commentEditUser, comment)
                 } else
-                    _uiState.postValue(CommentUiState(commentEditUser, null))
+                    _uiState.value = CommentUiState(commentEditUser, null)
             } catch (e: Exception) {
-                _uiState.postValue(CommentUiState(isError = true))
+                _uiState.value = CommentUiState(isError = true)
             }
         }
     }
 
-    fun editComment(content: String) {
+    private fun editComment(content: String) {
         viewModelScope.launch {
-            val uid = Firebase.auth.uid!!
-            val user = userRepository.getLocalUserById(uid)!!
-            val comment = CommentData(
-                userId = user.id,
-                meetingId = args.meetingId,
-                nickname = user.nickname,
-                profileImageWebUrl = user.profileImageWebUrl,
-                content = content,
-                createdDate = Date().time
-            )
-            if (args.commentId == null) insertComment(comment)
-            else updateComment(comment)
-            completeEdit()
+            if (networkUtil.isConnected()) {
+                val uid = Firebase.auth.uid!!
+                val user = userRepository.getLocalUserById(uid)!!
+                val comment = CommentData(
+                    userId = user.id,
+                    meetingId = args.meetingId,
+                    nickname = user.nickname,
+                    profileImageWebUrl = user.profileImageWebUrl,
+                    content = content,
+                    createdDate = Date().time
+                )
+                if (args.commentId == null) insertComment(comment)
+                else updateComment(comment)
+            } else {
+                _sideEffect.send(CommentEditSideEffect.ShowSnackBar(EDIT_COMMENT_NETWORK_MESSAGE))
+            }
         }
     }
 
@@ -84,8 +107,4 @@ class CommentEditViewModel @Inject constructor(
 
     private suspend fun updateComment(commentData: CommentData) =
         commentRepository.update(args.commentId!!, commentData.asCommentDTO())
-
-    private fun completeEdit() {
-        _uiState.value = uiState.value!!.copy(isCompleted = true)
-    }
 }

@@ -37,8 +37,9 @@ import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,13 +55,11 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.example.common.component.OptionsMenu
 import com.example.common.component.StateContent
 import com.example.common.graphics.AppTheme
 import com.example.model.MeetingsCategory
-import com.example.common.showSnackBar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -79,70 +78,82 @@ class UserFragment : Fragment() {
             setContent {
                 AppTheme {
                     UserScreen(
-                        onSettingsClick = ::moveToSettingFragment,
-                        onEditProfileClick = ::moveToUserEditFragment,
-                        onMeetingClickListener = userMeetingClickListener(),
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        userNavigate = getUserNavigate()
                     )
                 }
             }
         }
     }
 
-    private fun userMeetingClickListener() = object : UserMeetingClickListener {
-        override fun onDeleteClick(meetingId: String) {
-            if (viewModel.isNetworkConnected()) {
-                val deleteWorker = viewModel.getDeleteMeetingWorker(meetingId)
-                WorkManager.getInstance(requireContext()).enqueue(deleteWorker)
-            } else view?.showSnackBar(R.string.delete_meeting_network_message)
-        }
+    private fun getUserNavigate() = object : UserNavigate {
 
-        override fun onDetailClick(meetingId: String) {
+        override fun navigateMeetingDetail(meetingId: String) {
             val uri = Uri.parse("cupofcoffee://meeting_detail?meetingId=${meetingId}")
             findNavController().navigate(uri)
         }
 
-        override fun onUpdateClick(meetingId: String) {
-            val uri = Uri.parse("cupofcoffee://make_meeting?placeName=${null}&lat=${null}&lng=${null}&meetingId=${meetingId}")
+        override fun navigateMakeMeeting(meetingId: String) {
+            val uri =
+                Uri.parse("cupofcoffee://make_meeting?placeName=${null}&lat=${null}&lng=${null}&meetingId=${meetingId}")
             findNavController().navigate(uri)
         }
-    }
 
-    private fun moveToSettingFragment() {
-        val uri = Uri.parse("cupofcoffee://settings")
-        findNavController().navigate(uri)
-    }
+        override fun navigateSettings() {
+            val uri = Uri.parse("cupofcoffee://settings")
+            findNavController().navigate(uri)
+        }
 
-    private fun moveToUserEditFragment() {
-        val uri = Uri.parse("cupofcoffee://user_edit")
-        findNavController().navigate(uri)
+        override fun navigateUserEdit() {
+            val uri = Uri.parse("cupofcoffee://user_edit")
+            findNavController().navigate(uri)
+        }
     }
 }
 
 @Composable
 fun UserScreen(
-    onSettingsClick: () -> Unit,
-    onEditProfileClick: () -> Unit,
-    onMeetingClickListener: UserMeetingClickListener,
-    viewModel: UserViewModel
+    viewModel: UserViewModel,
+    userNavigate: UserNavigate
 ) {
-    val uiState by viewModel.userUiState.observeAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val pages = MeetingsCategory.tabCategories
     val pagerState = rememberPagerState { pages.size }
 
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(intent = UserIntent.InitData)
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is UserSideEffect.NavigateMakeMeeting -> {
+                    userNavigate.navigateMakeMeeting(effect.meetingId)
+                }
+
+                is UserSideEffect.NavigateMeetingDetail -> {
+                    userNavigate.navigateMeetingDetail(effect.meetingId)
+                }
+
+                UserSideEffect.NavigateSettings -> {
+                    userNavigate.navigateSettings()
+                }
+
+                UserSideEffect.NavigateUserEdit -> {
+                    userNavigate.navigateUserEdit()
+                }
+            }
+        }
+    }
+
     StateContent(
-        isError = uiState?.isError ?: false,
-        isLoading = uiState?.isLoading ?: false,
+        isError = uiState.isError,
+        isLoading = uiState.isLoading,
         data = uiState
     ) { data ->
         UserContent(
-            uiState = data!!,
+            viewModel = viewModel,
+            uiState = data,
             pagerState = pagerState,
             pages = pages,
-            onSettingsClick = onSettingsClick,
-            onEditProfileClick = onEditProfileClick,
-            onMeetingClickListener = onMeetingClickListener,
             coroutineScope = coroutineScope
         )
     }
@@ -150,26 +161,24 @@ fun UserScreen(
 
 @Composable
 fun UserContent(
+    viewModel: UserViewModel,
     uiState: UserUiState,
     pagerState: PagerState,
     pages: List<MeetingsCategory>,
-    onSettingsClick: () -> Unit,
-    onEditProfileClick: () -> Unit,
-    onMeetingClickListener: UserMeetingClickListener,
     coroutineScope: CoroutineScope
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        SettingsIcon(Modifier.align(Alignment.End), onSettingsClick = onSettingsClick)
-        UserProfileCard(uiState = uiState, onEditProfileClick = onEditProfileClick)
+        SettingsIcon(Modifier.align(Alignment.End), viewModel = viewModel)
+        UserProfileCard(uiState = uiState, viewModel = viewModel)
         UserTabs(pagerState = pagerState, pages = pages, coroutineScope = coroutineScope)
         UserPager(
             pagerState = pagerState,
             pages = pages,
             uiState = uiState,
-            onMeetingClickListener = onMeetingClickListener
+            viewModel = viewModel
         )
     }
 }
@@ -177,10 +186,10 @@ fun UserContent(
 @Composable
 fun SettingsIcon(
     modifier: Modifier,
-    onSettingsClick: () -> Unit
+    viewModel: UserViewModel
 ) {
     IconButton(
-        onClick = onSettingsClick,
+        onClick = { viewModel.handleIntent(UserIntent.SettingClick) },
         modifier = modifier
             .padding(top = 8.dp, end = 8.dp)
     ) {
@@ -193,7 +202,7 @@ fun SettingsIcon(
 }
 
 @Composable
-fun UserProfileCard(uiState: UserUiState, onEditProfileClick: () -> Unit) {
+fun UserProfileCard(viewModel: UserViewModel, uiState: UserUiState) {
     Card(
         modifier = Modifier
             .padding(top = 30.dp)
@@ -235,7 +244,7 @@ fun UserProfileCard(uiState: UserUiState, onEditProfileClick: () -> Unit) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            IconButton(onClick = onEditProfileClick) {
+            IconButton(onClick = { viewModel.handleIntent(UserIntent.UserEditClick) }) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_edit_24),
                     contentDescription = "프로필 수정"
@@ -283,10 +292,10 @@ fun UserTabs(
 
 @Composable
 fun UserPager(
+    viewModel: UserViewModel,
     pagerState: PagerState,
     pages: List<MeetingsCategory>,
     uiState: UserUiState,
-    onMeetingClickListener: UserMeetingClickListener,
 ) {
     HorizontalPager(
         state = pagerState,
@@ -297,15 +306,15 @@ fun UserPager(
         when (pageData) {
             MeetingsCategory.MADE_MEETINGS ->
                 MeetingPage(
+                    viewModel,
                     userMeetings = uiState.madeMeetings,
-                    onMeetingClickListener = onMeetingClickListener,
                     isMadeMeeting = true
                 )
 
             MeetingsCategory.ATTENDED_MEETINGS ->
                 MeetingPage(
+                    viewModel,
                     userMeetings = uiState.attendedMeetings,
-                    onMeetingClickListener = onMeetingClickListener,
                 )
         }
     }
@@ -313,8 +322,8 @@ fun UserPager(
 
 @Composable
 fun MeetingPage(
+    viewModel: UserViewModel,
     userMeetings: List<UserMeeting>,
-    onMeetingClickListener: UserMeetingClickListener,
     isMadeMeeting: Boolean = false
 ) {
     Box(
@@ -336,8 +345,8 @@ fun MeetingPage(
             ) {
                 items(userMeetings) { meeting ->
                     MeetingItem(
-                        meeting,
-                        onMeetingClickListener,
+                        viewModel = viewModel,
+                        userMeeting = meeting,
                         isMadeMeeting = isMadeMeeting
                     )
                 }
@@ -370,8 +379,8 @@ fun MeetingHeaderText(text: String, modifier: Modifier) {
 
 @Composable
 fun MeetingItem(
+    viewModel: UserViewModel,
     userMeeting: UserMeeting,
-    onMeetingClickListener: UserMeetingClickListener,
     isMadeMeeting: Boolean
 ) {
     Row(
@@ -379,7 +388,7 @@ fun MeetingItem(
             .fillMaxWidth()
             .padding(4.dp)
             .height(80.dp)
-            .clickable { onMeetingClickListener.onDetailClick(userMeeting.id) },
+            .clickable { viewModel.handleIntent(UserIntent.DetailMeetingClick(userMeeting.id)) },
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         MeetingDate(
@@ -413,8 +422,8 @@ fun MeetingItem(
         if (isMadeMeeting)
             OptionsMenu(
                 modifier = Modifier.align(Alignment.CenterVertically),
-                onEditClick = { onMeetingClickListener.onUpdateClick(userMeeting.id) },
-                onDeleteClick = { onMeetingClickListener.onDeleteClick(userMeeting.id) }
+                onEditClick = { viewModel.handleIntent(UserIntent.UpdateMeetingClick(userMeeting.id)) },
+                onDeleteClick = { viewModel.handleIntent(UserIntent.DeleteMeetingClick(userMeeting.id)) }
             )
     }
 

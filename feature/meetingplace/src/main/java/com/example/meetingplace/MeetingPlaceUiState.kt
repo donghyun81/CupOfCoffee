@@ -2,9 +2,10 @@ package com.example.meetingplace
 
 data class MeetingPlaceUiState(
     val placeCaption: String = "",
+    val snackBarMessage: String = "",
     val meetingsInPlace: List<MeetingPlaceMeetingUiModel> = emptyList(),
     val isError: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
 )
 
 data class MeetingPlaceMeetingUiModel(
@@ -14,7 +15,7 @@ data class MeetingPlaceMeetingUiModel(
     val time: String,
     val isAttendedMeeting: Boolean,
     val isMyMeeting: Boolean,
-    val meetingPlaceUserUiModel: List<MeetingPlaceUserUiModel>
+    val attendees: List<MeetingPlaceUserUiModel>
 )
 
 data class MeetingPlaceUserUiModel(

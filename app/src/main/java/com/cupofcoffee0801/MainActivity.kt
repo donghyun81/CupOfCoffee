@@ -3,11 +3,11 @@ package com.cupofcoffee0801
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
-import androidx.navigation.NavDeepLinkRequest
+import androidx.navigation.NavOptions
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.cupofcoffee0801.DestinationLabels.COMMENT_EDIT_FRAGMENT
@@ -16,6 +16,7 @@ import com.cupofcoffee0801.DestinationLabels.MEETING_DETAIL_FRAGMENT
 import com.cupofcoffee0801.DestinationLabels.SETTINGS_FRAGMENT
 import com.cupofcoffee0801.DestinationLabels.SPLASH_FRAGMENT
 import com.cupofcoffee0801.databinding.ActivityMainBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -38,18 +39,8 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.fv_main) as NavHostFragment
         navController = navHostFragment.navController
         val bottomNavigation = binding.bnvHome
-        setNavigationVisibility(navController)
         bottomNavigation.setupWithNavController(navController)
-    }
-
-    private fun handleDeepLink(intent: Intent?) {
-        intent?.data?.let {
-            try {
-                navController.handleDeepLink(intent)
-            } catch (e: Exception) {
-                navController.navigate(R.id.splashFragment)
-            }
-        }
+        setNavigationVisibility(navController)
     }
 
     private fun setNavigationVisibility(navController: NavController) {
@@ -69,9 +60,20 @@ class MainActivity : AppCompatActivity() {
 
                 else -> View.VISIBLE
             }
-            if (destination.id == R.id.homeFragment || destination.id == R.id.userFragment)
+
+            if (destination.id == R.id.homeFragment || destination.id == R.id.userFragment || destination.id == R.id.loginFragment)
                 onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
             else onBackPressedCallback.remove()
+        }
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        intent?.data?.let {
+            try {
+                navController.handleDeepLink(intent)
+            } catch (e: Exception) {
+                navController.navigate(R.id.splashFragment)
+            }
         }
     }
 }
