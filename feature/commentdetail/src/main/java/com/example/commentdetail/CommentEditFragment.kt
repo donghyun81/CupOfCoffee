@@ -1,7 +1,6 @@
 package com.example.commentdetail
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -83,6 +83,7 @@ fun CommentEditScreen(
                 is CommentEditSideEffect.ShowSnackBar -> {
                     snackbarHostState.showSnackbar(
                         message = effect.message,
+                        duration = SnackbarDuration.Short
                     )
                 }
             }

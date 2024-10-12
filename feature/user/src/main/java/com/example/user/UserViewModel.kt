@@ -6,7 +6,6 @@ import android.net.Network
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Data
-import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.common.util.NetworkUtil
@@ -20,11 +19,10 @@ import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,8 +38,8 @@ class UserViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UserUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
 
-    private val _sideEffect = MutableSharedFlow<UserSideEffect>(replay = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<UserSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     private var currentJob: Job? = null
 
@@ -62,11 +60,15 @@ class UserViewModel @Inject constructor(
             }
 
             is UserIntent.DetailMeetingClick -> {
-                _sideEffect.tryEmit(UserSideEffect.NavigateMeetingDetail(intent.meetingId))
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateMeetingDetail(intent.meetingId))
+                }
             }
 
             is UserIntent.UpdateMeetingClick -> {
-                _sideEffect.tryEmit(UserSideEffect.NavigateMakeMeeting(intent.meetingId))
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateMakeMeeting(intent.meetingId))
+                }
             }
 
             UserIntent.InitData -> {
@@ -75,11 +77,15 @@ class UserViewModel @Inject constructor(
             }
 
             UserIntent.SettingClick -> {
-                _sideEffect.tryEmit(UserSideEffect.NavigateSettings)
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateSettings)
+                }
             }
 
             UserIntent.UserEditClick -> {
-                _sideEffect.tryEmit(UserSideEffect.NavigateUserEdit)
+                viewModelScope.launch {
+                    _sideEffect.send(UserSideEffect.NavigateUserEdit)
+                }
             }
         }
     }
@@ -94,6 +100,7 @@ class UserViewModel @Inject constructor(
     private fun initUiState() {
         val uid = Firebase.auth.uid!!
         val userInFlow = userRepository.getLocalUserByIdInFlow(uid)
+
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
             userInFlow.collect { user ->

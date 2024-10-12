@@ -15,9 +15,9 @@ import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,8 +31,8 @@ class HomeViewModel @Inject constructor(
         MutableLiveData(HomeUiState(isLoading = true))
     val uiState: LiveData<HomeUiState> get() = _uiState
 
-    private val _sideEffect = MutableSharedFlow<HomeSideEffect>(replay = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<HomeSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     private var currentJob: Job? = null
 
@@ -54,20 +54,24 @@ class HomeViewModel @Inject constructor(
             }
 
             is HomeIntent.MarkerClick -> {
-                _sideEffect.tryEmit(
-                    HomeSideEffect.NavigateMeetingPlace(
-                        intent.placeId
+                viewModelScope.launch {
+                    _sideEffect.send(
+                        HomeSideEffect.NavigateMeetingPlace(
+                            intent.placeId
+                        )
                     )
-                )
+                }
             }
 
             is HomeIntent.SymbolClick -> {
-                _sideEffect.tryEmit(
-                    HomeSideEffect.NavigateMakeMeeting(
-                        intent.caption,
-                        intent.latLng
+                viewModelScope.launch {
+                    _sideEffect.send(
+                        HomeSideEffect.NavigateMakeMeeting(
+                            intent.caption,
+                            intent.latLng
+                        )
                     )
-                )
+                }
             }
         }
     }

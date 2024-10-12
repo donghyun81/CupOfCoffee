@@ -1,6 +1,5 @@
 package com.example.commentdetail
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,10 +12,10 @@ import com.example.data.repository.UserRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -37,14 +36,14 @@ class CommentEditViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CommentUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
 
-    private val _sideEffect = MutableSharedFlow<CommentEditSideEffect>(replay = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<CommentEditSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
     fun handleIntent(intent: CommentEditIntent) {
         when (intent) {
             is CommentEditIntent.EditComment -> {
                 viewModelScope.launch {
                     editComment(uiState.value.content)
-                    _sideEffect.tryEmit(CommentEditSideEffect.NavigateUp)
+                    _sideEffect.send(CommentEditSideEffect.NavigateUp)
                 }
             }
 
@@ -94,7 +93,7 @@ class CommentEditViewModel @Inject constructor(
                 if (args.commentId == null) insertComment(comment)
                 else updateComment(comment)
             } else {
-                _sideEffect.tryEmit(CommentEditSideEffect.ShowSnackBar(EDIT_COMMENT_NETWORK_MESSAGE))
+                _sideEffect.send(CommentEditSideEffect.ShowSnackBar(EDIT_COMMENT_NETWORK_MESSAGE))
             }
         }
     }

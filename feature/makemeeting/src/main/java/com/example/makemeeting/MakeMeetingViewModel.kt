@@ -21,12 +21,11 @@ import com.example.data.repository.UserRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -59,8 +58,8 @@ class MakeMeetingViewModel @Inject constructor(
         MutableStateFlow(MakeMeetingUiState(isLoading = true))
     val uiState: StateFlow<MakeMeetingUiState> = _uiState.asStateFlow()
 
-    private val _sideEffect = MutableSharedFlow<MakeMeetingSideEffect>(replay = 1)
-    val sideEffect: SharedFlow<MakeMeetingSideEffect> = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<MakeMeetingSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     fun handleIntent(intent: MakeMeetingIntent) {
         when (intent) {
@@ -75,6 +74,7 @@ class MakeMeetingViewModel @Inject constructor(
                 _uiState.value = uiState.value.copy(isSaveButtonEnable = false)
                 handleMakeMeeting()
             }
+
             is MakeMeetingIntent.EnterContent -> updateContent(intent.content)
             is MakeMeetingIntent.EditDate -> updateDate(intent.date)
             is MakeMeetingIntent.EditTime -> updateTime(intent.time)
@@ -88,14 +88,14 @@ class MakeMeetingViewModel @Inject constructor(
     }
 
     private fun handleMakeMeeting() {
-        if (networkUtil.isConnected()) {
-            viewModelScope.launch {
+        viewModelScope.launch {
+            if (networkUtil.isConnected()) {
                 saveMeeting()
-                _sideEffect.tryEmit(MakeMeetingSideEffect.NavigateUp)
+                _sideEffect.send(MakeMeetingSideEffect.NavigateUp)
+            } else {
+                showSnackBar(MAKE_NETWORK_MESSAGE)
+                _uiState.value = uiState.value.copy(isSaveButtonEnable = true)
             }
-        } else {
-            showSnackBar(MAKE_NETWORK_MESSAGE)
-            _uiState.value = uiState.value.copy(isSaveButtonEnable = true)
         }
     }
 
@@ -204,7 +204,7 @@ class MakeMeetingViewModel @Inject constructor(
         placeRepository.update(prvPlace)
     }
 
-    private fun showSnackBar(message: String) {
-        _sideEffect.tryEmit(MakeMeetingSideEffect.ShowSnackBar(message))
+    private suspend fun showSnackBar(message: String) {
+        _sideEffect.send(MakeMeetingSideEffect.ShowSnackBar(message))
     }
 }

@@ -19,6 +19,11 @@
         android:name="com.example.user.UserFragment"
         android:label="User" />
 
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.login.LoginFragment"
+        android:label="LoginFragment" />
+
     <include app:graph="@navigation/home_nav_graph" />
     <include app:graph="@navigation/login_nav_graph" />
     <include app:graph="@navigation/meeting_place_nav_graph" />

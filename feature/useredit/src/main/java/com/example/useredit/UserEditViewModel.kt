@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.common.util.NetworkUtil
 import com.example.data.model.User
 import com.example.data.repository.CommentRepositoryImpl
@@ -14,11 +13,11 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -35,8 +34,8 @@ class UserEditViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UserEditUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
 
-    private val _sideEffect = MutableSharedFlow<UserEditSideEffect>(replay = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<UserEditSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     fun handleIntent(intent: UserEditIntent) {
         when (intent) {
@@ -57,12 +56,18 @@ class UserEditViewModel @Inject constructor(
             }
 
             UserEditIntent.UserEdit -> {
-                if (networkUtil.isConnected()) {
-                    viewModelScope.launch {
-                        editUser()
-                        _sideEffect.tryEmit(UserEditSideEffect.NavigateUp)
-                    }
-                } else _sideEffect.tryEmit(UserEditSideEffect.ShowSnackBar(EDIT_USER_NETWORK_MESSAGE))
+                viewModelScope.launch {
+                    if (networkUtil.isConnected()) {
+                        viewModelScope.launch {
+                            editUser()
+                            _sideEffect.send(UserEditSideEffect.NavigateUp)
+                        }
+                    } else _sideEffect.send(
+                        UserEditSideEffect.ShowSnackBar(
+                            EDIT_USER_NETWORK_MESSAGE
+                        )
+                    )
+                }
             }
         }
     }

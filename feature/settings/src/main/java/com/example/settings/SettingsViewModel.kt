@@ -17,9 +17,10 @@ import com.google.firebase.ktx.Firebase
 import com.navercorp.nid.NaverIdLoginSDK
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,19 +37,22 @@ class SettingsViewModel @Inject constructor(
         MutableLiveData(SettingsUiState(isLoading = true))
     val uiState: LiveData<SettingsUiState> get() = _uiState
 
-    private val _sideEffect = MutableSharedFlow<SettingsSideEffect>(replay = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<SettingsSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     fun handleIntent(intent: SettingsIntent) {
         when (intent) {
             SettingsIntent.CancelMembership -> {
-                if (networkUtil.isConnected())
-                    cancelMembership()
-                else _sideEffect.tryEmit(
-                    SettingsSideEffect.ShowSnackBar(
-                        CANCEL_MEMBERSHIP_NETWORK_MESSAGE
+                viewModelScope.launch {
+                    if (networkUtil.isConnected())
+                        cancelMembership()
+                    else _sideEffect.send(
+                        SettingsSideEffect.ShowSnackBar(
+                            CANCEL_MEMBERSHIP_NETWORK_MESSAGE
+                        )
                     )
-                )
+                }
+
             }
 
             SettingsIntent.InitData -> {
@@ -58,8 +62,10 @@ class SettingsViewModel @Inject constructor(
             }
 
             SettingsIntent.Logout -> {
-                logout()
-                _sideEffect.tryEmit(SettingsSideEffect.NavigateLogin)
+                viewModelScope.launch {
+                    logout()
+                    _sideEffect.send(SettingsSideEffect.NavigateLogin)
+                }
             }
 
             SettingsIntent.SwitchAutoLogin -> {
@@ -89,15 +95,15 @@ class SettingsViewModel @Inject constructor(
         Firebase.auth.signOut()
     }
 
-    private fun cancelMembership() {
+    private suspend fun cancelMembership() {
         val user = Firebase.auth.currentUser!!
-        viewModelScope.launch {
-            val deleteUserWorker = getDeleteUserWorker()
-            NaverIdLoginSDK.logout()
-            WorkManager.getInstance(context).enqueue(deleteUserWorker)
-            delay(2000)
-            user.delete().addOnCompleteListener {
-                _sideEffect.tryEmit(SettingsSideEffect.NavigateLogin)
+        val deleteUserWorker = getDeleteUserWorker()
+        logout()
+        WorkManager.getInstance(context).enqueue(deleteUserWorker)
+        delay(2000)
+        user.delete().addOnCompleteListener {
+            viewModelScope.launch {
+                _sideEffect.send(SettingsSideEffect.NavigateLogin)
             }
         }
     }

@@ -16,12 +16,11 @@ import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -45,8 +44,8 @@ class MeetingPlaceViewModel @Inject constructor(
         MutableStateFlow(MeetingPlaceUiState(isLoading = true))
     val uiState: MutableStateFlow<MeetingPlaceUiState> get() = _uiState
 
-    private val _sideEffect = MutableSharedFlow<MeetingPlaceSideEffect>(replay = 1)
-    val sideEffect: SharedFlow<MeetingPlaceSideEffect> = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<MeetingPlaceSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     private var currentJob: Job? = null
 
@@ -71,13 +70,15 @@ class MeetingPlaceViewModel @Inject constructor(
     fun handleIntent(intent: MeetingPlaceIntent) {
         when (intent) {
             is MeetingPlaceIntent.AttendedCancelClick -> {
-                if (networkUtil.isConnected()) {
-                    cancelMeeting(intent.meetingId)
+                viewModelScope.launch {
+                    if (networkUtil.isConnected()) {
+                        cancelMeeting(intent.meetingId)
+                    }
+                    val snackBarMessage =
+                        if (intent.isMyMeeting) NO_CANCEL_MY_MEETING else CANCEL_NETWORK_MESSAGE
+                    _uiState.value = uiState.value.copy(snackBarMessage = snackBarMessage)
+                    _sideEffect.send(MeetingPlaceSideEffect.ShowSnackBar(uiState.value.snackBarMessage))
                 }
-                val snackBarMessage =
-                    if (intent.isMyMeeting) NO_CANCEL_MY_MEETING else CANCEL_NETWORK_MESSAGE
-                _uiState.value = uiState.value.copy(snackBarMessage = snackBarMessage)
-                _sideEffect.tryEmit(MeetingPlaceSideEffect.ShowSnackBar(uiState.value.snackBarMessage))
             }
 
             is MeetingPlaceIntent.MeetingApplyClick -> {
@@ -86,7 +87,9 @@ class MeetingPlaceViewModel @Inject constructor(
             }
 
             is MeetingPlaceIntent.MeetingDetailClick -> {
-                _sideEffect.tryEmit(MeetingPlaceSideEffect.NavigateMeetingDetail(intent.meetingId))
+                viewModelScope.launch {
+                    _sideEffect.send(MeetingPlaceSideEffect.NavigateMeetingDetail(intent.meetingId))
+                }
             }
         }
     }
@@ -175,11 +178,9 @@ class MeetingPlaceViewModel @Inject constructor(
         userRepository.update(user)
     }
 
-    private fun cancelMeeting(meetingId: String) {
-        viewModelScope.launch {
-            deleteUserToMeeting(meetingId)
-            deleteAttendedMeetingToUser(meetingId)
-        }
+    private suspend fun cancelMeeting(meetingId: String) {
+        deleteUserToMeeting(meetingId)
+        deleteAttendedMeetingToUser(meetingId)
     }
 
     private suspend fun deleteUserToMeeting(meetingId: String) {

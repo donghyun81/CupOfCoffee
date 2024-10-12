@@ -23,14 +23,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -55,8 +55,8 @@ class MeetingDetailViewModel @Inject constructor(
 
     val uiState: StateFlow<MeetingDetailUiState> get() = _uiState.asStateFlow()
 
-    private val _sideEffect = MutableSharedFlow<MeetingDetailSideEffect>(replay = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    private val _sideEffect = Channel<MeetingDetailSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     var currentJob: Job? = null
 
@@ -75,53 +75,66 @@ class MeetingDetailViewModel @Inject constructor(
     fun handleIntent(intent: MeetingDetailIntent) {
         when (intent) {
             is MeetingDetailIntent.DeleteComment -> {
-                if (networkUtil.isConnected()) deleteComment(intent.commentId)
-                else {
-                    _sideEffect.tryEmit(
-                        MeetingDetailSideEffect.ShowSnackBar(
-                            DELETE_COMMENT_NETWORK_MESSAGE
+                viewModelScope.launch {
+                    if (networkUtil.isConnected()) deleteComment(intent.commentId)
+                    else {
+                        _sideEffect.send(
+                            MeetingDetailSideEffect.ShowSnackBar(
+                                DELETE_COMMENT_NETWORK_MESSAGE
+                            )
                         )
-                    )
+                    }
                 }
+
             }
 
             MeetingDetailIntent.DeleteMeeting -> {
+
                 if (networkUtil.isConnected()) deleteMeeting()
                 else {
-                    _sideEffect.tryEmit(
-                        MeetingDetailSideEffect.ShowSnackBar(
-                            DELETE_MEETING_NETWORK_MESSAGE
+                    viewModelScope.launch {
+                        _sideEffect.send(
+                            MeetingDetailSideEffect.ShowSnackBar(
+                                DELETE_MEETING_NETWORK_MESSAGE
+                            )
                         )
-                    )
+                    }
                 }
             }
 
             MeetingDetailIntent.HandleInitData -> {
                 try {
                     if (networkUtil.isConnected()) {
+                        networkUtil.registerNetworkCallback(networkCallback)
+                    } else {
                         currentJob?.cancel()
                         currentJob = initUiState()
                     }
-                    networkUtil.registerNetworkCallback(networkCallback)
-                }catch (e:Exception){
-                    _uiState
+                } catch (e: Exception) {
+                    _uiState.value = uiState.value.copy(isError = true)
                 }
             }
 
             is MeetingDetailIntent.EditComment -> {
-                _sideEffect.tryEmit(
-                    MeetingDetailSideEffect.NavigateToCommentEdit(
-                        intent.commentId, intent.meetingId
+                viewModelScope.launch {
+                    _sideEffect.send(
+                        MeetingDetailSideEffect.NavigateToCommentEdit(
+                            intent.commentId, intent.meetingId
+                        )
                     )
-                )
+                }
+
             }
 
             is MeetingDetailIntent.EditMeeting -> {
-                _sideEffect.tryEmit(
-                    MeetingDetailSideEffect.NavigateToMakeMeeting(
-                        intent.meetingId
+                viewModelScope.launch {
+                    _sideEffect.send(
+                        MeetingDetailSideEffect.NavigateToMakeMeeting(
+                            intent.meetingId
+                        )
                     )
-                )
+                }
+
             }
         }
     }
@@ -147,7 +160,7 @@ class MeetingDetailViewModel @Inject constructor(
                     userUiModel = user.asUserUiModel(),
                     meetingUiModel = meeting.asMeetingUiModel(),
                     comments = comments.map { it.asCommentUiModel() },
-                    meeting.managerId == user.id,
+                    isMyMeeting = meeting.managerId == user.id,
                     isLoading = false
                 )
             }
@@ -157,7 +170,7 @@ class MeetingDetailViewModel @Inject constructor(
                     userUiModel = user.asUserUiModel(),
                     meetingUiModel = meeting.asMeetingUiModel(),
                     comments = emptyList(),
-                    meeting.managerId == user.id,
+                    isMyMeeting = meeting.managerId == user.id,
                     isLoading = false
                 )
             )
@@ -182,14 +195,12 @@ class MeetingDetailViewModel @Inject constructor(
             .build()
     }
 
-    private fun deleteComment(commentId: String) {
-        viewModelScope.launch {
-            val meeting =
-                meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
-            meeting.commentIds.remove(commentId)
-            meetingRepository.update(meeting)
-            commentRepository.delete(commentId)
-        }
+    private suspend fun deleteComment(commentId: String) {
+        val meeting =
+            meetingRepository.getMeeting(meetingId, networkUtil.isConnected())
+        meeting.commentIds.remove(commentId)
+        meetingRepository.update(meeting)
+        commentRepository.delete(commentId)
     }
 
     private fun User.asUserUiModel() = MeetingDetailUserUiModel(
